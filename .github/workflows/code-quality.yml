@@ -10,6 +10,11 @@ jobs:
   lint:
     name: 🔍 Android Lint 품질 검사
     runs-on: ubuntu-latest
+    # 핵심: 모든 run 명령어가 이 폴더 안에서 실행되도록 설정
+    defaults:
+      run:
+        working-directory: ./easy-law
+
     steps:
       - name: 📥 코드 받아오기
         uses: actions/checkout@v4
@@ -20,7 +25,8 @@ jobs:
         run: |
           mkdir -p app
           echo "${G_SERVICES//[[:space:]]/}" | base64 -d > app/google-services.json
-          echo "📍 파일 생성 확인:"
+          echo "✅ 파일 생성 완료 및 경로 확인:"
+          pwd
           ls -l app/google-services.json
 
       - name: ☕ JDK 17 설정
@@ -42,13 +48,17 @@ jobs:
         with:
           name: lint-report
           path: |
-            app/build/reports/lint-results*.html
-            app/build/reports/lint-results*.xml
+            easy-law/app/build/reports/lint-results*.html
+            easy-law/app/build/reports/lint-results*.xml
           retention-days: 7
 
   security-scan:
     name: 🔒 의존성 보안 취약점 검사 (OWASP)
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./easy-law
+
     steps:
       - name: 📥 코드 받아오기
         uses: actions/checkout@v4
@@ -59,7 +69,6 @@ jobs:
         run: |
           mkdir -p app
           echo "${G_SERVICES//[[:space:]]/}" | base64 -d > app/google-services.json
-          ls -l app/google-services.json
 
       - name: ☕ JDK 17 설정
         uses: actions/setup-java@v4
@@ -79,12 +88,16 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: security-scan-report
-          path: build/reports/dependency-check/
+          path: easy-law/build/reports/dependency-check/
           retention-days: 7
 
   coverage:
     name: 📊 코드 커버리지 (Jacoco)
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./easy-law
+
     steps:
       - name: 📥 코드 받아오기
         uses: actions/checkout@v4
@@ -93,8 +106,8 @@ jobs:
         env:
           G_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
-          echo "${G_SERVICES//[[:space:]]/}" | base64 -d > $GITHUB_WORKSPACE/app/google-services.json
-          ls -l $GITHUB_WORKSPACE/app/google-services.json
+          mkdir -p app
+          echo "${G_SERVICES//[[:space:]]/}" | base64 -d > app/google-services.json
 
       - name: ☕ JDK 17 설정
         uses: actions/setup-java@v4
@@ -118,6 +131,6 @@ jobs:
         with:
           name: coverage-report
           path: |
-            app/build/reports/coverage/debugCodeCoverage/
-            app/build/jacoco/
+            easy-law/app/build/reports/coverage/debugCodeCoverage/
+            easy-law/app/jacoco/
           retention-days: 7
