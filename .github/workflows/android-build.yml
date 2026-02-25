@@ -20,15 +20,14 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
-        cache: gradle
     
-    - name: 🔧 Gradle 설정
-      uses: gradle/gradle-build-action@v2
+    - name: 🔧 Gradle 권한 설정
+      run: chmod +x ./gradlew
     
     - name: 🔍 ktlint 코드 스타일 검사 시작
       run: |
         echo "📝 Kotlin 코드 스타일 검사를 시작합니다..."
-        ./gradlew ktlint --info || true
+        bash ./gradlew ktlint --info || true
         echo "✅ ktlint 검사 완료"
     
     - name: 📤 ktlint 결과 업로드
@@ -54,15 +53,14 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
-        cache: gradle
     
-    - name: 🔧 Gradle 설정
-      uses: gradle/gradle-build-action@v2
+    - name: 🔧 Gradle 권한 설정
+      run: chmod +x ./gradlew
     
     - name: 🔎 복잡한 코드, 성능 문제 분석
       run: |
         echo "🔍 Detekt 정적 분석을 시작합니다..."
-        ./gradlew detekt --info || true
+        bash ./gradlew detekt --info || true
         echo "✅ Detekt 분석 완료"
     
     - name: 📤 Detekt 결과 업로드
@@ -88,18 +86,14 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
-        cache: gradle
     
-    - name: 🔧 Gradle 설정
-      uses: gradle/gradle-build-action@v2
-    
-    - name: 📦 gradle 의존성 다운로드 (캐시 사용)
-      run: ./gradlew dependencies || true
+    - name: 🔧 Gradle 권한 설정
+      run: chmod +x ./gradlew
     
     - name: 🔨 Debug APK 빌드 시작
       run: |
         echo "🛠️ Android Debug APK를 빌드합니다..."
-        ./gradlew assembleDebug --info
+        bash ./gradlew assembleDebug --info
         echo "✅ 빌드 완료"
     
     - name: 📤 생성된 APK 아티팩트 업로드
@@ -123,15 +117,14 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
-        cache: gradle
     
-    - name: 🔧 Gradle 설정
-      uses: gradle/gradle-build-action@v2
+    - name: 🔧 Gradle 권한 설정
+      run: chmod +x ./gradlew
     
     - name: 🧪 단위 테스트 실행 (JUnit, Mockito)
       run: |
         echo "🧬 ViewModel, Repository 등 단위 테스트를 실행합니다..."
-        ./gradlew testDebugUnitTest --info || true
+        bash ./gradlew testDebugUnitTest --info || true
         echo "✅ 테스트 완료"
     
     - name: 📤 테스트 결과 업로드
