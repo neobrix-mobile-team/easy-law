@@ -1,4 +1,4 @@
-package com.neobrix.easylaw.di
+package com.easylaw.app.di
 
 import dagger.Module
 import dagger.hilt.InstallIn
