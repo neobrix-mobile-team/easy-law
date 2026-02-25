@@ -196,3 +196,16 @@ detekt {
         sarif.enabled = true
     }
 }
+
+// ktlint 설정
+ktlint {
+    version = '1.0.1'
+    verbose = true
+    outputToConsole = true
+    coloredOutput = true
+    android = true
+    reporters {
+        reporter 'plain'
+        reporter 'sarif'
+    }
+}

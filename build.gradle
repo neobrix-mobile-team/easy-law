@@ -6,35 +6,3 @@ plugins {
     id 'org.jetbrains.kotlin.kapt' version '1.9.10' apply false
     id 'com.google.dagger.hilt.android' version '2.48' apply false
 }
-
-// ktlint 설정
-subprojects {
-    apply plugin: 'org.jlleitschuh.gradle.ktlint'
-    
-    ktlint {
-        version = '1.0.1'
-        verbose = true
-        outputToConsole = true
-        coloredOutput = true
-        android = true
-        reporters {
-            reporter 'plain'
-            reporter 'sarif'
-        }
-    }
-}
-
-// detekt 설정
-detekt {
-    toolVersion = '1.23.0'
-    config = files('detekt.yml')
-    reports {
-        html.enabled = true
-        sarif.enabled = true
-    }
-}
-
-// OWASP Dependency Check
-dependencyCheck {
-    format = 'ALL'
-}
