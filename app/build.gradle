@@ -3,7 +3,6 @@ plugins {
     id 'kotlin-android'
     id 'kotlin-kapt'
     id 'com.google.dagger.hilt.android'
-    id 'jacoco'
 }
 
 android {
@@ -152,36 +151,4 @@ dependencies {
     // ============ Debugging ============
     debugImplementation 'androidx.compose.ui:ui-tooling'
     debugImplementation 'androidx.compose.ui:ui-test-manifest'
-}
-
-// Jacoco 설정 (코드 커버리지)
-jacoco {
-    toolVersion = '0.8.10'
-}
-
-task jacocoTestDebugUnitTestReport(type: JacocoReport) {
-    dependsOn testDebugUnitTest
-    
-    reports {
-        xml.required = true
-        html.required = true
-        csv.required = false
-    }
-    
-    def fileFilter = [
-        '**/R.class',
-        '**/R$*.class',
-        '**/BuildConfig.*',
-        '**/Manifest*.*',
-        '**/*Test*.*',
-        '**/*$Lambda$*.*',
-        '**/*$inlined$*.*'
-    ]
-    
-    def debugTree = fileTree(dir: "$buildDir/intermediates/classes/debug", excludes: fileFilter)
-    def mainSrc = "$project.projectDir/src/main/java"
-    
-    sourceDirectories.setFrom(files([mainSrc]))
-    classDirectories.setFrom(files([debugTree]))
-    executionData.setFrom(fileTree(dir: buildDir, includes: ['jacoco/testDebugUnitTest.exec']))
 }
