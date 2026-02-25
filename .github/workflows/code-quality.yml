@@ -15,7 +15,7 @@ jobs:
       - name: 📥 코드 받아오기
         uses: actions/checkout@v4
 
-      - name: 🔐 Firebase 설정 (google-services.json 생성)
+      - name: 🔐 Firebase 설정 (google-services.json)
         env:
           G_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
