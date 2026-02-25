@@ -161,38 +161,34 @@ easy-law/
 │   ├── src/
 │   │   ├── main/
 │   │   │   ├── java/com/neobrix/easylaw/
+│   │   │   │   ├── MainActivity.kt
+│   │   │   │   ├── EasyLawApplication.kt
 │   │   │   │   ├── ui/
-│   │   │   │   │   ├── screens/         # Compose Screens
-│   │   │   │   │   ├── components/      # Reusable UI Components
-│   │   │   │   │   └── theme/           # Theme & Colors
+│   │   │   │   │   ├── screens/         # 화면들 (로그인, 홈, 상세 등)
+│   │   │   │   │   ├── components/      # 재사용 컴포넌트
+│   │   │   │   │   └── theme/           # 테마 (Color, Typography)
 │   │   │   │   ├── data/
-│   │   │   │   │   ├── repository/      # Repository Pattern
-│   │   │   │   │   ├── datasource/      # Remote/Local Data Sources
-│   │   │   │   │   └── models/          # Data Models
+│   │   │   │   │   ├── repository/      # Repository 패턴
+│   │   │   │   │   ├── datasource/      # 원격/로컬 데이터
+│   │   │   │   │   └── models/          # 데이터 모델
 │   │   │   │   ├── domain/
-│   │   │   │   │   ├── model/           # Domain Models
-│   │   │   │   │   └── usecase/         # Use Cases
-│   │   │   │   ├── viewmodel/           # ViewModels
+│   │   │   │   │   ├── model/           # 도메인 모델
+│   │   │   │   │   └── usecase/         # 비즈니스 로직
+│   │   │   │   ├── viewmodel/           # ViewModel들
 │   │   │   │   ├── navigation/          # Navigation Graph
-│   │   │   │   ├── di/                  # Dependency Injection (Hilt)
-│   │   │   │   ├── util/                # Utility Functions
-│   │   │   │   └── MainActivity.kt
+│   │   │   │   ├── di/                  # Hilt DI (AppModule 등)
+│   │   │   │   └── util/                # 유틸리티 함수
 │   │   │   └── res/
-│   │   │       ├── drawable/
-│   │   │       ├── layout/
-│   │   │       ├── values/
-│   │   │       └── values-night/        # Dark Mode
-│   │   ├── test/                        # Unit Tests
+│   │   │       ├── drawable/            # 이미지, 벡터
+│   │   │       ├── values/              # 문자열, 색상, 테마
+│   │   │       └── values-night/        # 다크 모드
+│   │   ├── test/                        # 단위 테스트
 │   │   │   └── java/com/neobrix/easylaw/
 │   │   │       ├── viewmodel/
-│   │   │       ├── repository/
-│   │   │       └── util/
-│   │   └── androidTest/                 # Instrumented Tests
+│   │   │       └── repository/
+│   │   └── androidTest/                 # 통합 테스트 (Espresso)
 │   │       └── java/com/neobrix/easylaw/
-│   │           ├── ui/
-│   │           └── integration/
-│   ├── build.gradle
-│   └── proguard-rules.pro
+│   └── build.gradle
 │
 ├── docs/                        # 문서
 │   ├── API.md                  # Firebase & API 문서
@@ -203,14 +199,11 @@ easy-law/
 │   ├── ISSUE_TEMPLATE/         # 이슈 템플릿
 │   ├── PULL_REQUEST_TEMPLATE/  # PR 템플릿
 │   └── workflows/              # CI/CD (GitHub Actions)
-│       ├── android-build.yml
-│       ├── android-instrumented-tests.yml
-│       └── code-quality.yml
 │
-├── build.gradle                # Project-level Gradle
-├── settings.gradle             # Module settings
-├── gradle.properties           # Gradle properties
-├── detekt.yml                  # Detekt configuration
+├── build.gradle                # 프로젝트 레벨 Gradle
+├── settings.gradle             # 모듈 설정
+├── gradle.properties           # Gradle 속성
+├── detekt.yml                  # Detekt 설정
 ├── LICENSE                     # MIT License
 ├── README.md                   # 프로젝트 개요
 ├── CONTRIBUTING.md            # 기여 가이드
@@ -222,83 +215,166 @@ easy-law/
 
 ## 🚀 설치 및 실행 (2주 MVP)
 
-### Android 개발 환경 설정
-
-**필수 도구**:
-- Android Studio (최신 버전)
-- JDK 17 이상
+### 필수 환경
+```
+- Android Studio (2024.1.0 이상 권장)
+- JDK 17+
 - Android SDK API 34
 - Gradle 8.0+
+- Git
+```
 
-### 프로젝트 클론 & 열기
+### 1️⃣ 리포지토리 클론
 
 ```bash
 # 리포 클론
 git clone https://github.com/neobrix-mobile-team/easy-law.git
 cd easy-law
 
-# Android Studio에서 열기
-# File → Open → 프로젝트 폴더 선택
+# develop 브랜치로 이동
+git checkout develop
 ```
 
-### Gradle 의존성 설치 & 빌드
+### 2️⃣ Android Studio에서 열기
 
+```
+File → Open → 프로젝트 폴더 선택
+```
+
+Gradle이 자동으로 의존성을 다운로드합니다. (2-3분 소요)
+
+### 3️⃣ 로컬 환경 설정
+
+**`local.properties` 생성** (Git 커밋 X):
+```properties
+sdk.dir=/Users/[username]/Library/Android/sdk
+ndk.dir=/Users/[username]/Library/Android/sdk/ndk/25.1.8937393
+```
+
+### 4️⃣ Gradle 빌드
+
+**터미널에서**:
 ```bash
-# 의존성 설치 (Android Studio에서 자동)
-# 또는 터미널에서
+# 전체 빌드
 ./gradlew clean build
 
-# Debug APK 생성
+# Debug APK만 빌드
 ./gradlew assembleDebug
 
-# 에뮬레이터 또는 기기에 설치
-./gradlew installDebug
+# 린트 & 정적 분석
+./gradlew ktlint detekt lint
 ```
 
-### 에뮬레이터 실행
+### 5️⃣ 앱 실행
 
+**방법 1: Android Studio에서**
+- Run 버튼 클릭 → 에뮬레이터 또는 기기 선택
+
+**방법 2: 터미널에서**
 ```bash
-# Android Studio의 Device Manager에서 에뮬레이터 생성
-# 또는 CLI로
-emulator -avd EmulatorName
-```
-
-### 개발 서버 실행
-
-```bash
-# Android Studio의 Run 버튼 클릭
-# 또는 터미널에서
 ./gradlew installDebugAndroidTest
 ```
 
-### Firebase 설정
+### 6️⃣ Firebase 설정
 
 ```bash
-# Firebase 프로젝트 생성 (https://console.firebase.google.com)
-# 1. 새 프로젝트 생성
-# 2. Android 앱 추가
-# 3. google-services.json 다운로드
-# 4. app/ 폴더에 복사
+# Firebase Console에서 프로젝트 생성
+# https://console.firebase.google.com
 
-# Firebase CLI 설정 (선택사항)
+# 1. 새 Android 앱 추가
+# 2. google-services.json 다운로드
+# 3. app/ 폴더에 복사
+
+# 4. Firebase CLI 설정 (선택사항)
 firebase login
 firebase init
 ```
 
+### 7️⃣ 에뮬레이터 설정
+
+```bash
+# Android Studio: Tools → Device Manager
+# 또는 CLI로
+
+# 에뮬레이터 목록 확인
+$ANDROID_HOME/emulator/emulator -list-avds
+
+# 에뮬레이터 실행
+$ANDROID_HOME/emulator/emulator -avd EmulatorName
+```
+
+### 🧪 테스트 실행
+
+```bash
+# 단위 테스트
+./gradlew testDebugUnitTest
+
+# 통합 테스트 (에뮬레이터 필요)
+./gradlew connectedAndroidTest
+
+# 코드 커버리지
+./gradlew jacocoTestDebugUnitTestReport
+```
+
+### 📊 코드 품질 검사
+
+```bash
+# Kotlin 스타일 검사
+./gradlew ktlint
+
+# 자동 포맷팅
+./gradlew ktlintFormat
+
+# 정적 분석
+./gradlew detekt
+
+# Android Lint
+./gradlew lint
+
+# 보안 취약점
+./gradlew dependencyCheckAnalyze
+```
+
 ---
 
-## 📅 개발 일정 (2주)
+## 📅 개발 일정 (2주 MVP)
 
-| 주차 | 목표 | 담당 |
+### Week 1: 기초 구축
+| 날짜 | 목표 | 담당 |
 |------|------|------|
-| **Week 1** | 📦 프로젝트 셋업, 🔐 Auth (구글 로그인), 👤 사용자 관리, 🎨 디자인 시스템 | 전체 팀 |
-| **Week 2** | 🌳 Decision Tree UX, 📄 OCR/TTS (간단한 버전), 💬 커뮤니티 기본 기능, 🚀 배포 | 전체 팀 |
+| Mon-Wed | 🔐 Auth (구글 로그인) + Firebase 연동 | Backend/Frontend |
+| Wed-Fri | 👤 사용자 프로필 (Firestore) + 다국어 지원 | Frontend |
+| Fri | 🎨 디자인 시스템 & 테마 완성 | Frontend |
+
+### Week 2: 핵심 기능 개발
+| 날짜 | 목표 | 담당 |
+|------|------|------|
+| Mon-Tue | 🌳 Decision Tree UI 구현 | Frontend |
+| Wed-Thu | 📄 OCR 기능 (간단한 버전) + TTS | Frontend |
+| Fri | 💬 커뮤니티 기본 구조 + 배포 테스트 | Full Team |
 
 ### 우선순위 (MoSCoW)
-- **Must**: Auth, 기본 UX, 디자인 시스템, 프로젝트 셋업
-- **Should**: OCR, TTS, Decision Tree
-- **Could**: 커뮤니티, 포인트 시스템, 지도 (주차별 여유 시 진행)
-- **Won't**: 고급 AI 기능, 신뢰도 배지 (v2 이후)
+
+**Must** (필수):
+- ✅ 프로젝트 기본 구조 (완료)
+- 🔐 구글 로그인 + Firebase Auth
+- 👤 사용자 프로필 관리
+- 🎨 디자인 시스템 (완료)
+- 🌳 기본 Decision Tree UX
+
+**Should** (중요):
+- 📄 OCR 기능 (간단한 버전)
+- 🔊 TTS 연동
+- 🌍 다국어 지원
+
+**Could** (선택):
+- 💬 커뮤니티 포인트 시스템
+- 📍 위치 기반 기관 지도
+- 🏆 신뢰도 배지
+
+**Won't** (보류):
+- 🤖 고급 AI 기능 (v2에서)
+- 🎯 신뢰도 검증 시스템 (v2에서)
 
 ---
 
@@ -306,22 +382,57 @@ firebase init
 
 자세한 내용은 [CONTRIBUTING.md](./CONTRIBUTING.md) 참조
 
+### 빠른 시작
+
+```bash
+# 1. develop에서 새 브랜치 생성
+git checkout develop
+git pull
+git checkout -b feature/기능명
+
+# 2. 코드 작성 & 테스트
+./gradlew ktlintFormat
+./gradlew testDebugUnitTest
+./gradlew detekt
+
+# 3. 커밋
+git commit -m "feat: 기능 설명"
+
+# 4. PR 생성
+git push origin feature/기능명
+# GitHub에서 develop으로 PR 생성
+```
+
 ### 커밋 메시지 규칙
+
 ```
 feat: 기능 추가
 fix: 버그 수정
 docs: 문서 작성
-style: 코드 포맷팅
+style: 코드 포맷팅 (ktlint)
 refactor: 코드 정리
 test: 테스트 추가
-chore: 빌드, 의존성 관리
+chore: 의존성, Gradle 관리
+```
+
+**예시**:
+```
+feat: 구글 로그인 & Firebase Auth 연동 (#5)
+
+- Firebase Auth 설정
+- Google Sign-In SDK 통합
+- 사용자 프로필 자동 생성
+
+Closes #5
 ```
 
 ### 브랜치 규칙
-- `main`: 배포 가능한 안정 버전
-- `develop`: 개발 중인 버전
-- `feature/기능명`: 새로운 기능
-- `fix/버그명`: 버그 수정
+
+- `main` → 배포 버전 (PR 필수, 1명 리뷰)
+- `develop` → 개발 버전 (PR 필수, 1명 리뷰)
+- `feature/*` → 새 기능 (develop으로 PR)
+- `fix/*` → 버그 수정 (develop으로 PR)
+- `docs/*` → 문서 (develop으로 PR)
 
 ---
 
