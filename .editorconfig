@@ -1,0 +1,32 @@
+# 프로젝트 루트 설정
+root = true
+
+# 모든 Kotlin 파일에 적용
+[*.{kt,kts}]
+# 인덴트 스타일 및 크기
+indent_style = space
+indent_size = 4
+
+# 한 줄 최대 길이 (필요 시 조절)
+max_line_length = 120
+
+# 문장 끝 공백 제거 및 파일 끝 새 줄 추가
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+#### KtLint 관련 규칙 세부 설정 ####
+
+# 1. Jetpack Compose용: 대문자로 시작하는 @Composable 함수 허용
+# (이 설정을 넣으면 @Suppress를 일일이 안 써도 됩니다)
+ktlint_standard_function-naming_ignore_when_annotated_with = Composable
+
+# 2. 와일드카드 임포트 금지 (항상 명시적으로 임포트)
+ktlint_standard_no-wildcard-imports = enabled
+
+# 3. 주석 위치 규칙 (함수 인자 옆 주석 허용 여부)
+# 만약 인자 옆 주석을 계속 쓰고 싶다면 아래를 disabled로 바꾸세요.
+# 하지만 보통은 코드 가독성을 위해 별도 라인에 적는 것을 추천합니다.
+ktlint_standard_comment-wrapping = enabled
+
+# 4. 임포트 순서 (IntelliJ 스타일 선호 시 설정)
+ktlint_standard_import-ordering = enabled

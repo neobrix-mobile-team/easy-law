@@ -9,15 +9,18 @@ import androidx.compose.ui.graphics.Color
 // 컬러 팔레트 정의
 private val LightColorScheme =
     lightColorScheme(
-        primary = Color(0xFF1F5B9C), // Deep Blue
+        // Deep Blue
+        primary = Color(0xFF1F5B9C),
         onPrimary = Color.White,
         primaryContainer = Color(0xFFD6E7FF),
         onPrimaryContainer = Color(0xFF001A47),
-        secondary = Color(0xFF8C9DB0), // Soft Grey
+        // Soft Grey
+        secondary = Color(0xFF8C9DB0),
         onSecondary = Color.White,
         secondaryContainer = Color(0xFFCFE0F1),
         onSecondaryContainer = Color(0xFF1C2C3C),
-        tertiary = Color(0xFFC29B00), // Amber
+        // Amber
+        tertiary = Color(0xFFC29B00),
         onTertiary = Color.White,
         tertiaryContainer = Color(0xFFFFDEB8),
         onTertiaryContainer = Color(0xFF3D2800),
@@ -33,15 +36,18 @@ private val LightColorScheme =
 
 private val DarkColorScheme =
     darkColorScheme(
-        primary = Color(0xFFAFCDFF), // Light Blue
+        // Light Blue
+        primary = Color(0xFFAFCDFF),
         onPrimary = Color(0xFF003166),
         primaryContainer = Color(0xFF004797),
         onPrimaryContainer = Color(0xFFD6E7FF),
-        secondary = Color(0xFFB3C5D8), // Light Grey
+        // Light Grey
+        secondary = Color(0xFFB3C5D8),
         onSecondary = Color(0xFF304154),
         secondaryContainer = Color(0xFF475C6E),
         onSecondaryContainer = Color(0xFFCFE0F1),
-        tertiary = Color(0xFFE5B800), // Light Amber
+        // Light Amber
+        tertiary = Color(0xFFE5B800),
         onTertiary = Color(0xFF664D00),
         tertiaryContainer = Color(0xFF986F00),
         onTertiaryContainer = Color(0xFFFFDEB8),
@@ -56,6 +62,7 @@ private val DarkColorScheme =
     )
 
 @Composable
+@Suppress("ktlint:standard:function-naming") // 이 줄 추가
 fun EasyLawTheme(
     darkTheme: Boolean = false,
     content: @Composable () -> Unit,

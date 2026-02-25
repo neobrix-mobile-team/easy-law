@@ -1,64 +1,10 @@
-// Top-level build.gradle
-/*plugins {
-    id 'com.android.application' version '8.6.0' apply false
-    id 'com.android.library' version '8.6.0' apply false
-    id 'org.jetbrains.kotlin.android' version '2.1.0' apply false
-//    id 'org.jetbrains.kotlin.kapt' version '1.9.24' apply false
-//    id 'com.google.dagger.hilt.android' version '2.54.1' apply false
-    id 'org.jlleitschuh.gradle.ktlint' version '12.1.0' apply false
-    id 'io.gitlab.arturbosch.detekt' version '1.23.0' apply false
-    id 'org.owasp.dependencycheck' version '8.4.0' apply false
-    id 'com.google.devtools.ksp' version '2.1.0-1.0.29' apply false
-}*/
-
 plugins {
-    id 'com.android.application' version '8.6.0' apply false
-    id 'com.android.library' version '8.6.0' apply false
-    id 'org.jetbrains.kotlin.android' version '2.1.0' apply false
+    id 'com.android.application' version '8.4.0' apply false
+    id 'com.android.library' version '8.4.0' apply false
+    id 'org.jetbrains.kotlin.android' version '1.9.22' apply false
+    id 'org.jetbrains.kotlin.kapt' version '1.7.20' apply false
+    id 'com.google.dagger.hilt.android' version '2.48' apply false
+    id 'org.jlleitschuh.gradle.ktlint' version "12.1.1" apply false
+    id 'io.gitlab.arturbosch.detekt' version '1.23.6' apply false
 
-    // 이 부분의 주석을 풀고 버전을 2.54로 설정하세요.
-    id 'com.google.dagger.hilt.android' version '2.54' apply false
-
-    id 'org.jlleitschuh.gradle.ktlint' version '12.1.0' apply false
-    id 'io.gitlab.arturbosch.detekt' version '1.23.0' apply false
-    id 'org.owasp.dependencycheck' version '8.4.0' apply false
-    id 'com.google.devtools.ksp' version '2.1.0-1.0.29' apply false
-
-    id 'org.jetbrains.kotlin.plugin.serialization' version '2.1.0' apply false
-    id 'com.google.gms.google-services' version '4.4.2' apply false
-}
-
-apply plugin: 'io.gitlab.arturbosch.detekt'
-apply plugin: 'org.owasp.dependencycheck'
-// ktlint 설정
-subprojects {
-    apply plugin: 'org.jlleitschuh.gradle.ktlint'
-
-    ktlint {
-        version = '1.0.1'
-        ignoreFailures = true
-        verbose = true
-        outputToConsole = true
-        coloredOutput = true
-        android = true
-        reporters {
-            reporter 'plain'
-            reporter 'sarif'
-        }
-    }
-}
-
-// detekt 설정
-detekt {
-    toolVersion = '1.23.3'
-    config = files('detekt.yml')
-    reports {
-        html.enabled = true
-        sarif.enabled = true
-    }
-}
-
-// OWASP Dependency Check
-dependencyCheck {
-    format = 'ALL'
 }

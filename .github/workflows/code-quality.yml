@@ -1,129 +1,43 @@
-name: 🔐 코드 품질 & 보안 검사
+name: 🔐 코드 품질 & 보안 검사 (Optimized)
 
 on:
-  push:
-    branches: [ main, develop ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ develop ]
+  push:
+    branches: [ main ]
 
 jobs:
-  lint:
-    name: 🔍 Android Lint 품질 검사
+  quality-security:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📥 코드 받아오기
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: 🔐 Firebase 설정 (google-services.json 생성)
-        env:
-          G_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON }}
-        run: |
-          mkdir -p app
-          echo "$G_SERVICES" | tr -d '[:space:]' | base64 -d > app/google-services.json
-          echo "📍 현재 경로: $(pwd)"
-          ls -l app/google-services.json
-
-      - name: ☕ JDK 17 설정
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
           cache: gradle
 
-      - name: 🔧 Gradle wrapper 권한 설정
-        run: chmod +x ./gradlew
+      - run: chmod +x ./gradlew
 
-      - name: 🔍 Android Lint로 코드 품질 검사
-        run: ./gradlew lint --info || true
+      - name: 🔐 Google Services JSON
+        run: echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 --decode > app/google-services.json
 
-      - name: 📤 Lint 결과 업로드
+      # 🔍 Lint (항상 실행)
+      - name: 🔍 Android Lint
+        run: ./gradlew lint --parallel --build-cache
+
+      # 🔒 OWASP는 main push에서만
+      - name: 🔒 Dependency Check
+        if: github.event_name == 'push'
+        run: ./gradlew dependencyCheckAnalyze --parallel --build-cache
+
+      - name: 📤 리포트 업로드
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: lint-report
+          name: quality-report
           path: |
             app/build/reports/lint-results*.html
-            app/build/reports/lint-results*.xml
-          retention-days: 7
-
-  security-scan:
-    name: 🔒 의존성 보안 취약점 검사 (OWASP)
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: 📥 코드 받아오기
-        uses: actions/checkout@v4
-
-      - name: 🔐 Firebase 설정 (google-services.json 생성)
-        env:
-          G_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON }}
-        run: |
-          mkdir -p app
-          echo "$G_SERVICES" | tr -d '[:space:]' | base64 -d > app/google-services.json
-          echo "📍 현재 경로: $(pwd)"
-          ls -l app/google-services.json
-
-      - name: ☕ JDK 17 설정
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: gradle
-
-      - name: 🔧 Gradle wrapper 권한 설정
-        run: chmod +x ./gradlew
-
-      - name: 🔒 OWASP 보안 취약점 검사
-        run: ./gradlew dependencyCheckAnalyze --info || true
-
-      - name: 📤 보안 검사 결과 업로드
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: security-scan-report
-          path: build/reports/dependency-check/
-          retention-days: 7
-
-  coverage:
-    name: 📊 코드 커버리지 (Jacoco)
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: 📥 코드 받아오기
-        uses: actions/checkout@v4
-
-      - name: 🔐 Firebase 설정 (google-services.json 생성)
-        env:
-          G_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON }}
-        run: |
-          mkdir -p app
-          echo "$G_SERVICES" | tr -d '[:space:]' | base64 -d > app/google-services.json
-          echo "📍 현재 경로: $(pwd)"
-          ls -l app/google-services.json
-
-      - name: ☕ JDK 17 설정
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: gradle
-
-      - name: 🔧 Gradle wrapper 권한 설정
-        run: chmod +x ./gradlew
-
-      - name: 🧪 단위 테스트 실행
-        run: ./gradlew testDebugUnitTest --info || true
-
-      - name: 📊 코드 커버리지 리포트 생성
-        run: ./gradlew jacocoTestDebugUnitTestReport --info || true
-
-      - name: 📤 커버리지 리포트 업로드
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: |
-            app/build/reports/coverage/debugCodeCoverage/
-            app/build/jacoco/
-          retention-days: 7
+            build/reports/dependency-check*

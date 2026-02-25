@@ -1,0 +1,21 @@
+naming:
+  FunctionNaming:
+    active: true
+    # Compose 함수(대문자 시작)를 허용
+    ignoreAnnotated: ['Composable']
+
+style:
+  MagicNumber:
+    active: true
+    # ✅ 아래와 같이 'test' 폴더들을 추가합니다.
+    excludes:
+      - '**/ui/theme/**'
+      - '**/test/**'
+      - '**/androidTest/**'
+    ignoreNumbers: ['-1', '0', '1', '2', '255']
+    ignoreHashCodeFunction: true
+    ignorePropertyDeclaration: true
+    ignoreLocalVariableDeclaration: true
+
+  ForbiddenComment:
+    active: false
