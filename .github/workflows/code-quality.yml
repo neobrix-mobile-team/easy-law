@@ -15,15 +15,12 @@ jobs:
       - name: 📥 코드 받아오기
         uses: actions/checkout@v4
 
-      - name: 🔐 Firebase 설정 (google-services.json)
+      - name: 🔐 Firebase 설정 (google-services.json 생성)
         env:
           G_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
-          # 1. 현재 위치에 app 폴더가 없으면 생성
           mkdir -p app
-          # 2. Base64 디코딩하여 google-services.json 생성 (s 확인!)
-          echo "${G_SERVICES//[[:space:]]/}" | base64 -d > app/google-services.json
-          # 3. 파일 생성 위치와 경로 확인 (디버깅용)
+          echo "$G_SERVICES" | tr -d '[:space:]' | base64 -d > app/google-services.json
           echo "📍 현재 경로: $(pwd)"
           ls -l app/google-services.json
 
@@ -58,12 +55,14 @@ jobs:
       - name: 📥 코드 받아오기
         uses: actions/checkout@v4
 
-      - name: 🔐 Firebase 설정
+      - name: 🔐 Firebase 설정 (google-services.json 생성)
         env:
           G_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
           mkdir -p app
-          echo "${G_SERVICES//[[:space:]]/}" | base64 -d > app/google-services.json
+          echo "$G_SERVICES" | tr -d '[:space:]' | base64 -d > app/google-services.json
+          echo "📍 현재 경로: $(pwd)"
+          ls -l app/google-services.json
 
       - name: ☕ JDK 17 설정
         uses: actions/setup-java@v4
@@ -94,12 +93,14 @@ jobs:
       - name: 📥 코드 받아오기
         uses: actions/checkout@v4
 
-      - name: 🔐 Firebase 설정
+      - name: 🔐 Firebase 설정 (google-services.json 생성)
         env:
           G_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
           mkdir -p app
-          echo "${G_SERVICES//[[:space:]]/}" | base64 -d > app/google-services.json
+          echo "$G_SERVICES" | tr -d '[:space:]' | base64 -d > app/google-services.json
+          echo "📍 현재 경로: $(pwd)"
+          ls -l app/google-services.json
 
       - name: ☕ JDK 17 설정
         uses: actions/setup-java@v4
