@@ -19,14 +19,15 @@ jobs:
         env:
           G_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
-          # 1. 현재 위치 확인 (디버깅용)
-          pwd
-          # 2. app 폴더가 있는지 확인하고 생성
+          # 1. app 폴더 생성
           mkdir -p app
-          # 3. 파일을 생성하되, 혹시 모를 앞뒤 공백 제거 후 디코딩
-          echo "${G_SERVICES//[[:space:]]/}" | base64 -d > ./app/google-services.json
-          # 4. 파일이 진짜 생겼는지 리스트 출력해서 확인
-          ls -l ./app/google-services.json
+          
+          # 2. 정확한 파일명(google-services.json)으로 디코딩 및 저장
+          echo "${G_SERVICES//[[:space:]]/}" | base64 -d > app/google-services.json
+          
+          # 3. 파일 생성 여부 최종 확인
+          echo "📍 파일 생성 확인:"
+          ls -l app/google-services.json
 
       - name: ☕ JDK 17 설정
         uses: actions/setup-java@v4
