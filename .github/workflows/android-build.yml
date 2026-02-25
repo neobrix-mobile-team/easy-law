@@ -22,6 +22,9 @@ jobs:
         distribution: 'temurin'
         cache: gradle
     
+    - name: 🔧 Gradle 설정
+      uses: gradle/gradle-build-action@v2
+    
     - name: 🔍 ktlint 코드 스타일 검사 시작
       run: |
         echo "📝 Kotlin 코드 스타일 검사를 시작합니다..."
@@ -52,6 +55,9 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
         cache: gradle
+    
+    - name: 🔧 Gradle 설정
+      uses: gradle/gradle-build-action@v2
     
     - name: 🔎 복잡한 코드, 성능 문제 분석
       run: |
@@ -84,6 +90,9 @@ jobs:
         distribution: 'temurin'
         cache: gradle
     
+    - name: 🔧 Gradle 설정
+      uses: gradle/gradle-build-action@v2
+    
     - name: 📦 gradle 의존성 다운로드 (캐시 사용)
       run: ./gradlew dependencies || true
     
@@ -115,6 +124,9 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
         cache: gradle
+    
+    - name: 🔧 Gradle 설정
+      uses: gradle/gradle-build-action@v2
     
     - name: 🧪 단위 테스트 실행 (JUnit, Mockito)
       run: |

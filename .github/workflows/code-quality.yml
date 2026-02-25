@@ -22,6 +22,9 @@ jobs:
         distribution: 'temurin'
         cache: gradle
     
+    - name: 🔧 Gradle 설정
+      uses: gradle/gradle-build-action@v2
+    
     - name: 🔍 Android Lint로 코드 품질 검사
       run: |
         echo "🔎 다음을 검사합니다:"
@@ -58,6 +61,9 @@ jobs:
         distribution: 'temurin'
         cache: gradle
     
+    - name: 🔧 Gradle 설정
+      uses: gradle/gradle-build-action@v2
+    
     - name: 🔒 OWASP Dependency Check로 보안 취약점 검사
       run: |
         echo "🛡️ 다음을 검사합니다:"
@@ -91,6 +97,9 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
         cache: gradle
+    
+    - name: 🔧 Gradle 설정
+      uses: gradle/gradle-build-action@v2
     
     - name: 🧪 단위 테스트 실행
       run: |
