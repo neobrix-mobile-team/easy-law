@@ -15,7 +15,6 @@ jobs:
       - name: 📥 코드 받아오기
         uses: actions/checkout@v4
 
-      # 🔐 env를 사용하여 따옴표 문제를 원천 차단하고 -di 옵션으로 쓰레기 값 무시
       - name: 🔐 Firebase 설정 (google-services.json 생성)
         env:
           G_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON }}
