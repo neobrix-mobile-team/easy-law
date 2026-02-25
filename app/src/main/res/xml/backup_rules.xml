@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <!--
+    Defines the file backup rules for Android backup service.
+    By default, the entire /data/data/<package> directory is backed up.
+    -->
+    
+    <!-- Exclude cache and temporary files from backup -->
+    <exclude domain="cache" />
+    <exclude domain="code_cache" />
+    
+    <!-- Include app preferences and databases -->
+    <include domain="shared_prefs" />
+    <include domain="database" />
+    
+    <!-- Exclude files in root directory (except specified) -->
+    <exclude domain="root" path="*" />
+    <include domain="root" path="important_file.txt" />
+</full-backup-content>

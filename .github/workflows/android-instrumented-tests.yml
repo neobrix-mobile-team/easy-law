@@ -31,6 +31,9 @@ jobs:
         distribution: 'temurin'
         cache: gradle
     
+    - name: 🔧 Gradle wrapper 권한 설정
+      run: chmod +x ./gradlew
+    
     - name: 📱 Android 에뮬레이터 실행 (API Level ${{ matrix.api-level }})
       uses: reactivecircus/android-emulator-runner@v2
       with:
@@ -47,7 +50,7 @@ jobs:
     
     - name: 📤 통합 테스트 결과 업로드
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: instrumented-test-results-api-${{ matrix.api-level }}
         path: |

@@ -22,6 +22,9 @@ jobs:
         distribution: 'temurin'
         cache: gradle
     
+    - name: 🔧 Gradle wrapper 권한 설정
+      run: chmod +x ./gradlew
+    
     - name: 🔍 ktlint 코드 스타일 검사 시작
       run: |
         echo "📝 Kotlin 코드 스타일 검사를 시작합니다..."
@@ -30,7 +33,7 @@ jobs:
     
     - name: 📤 ktlint 결과 업로드
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ktlint-report
         path: |
@@ -53,6 +56,9 @@ jobs:
         distribution: 'temurin'
         cache: gradle
     
+    - name: 🔧 Gradle wrapper 권한 설정
+      run: chmod +x ./gradlew
+    
     - name: 🔎 복잡한 코드, 성능 문제 분석
       run: |
         echo "🔍 Detekt 정적 분석을 시작합니다..."
@@ -61,7 +67,7 @@ jobs:
     
     - name: 📤 Detekt 결과 업로드
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: detekt-report
         path: |
@@ -84,6 +90,9 @@ jobs:
         distribution: 'temurin'
         cache: gradle
     
+    - name: 🔧 Gradle wrapper 권한 설정
+      run: chmod +x ./gradlew
+    
     - name: 📦 gradle 의존성 다운로드 (캐시 사용)
       run: ./gradlew dependencies || true
     
@@ -95,7 +104,7 @@ jobs:
     
     - name: 📤 생성된 APK 아티팩트 업로드
       if: success()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: debug-apk
         path: app/build/outputs/apk/debug/
@@ -116,6 +125,9 @@ jobs:
         distribution: 'temurin'
         cache: gradle
     
+    - name: 🔧 Gradle wrapper 권한 설정
+      run: chmod +x ./gradlew
+    
     - name: 🧪 단위 테스트 실행 (JUnit, Mockito)
       run: |
         echo "🧬 ViewModel, Repository 등 단위 테스트를 실행합니다..."
@@ -124,7 +136,7 @@ jobs:
     
     - name: 📤 테스트 결과 업로드
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: unit-test-results
         path: |
