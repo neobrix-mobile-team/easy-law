@@ -1,4 +1,5 @@
 #!/usr/bin/env sh
+
 #
 # Copyright 2015 the original author or authors.
 #
@@ -38,7 +39,7 @@ cd "$SAVED" >/dev/null 2>&1 || exit 1
 
 APP_HOME="$(cd -P "$(dirname "$PRG")" >/dev/null 2>&1 && pwd)"
 # Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.
-DEFAULT_JVM_OPTS='"-Xmx64m" "-Xms64m"'
+DEFAULT_JVM_OPTS="-Xmx64m -Xms64m"
 
 # Use the maximum available, or set MAX_FD != -1 to use that value.
 MAX_FD="maximum"
@@ -96,16 +97,9 @@ if ! "$cygwin" && ! "$msys" ; then
       *i*) ;; #(
       *) set +m ;;
     esac
-    ulimit -n "$MAX_FD" ||
+    ulimit -n "$MAX_FD" 2> /dev/null ||
         warn "Could not set maximum file descriptor limit to $MAX_FD"
 fi
-
-case $MAX_FD in #(
-  '' | soft) :;; #(
-  *)
-    ulimit -n "$MAX_FD"
-    ;;
-esac
 
 # Escape application args
 save () {
@@ -137,14 +131,8 @@ if "$cygwin" || "$msys" ; then
     done
     OURCYGPATTERN="(^($ROOTDIRS))"
     APP_HOME_PATTERN="$APP_HOME_PATTERN|($APP_HOME)"
-    APP_HOME_PATTERN="$APP_HOME_PATTERN|($APP_HOME)"
     CLASSPATH_PATTERN="$CLASSPATH_PATTERN|($APP_HOME)"
     CLASSPATH="$CLASSPATH_PATTERN"
-
-    # Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.
-    DEFAULT_JVM_OPTS='"-Xmx64m" "-Xms64m"'
-
-    GRADLE_OPTS="$GRADLE_OPTS \"-Dorg.gradle.appname=$APP_BASE_NAME\" -Dorg.gradle.java.home=\"$JAVA_HOME\""
 
 fi
 
@@ -153,37 +141,4 @@ if "$darwin"; then
     GRADLE_OPTS="$GRADLE_OPTS \"-Xdock:name=$APP_BASE_NAME\" \"-Xdock:icon=$APP_HOME/media/gradle.icns\""
 fi
 
-# For Cygwin or MSYS, switch paths to Windows format before running java
-if "$cygwin" || "$msys" ; then
-    APP_HOME=$( cygwin_path "$APP_HOME" )
-    CLASSPATH=$( cygwin_path "$CLASSPATH" )
-
-    JAVACMD=$( cygwin_path "$JAVACMD" )
-
-    # We build the pattern for arguments to be converted via cygpath
-    ROOTDIRSRAW=$( find -L / -maxdepth 3 -type d -name gradle 2>/dev/null )
-    SEP=""
-    for dir in $ROOTDIRSRAW ; do
-        ROOTDIRS="$ROOTDIRS$SEP$( cygwin_path "$dir" )"
-        SEP="|"
-    done
-    OURCYGPATTERN="(^($ROOTDIRS))"
-    APP_HOME_PATTERN="$APP_HOME_PATTERN|($APP_HOME)"
-    APP_HOME_PATTERN="$APP_HOME_PATTERN|($APP_HOME)"
-    CLASSPATH_PATTERN="$CLASSPATH_PATTERN|($APP_HOME)"
-    CLASSPATH="$CLASSPATH_PATTERN"
-
-    # Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.
-    DEFAULT_JVM_OPTS='"-Xmx64m" "-Xms64m"'
-
-    GRADLE_OPTS="$GRADLE_OPTS \"-Dorg.gradle.appname=$APP_BASE_NAME\" -Dorg.gradle.java.home=\"$JAVA_HOME\""
-
-fi
-
-exec "$JAVACMD" \
-  $DEFAULT_JVM_OPTS \
-  $JAVA_OPTS \
-  $GRADLE_OPTS \
-  -classpath "$CLASSPATH" \
-  org.gradle.wrapper.GradleWrapperMain \
-  "$@"
+exec "$JAVACMD" $DEFAULT_JVM_OPTS $JAVA_OPTS $GRADLE_OPTS -classpath "$CLASSPATH" org.gradle.wrapper.GradleWrapperMain "$@"
