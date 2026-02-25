@@ -10,7 +10,7 @@ import javax.inject.Singleton
 
 data class UserState(
     val userRole: String = "",
-    val userInfo: UserInfo? = null
+    val userInfo: UserInfo? = null,
 )
 
 @Serializable
@@ -20,31 +20,32 @@ data class UserInfo(
 )
 
 @Singleton
-class UserSession @Inject constructor() {
-    private val _userState = MutableStateFlow(UserState())
-    val userState: StateFlow<UserState> = _userState.asStateFlow()
+class UserSession
+    @Inject
+    constructor() {
+        private val _userState = MutableStateFlow(UserState())
+        val userState: StateFlow<UserState> = _userState.asStateFlow()
 
-    fun setUserRole(role: String) {
-        _userState.update { it.copy(userRole = role) }
-    }
+        fun setUserRole(role: String) {
+            _userState.update { it.copy(userRole = role) }
+        }
 
-    fun setLoginInfo(name: String, email: String) {
-        _userState.update {
-            it.copy(
-                userInfo = UserInfo(
-                    name = name,
-                    email = email,
-
+        fun setLoginInfo(
+            name: String,
+            email: String,
+        ) {
+            _userState.update {
+                it.copy(
+                    userInfo =
+                        UserInfo(
+                            name = name,
+                            email = email,
+                        ),
                 )
-            )
+            }
+        }
+
+        fun clear() {
+            _userState.value = UserState()
         }
     }
-
-    fun clear() {
-        _userState.value = UserState()
-    }
-}
-
-
-
-

@@ -11,7 +11,6 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {
-
     // 1. 메시지를 받았을 때 실행되는 함수
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onMessageReceived(message: RemoteMessage) {
@@ -26,7 +25,10 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
     // 2. 화면에 알림을 띄워주는 함수
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun sendNotification(title: String, body: String) {
+    private fun sendNotification(
+        title: String,
+        body: String,
+    ) {
         val channelId = "default_channel" // 파이어베이스 콘솔과 일치해야 함
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
@@ -34,13 +36,14 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         val channel = NotificationChannel(channelId, "기본 알림", NotificationManager.IMPORTANCE_HIGH)
         notificationManager.createNotificationChannel(channel)
 
-        val notification = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(R.drawable.ic_dialog_info) // 아이콘 설정
-            .setContentTitle(title)
-            .setContentText(body)
-            .setAutoCancel(true)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .build()
+        val notification =
+            NotificationCompat.Builder(this, channelId)
+                .setSmallIcon(R.drawable.ic_dialog_info) // 아이콘 설정
+                .setContentTitle(title)
+                .setContentText(body)
+                .setAutoCancel(true)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .build()
 
         notificationManager.notify(0, notification)
     }

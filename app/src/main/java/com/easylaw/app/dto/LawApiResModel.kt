@@ -5,8 +5,9 @@ import com.google.gson.annotations.SerializedName
 // 판례 검색 응답 모델
 data class LawApiResModel(
     @SerializedName("PrecSearch")
-    val precSearch: PrecSearchModel
-    )
+    val precSearch: PrecSearchModel,
+)
+
 data class PrecSearchModel(
     @SerializedName("키워드")
     val keyword: String,
@@ -42,5 +43,5 @@ data class precModel(
     @SerializedName("데이터출처명")
     val dataSource: String,
     @SerializedName("판결유형")
-    val judgment: String
+    val judgment: String,
 )

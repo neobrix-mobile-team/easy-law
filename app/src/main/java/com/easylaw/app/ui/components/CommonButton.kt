@@ -23,19 +23,22 @@ fun CommonButton(
     icon: ImageVector,
     color: Color,
     text: String,
-    isEnable: Boolean = false
-){
+    isEnable: Boolean = false,
+) {
     Button(
         onClick = onClick,
         modifier = modifier,
         shape = RoundedCornerShape(24.dp),
         enabled = isEnable,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = color,
-            disabledContentColor = Color(0xFFD1D9E0)
-        ),
-        elevation = ButtonDefaults.buttonElevation(
-            defaultElevation = if (isEnable) 6.dp else 0.dp)
+        colors =
+            ButtonDefaults.buttonColors(
+                containerColor = color,
+                disabledContentColor = Color(0xFFD1D9E0),
+            ),
+        elevation =
+            ButtonDefaults.buttonElevation(
+                defaultElevation = if (isEnable) 6.dp else 0.dp,
+            ),
     ) {
         Icon(icon, contentDescription = null, tint = if (isEnable) Color.White else Color.Gray)
         Spacer(modifier = Modifier.width(12.dp))
@@ -43,7 +46,7 @@ fun CommonButton(
             text = text,
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White
+            color = Color.White,
         )
     }
 }

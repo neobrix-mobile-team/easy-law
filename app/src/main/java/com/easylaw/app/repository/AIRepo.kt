@@ -20,26 +20,28 @@ aiModule : gemini 엔진(객체 생성)
 
 data class AlLoading(
     val isLoading: Boolean = false,
-    val message: String = "AI가 분석 중입니다..."
+    val message: String = "AI가 분석 중입니다...",
 )
+
 @Singleton
-class AIRepo @Inject constructor(
-    private val generativeModel: GenerativeModel
-) {
+class AIRepo
+    @Inject
+    constructor(
+        private val generativeModel: GenerativeModel,
+    ) {
+        private val _loadingState = MutableStateFlow(AlLoading())
+        val loadingState = _loadingState.asStateFlow()
 
-    private val _loadingState = MutableStateFlow(AlLoading())
-    val loadingState = _loadingState.asStateFlow()
-
-    suspend fun execute(prompt: String): String {
-        return try {
-            _loadingState.update { it.copy(isLoading = true) }
-            val response = generativeModel.generateContent(prompt)
-            response.text?.trim() ?: ""
-        } catch (e: Exception) {
-            Log.e("error", e.toString())
-            "에러가 발생했습니다. 다시 시도해주세요."
-        } finally {
-            _loadingState.update { it.copy(isLoading = false) }
+        suspend fun execute(prompt: String): String {
+            return try {
+                _loadingState.update { it.copy(isLoading = true) }
+                val response = generativeModel.generateContent(prompt)
+                response.text?.trim() ?: ""
+            } catch (e: Exception) {
+                Log.e("error", e.toString())
+                "에러가 발생했습니다. 다시 시도해주세요."
+            } finally {
+                _loadingState.update { it.copy(isLoading = false) }
+            }
         }
-}
-}
+    }

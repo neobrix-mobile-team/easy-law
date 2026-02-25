@@ -4,44 +4,38 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.easylaw.app.repository.AIRepo
 import com.easylaw.app.ui.Route.AppRoute
 import com.easylaw.app.ui.Route.navRoute
 import com.easylaw.app.ui.Route.navRoute.bottomItems
+import com.easylaw.app.ui.components.CommonIndicator
 import com.easylaw.app.ui.theme.EasyLawTheme
 import dagger.hilt.android.AndroidEntryPoint
-import com.easylaw.app.repository.AIRepo
-import com.easylaw.app.ui.components.CommonIndicator
 import javax.inject.Inject
 
 /**
  * EasyLaw 메인 액티비티
- * 
+ *
  * 앱의 진입점이 되는 액티비티입니다.
  * Jetpack Compose를 사용하여 UI를 구성합니다.
  */
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-
     @Inject
     lateinit var aiManager: AIRepo
 
@@ -51,7 +45,6 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             EasyLawTheme {
-
                 val navController = rememberNavController()
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route
@@ -62,27 +55,28 @@ class MainActivity : ComponentActivity() {
 
                 Scaffold(
                     bottomBar = {
-                        if(currentRoute !in hideBottomBarRoutes){
+                        if (currentRoute !in hideBottomBarRoutes) {
                             NavigationBar(
                                 containerColor = Color(0xFFEAEFEF),
-                                tonalElevation = 8.dp
+                                tonalElevation = 8.dp,
                             ) {
                                 bottomItems.forEach { item ->
                                     val isSelected = currentRoute == item.route
 
                                     NavigationBarItem(
-                                        colors = NavigationBarItemDefaults.colors(
-                                            selectedIconColor = Color(0xFFD95F1E),
-                                            selectedTextColor = Color(0xFFD95F1E),
-                                            unselectedIconColor = Color(0xFF797573),
-                                            unselectedTextColor = Color(0xFF797573),
-                                        ),
+                                        colors =
+                                            NavigationBarItemDefaults.colors(
+                                                selectedIconColor = Color(0xFFD95F1E),
+                                                selectedTextColor = Color(0xFFD95F1E),
+                                                unselectedIconColor = Color(0xFF797573),
+                                                unselectedTextColor = Color(0xFF797573),
+                                            ),
                                         selected = isSelected,
                                         label = { Text(text = item.title) },
                                         icon = {
                                             Icon(
                                                 imageVector = item.icon,
-                                                contentDescription = item.title
+                                                contentDescription = item.title,
                                             )
                                         },
                                         /*
@@ -115,26 +109,24 @@ class MainActivity : ComponentActivity() {
                                                     restoreState = true
                                                 }
                                             }
-                                        }
+                                        },
                                     )
                                 }
                             }
                         }
-                    }
+                    },
                 ) { innerPadding ->
                     AppRoute(
                         modifier = if (currentRoute in hideBottomBarRoutes) Modifier else Modifier.padding(innerPadding),
-                        navController = navController
+                        navController = navController,
                     )
-
                 }
-                if (geminiState.isLoading)
+                if (geminiState.isLoading) {
                     CommonIndicator(
-                        geminiState.message
+                        geminiState.message,
                     )
+                }
             }
-
-
         }
     }
 }

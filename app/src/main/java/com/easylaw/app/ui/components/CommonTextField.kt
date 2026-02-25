@@ -44,38 +44,40 @@ fun CommonTextField(
     singleLine: Boolean = true,
     errorText: String = "",
     isError: Boolean = false,
-    isPassword: Boolean = false
-
+    isPassword: Boolean = false,
 ) {
-
     var passwordVisible by remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        if (isRequire) Row {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.labelLarge.copy(
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF000000),
-                    letterSpacing = 0.5.sp
-                ),
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                text = "*",
-                color = Color.Red
-            )
+        if (isRequire) {
+            Row {
+                Text(
+                    text = title,
+                    style =
+                        MaterialTheme.typography.labelLarge.copy(
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF000000),
+                            letterSpacing = 0.5.sp,
+                        ),
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = "*",
+                    color = Color.Red,
+                )
+            }
         } else {
             Text(
                 text = title,
-                style = MaterialTheme.typography.labelLarge.copy(
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF000000),
-                    letterSpacing = 0.5.sp
-                ),
+                style =
+                    MaterialTheme.typography.labelLarge.copy(
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF000000),
+                        letterSpacing = 0.5.sp,
+                    ),
             )
         }
         OutlinedTextField(
@@ -86,25 +88,27 @@ fun CommonTextField(
             placeholder = {
                 Text(
                     text = placeholder,
-                    color = Color.LightGray
+                    color = Color.LightGray,
                 )
             },
             shape = RoundedCornerShape(16.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFF673AB7),
-                unfocusedBorderColor = Color(0xFFE0E0E0),
-                focusedContainerColor = Color(0xFFF8F9FA),
-                unfocusedContainerColor = Color(0xFFF8F9FA),
-                errorBorderColor = Color.Red,
-            ),
+            colors =
+                OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFF673AB7),
+                    unfocusedBorderColor = Color(0xFFE0E0E0),
+                    focusedContainerColor = Color(0xFFF8F9FA),
+                    unfocusedContainerColor = Color(0xFFF8F9FA),
+                    errorBorderColor = Color.Red,
+                ),
             singleLine = singleLine,
-            visualTransformation = if (isPassword && !passwordVisible) {
-            // 비밀번호 안보이게 표시
-                PasswordVisualTransformation()
-            } else {
-            // 그대로 표시
-                VisualTransformation.None
-            },
+            visualTransformation =
+                if (isPassword && !passwordVisible) {
+                    // 비밀번호 안보이게 표시
+                    PasswordVisualTransformation()
+                } else {
+                    // 그대로 표시
+                    VisualTransformation.None
+                },
             trailingIcon = {
                 if (isPassword) {
                     val icon =
@@ -113,21 +117,22 @@ fun CommonTextField(
                         Icon(
                             imageVector = icon,
                             contentDescription = "Password Visibility",
-                            tint = Color.Gray
+                            tint = Color.Gray,
                         )
                     }
                 }
             },
             // 올라오는 키보드 설정
-            keyboardOptions = KeyboardOptions(
-                keyboardType = if (isPassword) KeyboardType.Password else KeyboardType.Text
-            ),
+            keyboardOptions =
+                KeyboardOptions(
+                    keyboardType = if (isPassword) KeyboardType.Password else KeyboardType.Text,
+                ),
         )
         Text(
             text = errorText,
             color = Color.Red,
             style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.padding(start = 4.dp)
+            modifier = Modifier.padding(start = 4.dp),
         )
     }
 }

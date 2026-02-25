@@ -1,6 +1,5 @@
 package com.easylaw.app.ui.screen.Login
 
-import com.easylaw.app.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,43 +27,46 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.easylaw.app.R
 import com.easylaw.app.ui.components.CommonButton
 import com.easylaw.app.ui.components.CommonDialog
 import com.easylaw.app.ui.components.CommonIndicator
 import com.easylaw.app.ui.components.CommonTextField
 
-
 @Composable
 fun SignView(
     viewModel: SignViewModel,
-    goToLoginView: () -> Unit
+    goToLoginView: () -> Unit,
 ) {
     val scrollState = rememberScrollState()
     val signState by viewModel.signViewState.collectAsState()
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
-            .statusBarsPadding()
-            .navigationBarsPadding()
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(Color.White)
+                .statusBarsPadding()
+                .navigationBarsPadding(),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 24.dp)
-                .verticalScroll(scrollState)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 24.dp)
+                    .verticalScroll(scrollState),
         ) {
             Spacer(modifier = Modifier.height(32.dp))
 
             Text(
                 text = stringResource(id = R.string.sign_title),
-                style = TextStyle(
-                    fontSize = 24.sp,
-                    lineHeight = 34.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF191F28)
-                )
+                style =
+                    TextStyle(
+                        fontSize = 24.sp,
+                        lineHeight = 34.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF191F28),
+                    ),
             )
 
             Spacer(modifier = Modifier.height(40.dp))
@@ -75,7 +77,7 @@ fun SignView(
                 title = stringResource(id = R.string.sign_name_label),
                 value = signState.name,
                 onValueChange = { viewModel.onNameChanged(it) },
-                placeholder = stringResource(id = R.string.sign_name_hint)
+                placeholder = stringResource(id = R.string.sign_name_hint),
             )
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -88,7 +90,7 @@ fun SignView(
                 onValueChange = { viewModel.onEmailChanged(it) },
                 placeholder = stringResource(id = R.string.sign_email_hint),
                 isError = signState.isEmailError,
-                errorText = if (!signState.isEmailError) "" else stringResource(id = R.string.sign_email_error)
+                errorText = if (!signState.isEmailError) "" else stringResource(id = R.string.sign_email_error),
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -102,7 +104,7 @@ fun SignView(
                 placeholder = stringResource(id = R.string.sign_pwd_hint),
                 isPassword = true,
                 isError = signState.isPasswordError,
-                errorText = if (!signState.isPasswordError) "" else stringResource(id = R.string.sign_pwd_error)
+                errorText = if (!signState.isPasswordError) "" else stringResource(id = R.string.sign_pwd_error),
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -116,26 +118,28 @@ fun SignView(
                 placeholder = "",
                 isPassword = true,
                 isError = signState.isPasswordConfirmError,
-                errorText = if (!signState.isPasswordConfirmError) "" else stringResource(id = R.string.sign_pwd_confirm_error)
+                errorText = if (!signState.isPasswordConfirmError) "" else stringResource(id = R.string.sign_pwd_confirm_error),
             )
 
             Spacer(modifier = Modifier.height(30.dp))
 
             CommonButton(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
                 onClick = {
                     viewModel.signUp()
                 },
                 text = stringResource(id = R.string.sign_btn),
-                isEnable = signState.name.isNotEmpty()
-                        && signState.email.isNotEmpty()
-                        && signState.password.isNotEmpty()
-                        && signState.passwordConfirm.isNotEmpty()
-                        && !signState.isEmailError
-                        && !signState.isPasswordError
-                        && !signState.isPasswordConfirmError,
+                isEnable =
+                    signState.name.isNotEmpty() &&
+                        signState.email.isNotEmpty() &&
+                        signState.password.isNotEmpty() &&
+                        signState.passwordConfirm.isNotEmpty() &&
+                        !signState.isEmailError &&
+                        !signState.isPasswordError &&
+                        !signState.isPasswordConfirmError,
                 color = Color(0xFF3182F6),
                 icon = Icons.Default.Login,
             )
@@ -155,7 +159,7 @@ fun SignView(
                 icon = Icons.Default.CheckCircle,
                 onConfirm = {
                     goToLoginView()
-                }
+                },
             )
         }
 
@@ -167,7 +171,7 @@ fun SignView(
                 icon = Icons.Default.Error,
                 onConfirm = {
                     viewModel.onSignErrorClose()
-                }
+                },
             )
         }
     }
