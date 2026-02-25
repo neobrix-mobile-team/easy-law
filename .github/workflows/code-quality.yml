@@ -93,9 +93,8 @@ jobs:
         env:
           G_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
-          mkdir -p app
-          echo "${G_SERVICES//[[:space:]]/}" | base64 -d > app/google-services.json
-          ls -l app/google-services.json
+          echo "${G_SERVICES//[[:space:]]/}" | base64 -d > $GITHUB_WORKSPACE/app/google-services.json
+          ls -l $GITHUB_WORKSPACE/app/google-services.json
 
       - name: ☕ JDK 17 설정
         uses: actions/setup-java@v4
