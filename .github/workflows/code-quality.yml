@@ -1,0 +1,77 @@
+name: 🔐 Code Quality & Security
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: 📦 JDK 17 설정
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+    
+    - name: 🔍 Android Lint 검사
+      run: ./gradlew lint || true
+    
+    - name: 📤 Lint 결과 업로드
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: lint-results
+        path: app/build/reports/lint-results*.html
+
+  security-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: 📦 JDK 17 설정
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+    
+    - name: 🔐 의존성 취약점 검사 (OWASP)
+      run: ./gradlew dependencyCheckAnalyze || true
+    
+    - name: 📤 보안 검사 결과 업로드
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: security-scan-results
+        path: build/reports/dependency-check/
+
+  coverage:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: 📦 JDK 17 설정
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+    
+    - name: 📊 코드 커버리지 생성
+      run: ./gradlew testDebugUnitTest jacocoTestDebugUnitTestReport || true
+    
+    - name: 📤 커버리지 결과 업로드
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: coverage-report
+        path: app/build/reports/coverage/
