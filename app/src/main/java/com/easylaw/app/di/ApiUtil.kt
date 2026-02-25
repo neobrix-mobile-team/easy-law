@@ -20,72 +20,76 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object ApiUtil {
-
     const val BASE_URL = "http://www.law.go.kr/"
 
     @Provides
     @Singleton
     fun provideRetrofit(showErrorInterceptor: ShowErrorInterceptor): Retrofit {
-        val logger = HttpLoggingInterceptor { message ->
-            when {
-                message.startsWith("--> GET") || message.startsWith("--> POST") -> {
-                    try {
-                        val method = if (message.startsWith("--> GET")) "GET" else "POST"
-                        val fullUrl = message.substringAfter("--> $method ").trim()
+        val logger =
+            HttpLoggingInterceptor { message ->
+                when {
+                    message.startsWith("--> GET") || message.startsWith("--> POST") -> {
+                        try {
+                            val method = if (message.startsWith("--> GET")) "GET" else "POST"
+                            val fullUrl = message.substringAfter("--> $method ").trim()
 
-                        if (fullUrl.contains("?")) {
-                            val baseUrl = fullUrl.substringBefore("?")
-                            val queryString = fullUrl.substringAfter("?")
+                            if (fullUrl.contains("?")) {
+                                val baseUrl = fullUrl.substringBefore("?")
+                                val queryString = fullUrl.substringAfter("?")
 
-                            val params = queryString.split("&").joinToString("\n    ") {
-                                java.net.URLDecoder.decode(it, "UTF-8") // 인코딩된 한글을 읽기 쉽게 변환
+                                val params =
+                                    queryString.split("&").joinToString("\n    ") {
+                                        java.net.URLDecoder.decode(it, "UTF-8") // 인코딩된 한글을 읽기 쉽게 변환
+                                    }
+
+                                android.util.Log.d("OKHTTP_API", "🚀 [METHOD] : $method")
+                                android.util.Log.d("OKHTTP_API", "📍 [URL]    : $baseUrl")
+                                android.util.Log.d("OKHTTP_API", "📝 [PARAMS] :\n    $params")
+                            } else {
+                                android.util.Log.d("OKHTTP_API", message)
                             }
+                        } catch (e: Exception) {
+                            android.util.Log.d("OKHTTP_API", e.toString())
+                        }
+                    }
 
-                            android.util.Log.d("OKHTTP_API", "🚀 [METHOD] : $method")
-                            android.util.Log.d("OKHTTP_API", "📍 [URL]    : $baseUrl")
-                            android.util.Log.d("OKHTTP_API", "📝 [PARAMS] :\n    $params")
-                        } else {
+                    message.contains(":") && !message.startsWith("{") && !message.startsWith("[") -> {
+                        android.util.Log.d("OKHTTP_API", "🔑 [HEADER] : $message")
+                    }
+
+                    // 3. 응답 결과 라인 (200 OK 등)
+                    message.startsWith("<-- 200") || message.startsWith("<-- HTTP") -> {
+                        android.util.Log.d("OKHTTP_API", "✅ [RESPONSE STATUS] : $message")
+                    }
+
+                    message.startsWith("{") || message.startsWith("[") -> {
+                        try {
+                            val prettyJson =
+                                GsonBuilder().setPrettyPrinting().create().toJson(
+                                    JsonParser.parseString(message),
+                                )
+                            android.util.Log.d("OKHTTP_API", "📦 [BODY] :\n$prettyJson")
+                        } catch (e: Exception) {
                             android.util.Log.d("OKHTTP_API", message)
                         }
-                    } catch (e: Exception) {
-                        android.util.Log.d("OKHTTP_API", e.toString())
                     }
                 }
+            }.apply { level = HttpLoggingInterceptor.Level.BODY }
 
-                message.contains(":") && !message.startsWith("{") && !message.startsWith("[") -> {
-                    android.util.Log.d("OKHTTP_API", "🔑 [HEADER] : $message")
-                }
-
-                // 3. 응답 결과 라인 (200 OK 등)
-                message.startsWith("<-- 200") || message.startsWith("<-- HTTP") -> {
-                    android.util.Log.d("OKHTTP_API", "✅ [RESPONSE STATUS] : $message")
-                }
-
-                message.startsWith("{") || message.startsWith("[") -> {
-                    try {
-                        val prettyJson = GsonBuilder().setPrettyPrinting().create().toJson(
-                            JsonParser.parseString(message)
-                        )
-                        android.util.Log.d("OKHTTP_API", "📦 [BODY] :\n$prettyJson")
-                    } catch (e: Exception) {
-                        android.util.Log.d("OKHTTP_API", message)
-                    }
-                }
-            }
-        }.apply { level = HttpLoggingInterceptor.Level.BODY }
-
-        val okHttpClient = OkHttpClient.Builder()
-            .addInterceptor(ErrorLoggingInterceptor())
-            .addInterceptor(showErrorInterceptor)
-            .addInterceptor(logger) // 가독성이 개선된 로거 적용
-            .build()
+        val okHttpClient =
+            OkHttpClient.Builder()
+                .addInterceptor(ErrorLoggingInterceptor())
+                .addInterceptor(showErrorInterceptor)
+                .addInterceptor(logger) // 가독성이 개선된 로거 적용
+                .build()
 
         return Retrofit.Builder()
             .baseUrl(BASE_URL)
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-    }}
+    }
+}
 
 // 인터셉터 설정
 class ErrorLoggingInterceptor : Interceptor {
@@ -100,29 +104,30 @@ class ErrorLoggingInterceptor : Interceptor {
     }
 }
 
-class ShowErrorInterceptor @Inject constructor(
-    @ApplicationContext private val context: Context
-) : Interceptor {
-    override fun intercept(chain: Interceptor.Chain): Response {
-        val res = chain.proceed(chain.request())
+class ShowErrorInterceptor
+    @Inject
+    constructor(
+        @ApplicationContext private val context: Context,
+    ) : Interceptor {
+        override fun intercept(chain: Interceptor.Chain): Response {
+            val res = chain.proceed(chain.request())
 
-        showError(res.code)?.let { msg ->
-            android.os.Handler(android.os.Looper.getMainLooper()).post {
-                android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT)
-                    .show()
+            showError(res.code)?.let { msg ->
+                android.os.Handler(android.os.Looper.getMainLooper()).post {
+                    android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT)
+                        .show()
+                }
+            }
+            return res
+        }
+
+        // 에러코드에 따라 추가
+        private fun showError(code: Int): String? {
+            return when (code) {
+                401 -> "인증에 실패했습니다."
+                403 -> "접근 권한이 없습니다."
+                in 500..599 -> "법령 서버 에러"
+                else -> null
             }
         }
-        return res
     }
-
-    // 에러코드에 따라 추가
-    private fun showError(code: Int): String? {
-        return when (code) {
-            401 -> "인증에 실패했습니다."
-            403 -> "접근 권한이 없습니다."
-            in 500..599 -> "법령 서버 에러"
-            else -> null
-        }
-    }
-}
-

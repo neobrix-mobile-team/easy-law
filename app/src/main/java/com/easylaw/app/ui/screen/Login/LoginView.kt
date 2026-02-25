@@ -1,6 +1,5 @@
 package com.easylaw.app.ui.screen.Login
 
-import com.easylaw.app.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -30,6 +29,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.easylaw.app.R
 import com.easylaw.app.ui.components.CommonButton
 import com.easylaw.app.ui.components.CommonDialog
 import com.easylaw.app.ui.components.CommonIndicator
@@ -39,30 +39,32 @@ import com.easylaw.app.ui.components.CommonTextField
 fun LoginView(
     viewModel: LoginViewModel,
     goToMainView: () -> Unit,
-    goToSignUpView: () -> Unit
+    goToSignUpView: () -> Unit,
 ) {
     val loginState by viewModel.loginViewState.collectAsState()
     val context = LocalContext.current
 
     Box {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.White)
-                .statusBarsPadding()
-                .navigationBarsPadding()
-                .padding(24.dp)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(Color.White)
+                    .statusBarsPadding()
+                    .navigationBarsPadding()
+                    .padding(24.dp),
         ) {
             Spacer(modifier = Modifier.height(48.dp))
 
             Text(
                 text = stringResource(id = R.string.login_title),
-                style = TextStyle(
-                    fontSize = 26.sp,
-                    lineHeight = 36.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF191F28)
-                )
+                style =
+                    TextStyle(
+                        fontSize = 26.sp,
+                        lineHeight = 36.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF191F28),
+                    ),
             )
 
             Spacer(modifier = Modifier.height(40.dp))
@@ -75,7 +77,7 @@ fun LoginView(
                 onValueChange = { viewModel.onChangedIdTextField(it) },
                 placeholder = stringResource(id = R.string.login_id_hint),
                 isError = loginState.isIdError,
-                errorText = if (!loginState.isIdError) "" else stringResource(id = R.string.login_id_error)
+                errorText = if (!loginState.isIdError) "" else stringResource(id = R.string.login_id_error),
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -94,18 +96,19 @@ fun LoginView(
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
+                horizontalArrangement = Arrangement.End,
             ) {
                 Text(
                     text = stringResource(id = R.string.login_signup_link),
                     modifier = Modifier.clickable { goToSignUpView() },
-                    style = TextStyle(
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = Color(0xFF191F28),
-                        letterSpacing = (-0.5).sp,
-                        textDecoration = TextDecoration.Underline
-                    )
+                    style =
+                        TextStyle(
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color(0xFF191F28),
+                            letterSpacing = (-0.5).sp,
+                            textDecoration = TextDecoration.Underline,
+                        ),
                 )
             }
 
@@ -113,9 +116,10 @@ fun LoginView(
 
             // 로그인 버튼
             CommonButton(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
                 text = stringResource(id = R.string.login_btn),
                 isEnable = loginState.idInput.isNotEmpty() && loginState.pwdInput.isNotEmpty() && !loginState.isIdError && !loginState.isPwdError,
                 icon = Icons.Default.Login,
@@ -129,16 +133,17 @@ fun LoginView(
 
             // 구글 로그인 버튼
             CommonButton(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
                 text = stringResource(id = R.string.login_google_btn),
                 isEnable = true,
                 onClick = {
                     viewModel.signInGoogle(context, { goToMainView() })
                 },
                 color = Color(0xff78aef5),
-                icon = Icons.Default.Login
+                icon = Icons.Default.Login,
             )
         }
 
@@ -155,7 +160,7 @@ fun LoginView(
                 icon = Icons.Default.Error,
                 onConfirm = {
                     viewModel.onLoginErrorClose()
-                }
+                },
             )
         }
     }

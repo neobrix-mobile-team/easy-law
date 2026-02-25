@@ -2,16 +2,9 @@ package com.easylaw.app.ui.screen.onboarding
 
 import android.app.Activity
 import android.content.Context
-import com.easylaw.app.R
-import android.os.Build
-import android.util.Log
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -31,8 +24,6 @@ import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.PhotoLibrary
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ProgressIndicatorDefaults
@@ -41,8 +32,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,38 +44,40 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+import com.easylaw.app.R
 import com.easylaw.app.ui.components.CommonButton
 
 @Composable
 fun OnboardingView(
     viewModel: OnboardingViewModel,
-    goToLoginView: () -> Unit
+    goToLoginView: () -> Unit,
 ) {
     val onboardingViewState by viewModel.onboardingViewState.collectAsState()
-    
+
     // 기기의 뒤로가기 버튼 동작 제어, 컴포즈 내장 함수
     BackHandler(enabled = onboardingViewState.currentStep > 1) {
         viewModel.previousStep()
     }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
-            .statusBarsPadding() // 상단바 공간 확보
-            .navigationBarsPadding() // 하단바 공간 확보
-            .padding(24.dp)
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(Color.White)
+                .statusBarsPadding() // 상단바 공간 확보
+                .navigationBarsPadding() // 하단바 공간 확보
+                .padding(24.dp),
     ) {
         LinearProgressIndicator(
-        progress = onboardingViewState.currentStep / 3f,
-        modifier = Modifier
-                        .fillMaxWidth()
-                        .height(4.dp)
-                        .clip(RoundedCornerShape(2.dp)),
-        color = Color(0xFF3182F6),
-        trackColor = Color(0xFFF2F4F6),
-        strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
+            progress = onboardingViewState.currentStep / 3f,
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(4.dp)
+                    .clip(RoundedCornerShape(2.dp)),
+            color = Color(0xFF3182F6),
+            trackColor = Color(0xFFF2F4F6),
+            strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
         )
 
         Spacer(modifier = Modifier.height(48.dp))
@@ -94,38 +85,50 @@ fun OnboardingView(
         Box(modifier = Modifier.weight(1f)) {
             when (onboardingViewState.currentStep) {
                 1 -> WelcomeView()
-                2 -> RoleSelectionView(
-                    selectedRole = onboardingViewState.userRole,
-                    onRoleSelected = { viewModel.selectRole(it) }
-                )
+                2 ->
+                    RoleSelectionView(
+                        selectedRole = onboardingViewState.userRole,
+                        onRoleSelected = { viewModel.selectRole(it) },
+                    )
                 3 -> FinalView()
             }
         }
 
-        val isNextEnabled = when (onboardingViewState.currentStep) {
-            2 -> onboardingViewState.userRole.isNotEmpty()
-            else -> true
-        }
+        val isNextEnabled =
+            when (onboardingViewState.currentStep) {
+                2 -> onboardingViewState.userRole.isNotEmpty()
+                else -> true
+            }
 
         CommonButton(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
             onClick = {
                 if (onboardingViewState.currentStep == 3) {
                     viewModel.completeOnboarding()
                     goToLoginView()
+                } else {
+                    viewModel.nextStep()
                 }
-                else viewModel.nextStep()
             },
             color = Color(0xFF3182F6),
             isEnable = isNextEnabled,
-            text = if (onboardingViewState.currentStep == 3) stringResource(id = R.string.btn_start) else stringResource(id = R.string.btn_next),
-            icon = if (onboardingViewState.currentStep == 3) {
-                Icons.Default.Check
-            } else {
-                Icons.Default.ArrowForward
-            }
+            text =
+                if (onboardingViewState.currentStep == 3) {
+                    stringResource(
+                        id = R.string.btn_start,
+                    )
+                } else {
+                    stringResource(id = R.string.btn_next)
+                },
+            icon =
+                if (onboardingViewState.currentStep == 3) {
+                    Icons.Default.Check
+                } else {
+                    Icons.Default.ArrowForward
+                },
         )
     }
 }
@@ -135,18 +138,19 @@ fun WelcomeView() {
     Column {
         Text(
             text = stringResource(id = R.string.onboarding_welcome_title),
-            style = TextStyle(
-                fontSize = 26.sp,
-                lineHeight = 36.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF191F28)
-            )
+            style =
+                TextStyle(
+                    fontSize = 26.sp,
+                    lineHeight = 36.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF191F28),
+                ),
         )
         Spacer(modifier = Modifier.height(12.dp))
         Text(
             text = stringResource(id = R.string.onboarding_welcome_subtitle),
             fontSize = 16.sp,
-            color = Color(0xFF4E5968)
+            color = Color(0xFF4E5968),
         )
     }
 }
@@ -154,7 +158,7 @@ fun WelcomeView() {
 @Composable
 fun RoleSelectionView(
     selectedRole: String,
-    onRoleSelected: (String) -> Unit
+    onRoleSelected: (String) -> Unit,
 ) {
     val context = LocalContext.current
 //    val roles = listOf("일반 사용자예요.", "I am a foreign resident in Korea.")
@@ -165,12 +169,13 @@ fun RoleSelectionView(
     Column {
         Text(
             text = stringResource(id = R.string.onboarding_ask_help),
-            style = TextStyle(
-                fontSize = 26.sp,
-                lineHeight = 36.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF191F28)
-            )
+            style =
+                TextStyle(
+                    fontSize = 26.sp,
+                    lineHeight = 36.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF191F28),
+                ),
         )
         Spacer(modifier = Modifier.height(32.dp))
 
@@ -190,28 +195,28 @@ fun RoleSelectionView(
                         setLocale(context, "ko")
                         (context as? Activity)?.recreate()
                     }
-
-
-                          },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 6.dp),
+                },
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 6.dp),
                 shape = RoundedCornerShape(16.dp),
                 color = if (isSelected) Color(0xFFE8F3FF) else Color(0xFFF9FAFB),
-                border = if (isSelected) BorderStroke(1.5.dp, Color(0xFF3182F6)) else null
+                border = if (isSelected) BorderStroke(1.5.dp, Color(0xFF3182F6)) else null,
             ) {
                 Row(
                     modifier = Modifier.padding(24.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
                         text = role,
                         modifier = Modifier.weight(1f),
-                        style = TextStyle(
-                            fontSize = 18.sp,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                            color = if (isSelected) Color(0xFF3182F6) else Color(0xFF4E5968)
-                        )
+                        style =
+                            TextStyle(
+                                fontSize = 18.sp,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                color = if (isSelected) Color(0xFF3182F6) else Color(0xFF4E5968),
+                            ),
                     )
 //                    if (isSelected) {
 //                        Icon(
@@ -232,12 +237,13 @@ fun FinalView() {
         Text(
             text = stringResource(id = R.string.permission_title),
 //            text = "꼭 필요한 권한만\n사용할 때 여쭤볼게요.",
-            style = TextStyle(fontSize = 26.sp, lineHeight = 36.sp, fontWeight = FontWeight.Bold)
+            style = TextStyle(fontSize = 26.sp, lineHeight = 36.sp, fontWeight = FontWeight.Bold),
         )
         Spacer(modifier = Modifier.height(12.dp))
         Text(
             text = stringResource(id = R.string.permission_subtitle),
-            fontSize = 16.sp, color = Color(0xFF4E5968)
+            fontSize = 16.sp,
+            color = Color(0xFF4E5968),
         )
 
         Spacer(modifier = Modifier.height(40.dp))
@@ -262,22 +268,23 @@ fun PermissionItem(
     desc: String,
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .padding(vertical = 12.dp, horizontal = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .padding(vertical = 12.dp, horizontal = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Surface(
             shape = CircleShape,
-            color =  Color(0xFFF2F4F6),
-            modifier = Modifier.size(48.dp)
+            color = Color(0xFFF2F4F6),
+            modifier = Modifier.size(48.dp),
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
                 modifier = Modifier.padding(12.dp),
-                tint = Color(0xFF4E5968)
+                tint = Color(0xFF4E5968),
             )
         }
         Spacer(modifier = Modifier.width(16.dp))
@@ -285,11 +292,13 @@ fun PermissionItem(
             Text(text = title, fontWeight = FontWeight.Bold, fontSize = 16.sp)
             Text(text = desc, fontSize = 14.sp, color = Color(0xFF8B95A1))
         }
-
     }
 }
 
-fun setLocale(context: Context, lang: String) {
+fun setLocale(
+    context: Context,
+    lang: String,
+) {
     val locale = java.util.Locale(lang)
     java.util.Locale.setDefault(locale)
     val config = context.resources.configuration

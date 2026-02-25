@@ -1,7 +1,5 @@
 package com.easylaw.app.ui.Route
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -9,10 +7,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Gavel
-import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Videocam
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -33,16 +28,14 @@ import com.easylaw.app.ui.screen.lawConsult.LawConsultViewModel
 import com.easylaw.app.ui.screen.onboarding.OnboardingView
 import com.easylaw.app.ui.screen.onboarding.OnboardingViewModel
 
-
 data class BottomNavItem(
     val route: String,
     val title: String,
-    val icon: ImageVector
+    val icon: ImageVector,
 )
 
 // 앱의 네비게이션 설정
 object navRoute {
-
     const val onboarding = "onboarding"
     const val login = "login"
     const val signUp = "signUp"
@@ -51,35 +44,35 @@ object navRoute {
     const val self = "self"
     const val carCrush = "carCrush"
 
-
-
-    val bottomItems = listOf(
-        BottomNavItem(
-            route =community,
-            title = "커뮤니티",
-            icon = Icons.Default.Share
-        ),
-        BottomNavItem(
-            route = lawConsult,
-            title = "판례검색",
-            icon = Icons.Default.Gavel
-        ),
-        BottomNavItem(
-            route = self,
-            title = "자가진단",
-            icon = Icons.Default.Check
-        ),
+    val bottomItems =
+        listOf(
+            BottomNavItem(
+                route = community,
+                title = "커뮤니티",
+                icon = Icons.Default.Share,
+            ),
+            BottomNavItem(
+                route = lawConsult,
+                title = "판례검색",
+                icon = Icons.Default.Gavel,
+            ),
+            BottomNavItem(
+                route = self,
+                title = "자가진단",
+                icon = Icons.Default.Check,
+            ),
 //        BottomNavItem(
 //            route = carCrush,
 //            title = "영상 분석",
 //            icon = Icons.Default.Videocam
 //        )
-    )
+        )
 }
+
 @Composable
 fun AppRoute(
     modifier: Modifier,
-    navController: NavHostController
+    navController: NavHostController,
 ) {
     NavHost(
         navController = navController,
@@ -88,13 +81,13 @@ fun AppRoute(
         enterTransition = {
             slideIntoContainer(
                 towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                animationSpec = tween(300)
+                animationSpec = tween(300),
             ) + fadeIn(animationSpec = tween(300))
         },
         exitTransition = {
             slideOutOfContainer(
                 towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                animationSpec = tween(300)
+                animationSpec = tween(300),
             ) + fadeOut(animationSpec = tween(300))
         },
     ) {
@@ -109,7 +102,7 @@ fun AppRoute(
                         // inclusive : 해당 경로까지 제거
                         popUpTo(navRoute.onboarding) { inclusive = true }
                     }
-                }
+                },
             )
         }
         // 로그인
@@ -119,15 +112,14 @@ fun AppRoute(
                 viewModel = loginViewModel,
                 goToSignUpView = {
                     navController.navigate(
-                        navRoute.signUp
+                        navRoute.signUp,
                     )
                 },
                 goToMainView = {
                     navController.navigate(navRoute.community) {
                         popUpTo(navRoute.login) { inclusive = true }
                     }
-
-                }
+                },
             )
         }
         // 회원가입
@@ -137,41 +129,39 @@ fun AppRoute(
                 viewModel = signViewModel,
                 goToLoginView = {
                     navController.navigate(navRoute.login) {
-                        popUpTo(navRoute.signUp) { inclusive = true }
+                        popUpTo(navRoute.login) { inclusive = true }
                     }
-                }
+                },
             )
         }
-
 
         // 판례검색 화면
         composable(route = navRoute.lawConsult) {
             val lawConsultViewModel: LawConsultViewModel = hiltViewModel()
             LawConsultView(
                 modifier = modifier,
-                viewModel = lawConsultViewModel
+                viewModel = lawConsultViewModel,
             )
         }
         // 커뮤니티 화면
         composable(
-            route = navRoute.community
-        ){
+            route = navRoute.community,
+        ) {
             val communityViewModel: CommunityViewModel = hiltViewModel()
             CommunityView(
                 modifier = modifier,
-                viewModel = communityViewModel
+                viewModel = communityViewModel,
             )
         }
         // 자가진단 화면
         composable(
-            route = navRoute.self
-        ){
+            route = navRoute.self,
+        ) {
             val selfViewModel: SelfViewModel = hiltViewModel()
             SelfView(
                 modifier = modifier,
-                viewModel = selfViewModel
+                viewModel = selfViewModel,
             )
         }
-
     }
 }

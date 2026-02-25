@@ -12,8 +12,7 @@ data class Post(
     val content: String,
     // db칼럼명과 다를 시 해줘야 매핑된다.
     @SerialName("created_at") val createdAt: String? = null,
-
-    val comments: List<Comment> = emptyList()
+    val comments: List<Comment> = emptyList(),
 ) {
     val commentCount: String
         get() = comments.size.toString()
@@ -26,6 +25,5 @@ data class Comment(
     val postId: Int,
     val author: String,
     val content: String,
-    @SerialName("created_at") val createdAt: String? = null
-
+    @SerialName("created_at") val createdAt: String? = null,
 )
