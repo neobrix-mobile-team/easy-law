@@ -10,7 +10,7 @@ import dagger.hilt.android.HiltAndroidApp
  * Hilt를 초기화하는 진입점입니다.
  */
 @HiltAndroidApp
-class EasyLawApplication : Application(){
+class EasyLawApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         FirebaseApp.initializeApp(this)
