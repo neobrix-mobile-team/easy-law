@@ -117,27 +117,39 @@
 
 ## 🛠️ 기술 스택
 
-### Frontend
-- **Framework**: React Native / Flutter (모바일 우선)
-- **상태 관리**: Redux / Zustand
-- **UI**: Material Design 3 + 커스텀 테마
-- **지도**: Naver Map SDK
-- **음성**: React Native Voice
+### Android App
+- **Language**: Kotlin
+- **UI Framework**: Jetpack Compose (권장) 또는 XML Layouts
+- **Minimum SDK**: API 26 (Android 8.0)
+- **Target SDK**: API 34 (Android 14)
+- **Architecture**: MVVM + Clean Architecture
+- **State Management**: ViewModel + StateFlow / LiveData
+- **DI**: Hilt (Dependency Injection)
+- **Navigation**: Jetpack Navigation Component
+- **UI Components**: Material Design 3
 
-### Backend
-- **Runtime**: Node.js
-- **Framework**: Express.js / NestJS
+### Backend & Services
 - **Database**: Firebase Firestore (NoSQL)
 - **인증**: Firebase Authentication
-- **AI/ML**: Google Vision API, Google Cloud NLP, OpenAI LLM
-- **배포**: Firebase Hosting / Google Cloud Run
+- **실시간**: Firebase Realtime Database (댓글, 포인트)
+- **AI/ML**: Google Vision API (OCR), Google Gemini (용어 풀이)
+- **배포**: Firebase Hosting
+- **구글 로그인**: Firebase Auth + Google Sign-In SDK
 
-### External APIs
-- 🔐 **Firebase**: Auth, Firestore, Hosting
-- 🗺️ **Naver Maps API**: 위치 기반 기관 정보
-- 👁️ **Google Vision API**: OCR
-- 🧠 **LLM**: OpenAI / Google Gemini (용어 풀이)
-- 🔊 **TTS**: Google Cloud TTS / Azure Speech Services
+### 위치 기반 & 지도
+- 🗺️ **Naver Maps SDK for Android**: 기관 위치 표시
+- 📍 **Location Services**: GPS 기반 현재 위치
+
+### 접근성 & 입력
+- 🎙️ **Google Speech-to-Text**: 음성 입력
+- 🔊 **Google Text-to-Speech**: 음성 읽기
+- 📱 **Jetpack Accessibility**: 스크린리더 지원
+
+### 테스팅
+- **Unit Tests**: JUnit 4, Mockito, Mockk
+- **Instrumented Tests**: Espresso, AndroidX Test
+- **Code Coverage**: Jacoco
+- **Static Analysis**: ktlint, Detekt, Android Lint
 
 ---
 
@@ -145,85 +157,224 @@
 
 ```
 easy-law/
-├── frontend/                    # React Native / Flutter 프로젝트
+├── app/                         # Main Android App Module
 │   ├── src/
-│   │   ├── screens/            # 화면 컴포넌트
-│   │   ├── components/         # 재사용 가능한 컴포넌트
-│   │   ├── navigation/         # 네비게이션 구조
-│   │   ├── services/           # API 호출 로직
-│   │   ├── store/              # 상태 관리 (Redux/Zustand)
-│   │   ├── theme/              # 테마 설정 (Color, Font)
-│   │   └── utils/              # 유틸리티 함수
-│   └── package.json
+│   │   ├── main/
+│   │   │   ├── java/com/neobrix/easylaw/
+│   │   │   │   ├── MainActivity.kt
+│   │   │   │   ├── EasyLawApplication.kt
+│   │   │   │   ├── ui/
+│   │   │   │   │   ├── screens/         # 화면들 (로그인, 홈, 상세 등)
+│   │   │   │   │   ├── components/      # 재사용 컴포넌트
+│   │   │   │   │   └── theme/           # 테마 (Color, Typography)
+│   │   │   │   ├── data/
+│   │   │   │   │   ├── repository/      # Repository 패턴
+│   │   │   │   │   ├── datasource/      # 원격/로컬 데이터
+│   │   │   │   │   └── models/          # 데이터 모델
+│   │   │   │   ├── domain/
+│   │   │   │   │   ├── model/           # 도메인 모델
+│   │   │   │   │   └── usecase/         # 비즈니스 로직
+│   │   │   │   ├── viewmodel/           # ViewModel들
+│   │   │   │   ├── navigation/          # Navigation Graph
+│   │   │   │   ├── di/                  # Hilt DI (AppModule 등)
+│   │   │   │   └── util/                # 유틸리티 함수
+│   │   │   └── res/
+│   │   │       ├── drawable/            # 이미지, 벡터
+│   │   │       ├── values/              # 문자열, 색상, 테마
+│   │   │       └── values-night/        # 다크 모드
+│   │   ├── test/                        # 단위 테스트
+│   │   │   └── java/com/neobrix/easylaw/
+│   │   │       ├── viewmodel/
+│   │   │       └── repository/
+│   │   └── androidTest/                 # 통합 테스트 (Espresso)
+│   │       └── java/com/neobrix/easylaw/
+│   └── build.gradle
 │
-├── backend/                     # Node.js Express 백엔드
-│   ├── src/
-│   │   ├── routes/             # API 라우트
-│   │   ├── controllers/        # 비즈니스 로직
-│   │   ├── services/           # 서비스 계층
-│   │   ├── models/             # 데이터 모델 (Firestore)
-│   │   ├── middleware/         # 인증, 에러 핸들링
-│   │   ├── config/             # 환경 설정 (Firebase, API keys)
-│   │   └── utils/              # 유틸리티
-│   └── package.json
-│
-├── docs/                        # 설명서
-│   ├── API.md                  # API 문서
-│   ├── ARCHITECTURE.md         # 아키텍처
-│   └── SETUP.md                # 개발 환경 설정
+├── docs/                        # 문서
+│   ├── API.md                  # Firebase & API 문서
+│   ├── ARCHITECTURE.md         # MVVM & Clean Architecture
+│   └── ANDROID_SETUP.md        # Android 개발 환경 설정
 │
 ├── .github/
 │   ├── ISSUE_TEMPLATE/         # 이슈 템플릿
 │   ├── PULL_REQUEST_TEMPLATE/  # PR 템플릿
 │   └── workflows/              # CI/CD (GitHub Actions)
 │
-├── LICENSE                      # MIT License
-├── README.md                    # 프로젝트 개요
-├── CONTRIBUTING.md             # 기여 가이드
-└── .gitignore                  # Git 무시 파일
-
+├── build.gradle                # 프로젝트 레벨 Gradle
+├── settings.gradle             # 모듈 설정
+├── gradle.properties           # Gradle 속성
+├── detekt.yml                  # Detekt 설정
+├── LICENSE                     # MIT License
+├── README.md                   # 프로젝트 개요
+├── CONTRIBUTING.md            # 기여 가이드
+├── DEVELOPMENT.md             # 개발 규칙
+└── .gitignore                 # Git 무시 파일
 ```
 
 ---
 
 ## 🚀 설치 및 실행 (2주 MVP)
 
-### Frontend 시작
-```bash
-cd frontend
-npm install
-npm start                # 또는 npm run android / npm run ios (React Native)
+### 필수 환경
+```
+- Android Studio (2024.1.0 이상 권장)
+- JDK 17+
+- Android SDK API 34
+- Gradle 8.0+
+- Git
 ```
 
-### Backend 시작
+### 1️⃣ 리포지토리 클론
+
 ```bash
-cd backend
-npm install
-firebase init           # Firebase 설정
-npm run dev            # 개발 서버 실행
+# 리포 클론
+git clone https://github.com/neobrix-mobile-team/easy-law.git
+cd easy-law
+
+# develop 브랜치로 이동
+git checkout develop
 ```
 
-### Firebase 설정
+### 2️⃣ Android Studio에서 열기
+
+```
+File → Open → 프로젝트 폴더 선택
+```
+
+Gradle이 자동으로 의존성을 다운로드합니다. (2-3분 소요)
+
+### 3️⃣ 로컬 환경 설정
+
+**`local.properties` 생성** (Git 커밋 X):
+```properties
+sdk.dir=/Users/[username]/Library/Android/sdk
+ndk.dir=/Users/[username]/Library/Android/sdk/ndk/25.1.8937393
+```
+
+### 4️⃣ Gradle 빌드
+
+**터미널에서**:
 ```bash
+# 전체 빌드
+./gradlew clean build
+
+# Debug APK만 빌드
+./gradlew assembleDebug
+
+# 린트 & 정적 분석
+./gradlew ktlint detekt lint
+```
+
+### 5️⃣ 앱 실행
+
+**방법 1: Android Studio에서**
+- Run 버튼 클릭 → 에뮬레이터 또는 기기 선택
+
+**방법 2: 터미널에서**
+```bash
+./gradlew installDebugAndroidTest
+```
+
+### 6️⃣ Firebase 설정
+
+```bash
+# Firebase Console에서 프로젝트 생성
+# https://console.firebase.google.com
+
+# 1. 새 Android 앱 추가
+# 2. google-services.json 다운로드
+# 3. app/ 폴더에 복사
+
+# 4. Firebase CLI 설정 (선택사항)
 firebase login
-firebase init firestore
-firebase init functions
+firebase init
+```
+
+### 7️⃣ 에뮬레이터 설정
+
+```bash
+# Android Studio: Tools → Device Manager
+# 또는 CLI로
+
+# 에뮬레이터 목록 확인
+$ANDROID_HOME/emulator/emulator -list-avds
+
+# 에뮬레이터 실행
+$ANDROID_HOME/emulator/emulator -avd EmulatorName
+```
+
+### 🧪 테스트 실행
+
+```bash
+# 단위 테스트
+./gradlew testDebugUnitTest
+
+# 통합 테스트 (에뮬레이터 필요)
+./gradlew connectedAndroidTest
+
+# 코드 커버리지
+./gradlew jacocoTestDebugUnitTestReport
+```
+
+### 📊 코드 품질 검사
+
+```bash
+# Kotlin 스타일 검사
+./gradlew ktlint
+
+# 자동 포맷팅
+./gradlew ktlintFormat
+
+# 정적 분석
+./gradlew detekt
+
+# Android Lint
+./gradlew lint
+
+# 보안 취약점
+./gradlew dependencyCheckAnalyze
 ```
 
 ---
 
-## 📅 개발 일정 (2주)
+## 📅 개발 일정 (2주 MVP)
 
-| 주차 | 목표 | 담당 |
+### Week 1: 기초 구축
+| 날짜 | 목표 | 담당 |
 |------|------|------|
-| **Week 1** | Auth (구글 로그인), 사용자 관리, 기본 UI 구성, 디자인 시스템 | 전체 팀 |
-| **Week 2** | Decision Tree UX, OCR/TTS (간단한 버전), 커뮤니티 기본 기능, 배포 | 전체 팀 |
+| Mon-Wed | 🔐 Auth (구글 로그인) + Firebase 연동 | Backend/Frontend |
+| Wed-Fri | 👤 사용자 프로필 (Firestore) + 다국어 지원 | Frontend |
+| Fri | 🎨 디자인 시스템 & 테마 완성 | Frontend |
+
+### Week 2: 핵심 기능 개발
+| 날짜 | 목표 | 담당 |
+|------|------|------|
+| Mon-Tue | 🌳 Decision Tree UI 구현 | Frontend |
+| Wed-Thu | 📄 OCR 기능 (간단한 버전) + TTS | Frontend |
+| Fri | 💬 커뮤니티 기본 구조 + 배포 테스트 | Full Team |
 
 ### 우선순위 (MoSCoW)
-- **Must**: Auth, 기본 UX, 디자인 시스템
-- **Should**: OCR, TTS, Decision Tree
-- **Could**: 커뮤니티, 포인트 시스템, 지도 (주차별 여유 시 진행)
-- **Won't**: 고급 AI 기능, 신뢰도 배지 (v2 이후)
+
+**Must** (필수):
+- ✅ 프로젝트 기본 구조 (완료)
+- 🔐 구글 로그인 + Firebase Auth
+- 👤 사용자 프로필 관리
+- 🎨 디자인 시스템 (완료)
+- 🌳 기본 Decision Tree UX
+
+**Should** (중요):
+- 📄 OCR 기능 (간단한 버전)
+- 🔊 TTS 연동
+- 🌍 다국어 지원
+
+**Could** (선택):
+- 💬 커뮤니티 포인트 시스템
+- 📍 위치 기반 기관 지도
+- 🏆 신뢰도 배지
+
+**Won't** (보류):
+- 🤖 고급 AI 기능 (v2에서)
+- 🎯 신뢰도 검증 시스템 (v2에서)
 
 ---
 
@@ -231,22 +382,57 @@ firebase init functions
 
 자세한 내용은 [CONTRIBUTING.md](./CONTRIBUTING.md) 참조
 
+### 빠른 시작
+
+```bash
+# 1. develop에서 새 브랜치 생성
+git checkout develop
+git pull
+git checkout -b feature/기능명
+
+# 2. 코드 작성 & 테스트
+./gradlew ktlintFormat
+./gradlew testDebugUnitTest
+./gradlew detekt
+
+# 3. 커밋
+git commit -m "feat: 기능 설명"
+
+# 4. PR 생성
+git push origin feature/기능명
+# GitHub에서 develop으로 PR 생성
+```
+
 ### 커밋 메시지 규칙
+
 ```
 feat: 기능 추가
 fix: 버그 수정
 docs: 문서 작성
-style: 코드 포맷팅
+style: 코드 포맷팅 (ktlint)
 refactor: 코드 정리
 test: 테스트 추가
-chore: 빌드, 의존성 관리
+chore: 의존성, Gradle 관리
+```
+
+**예시**:
+```
+feat: 구글 로그인 & Firebase Auth 연동 (#5)
+
+- Firebase Auth 설정
+- Google Sign-In SDK 통합
+- 사용자 프로필 자동 생성
+
+Closes #5
 ```
 
 ### 브랜치 규칙
-- `main`: 배포 가능한 안정 버전
-- `develop`: 개발 중인 버전
-- `feature/기능명`: 새로운 기능
-- `fix/버그명`: 버그 수정
+
+- `main` → 배포 버전 (PR 필수, 1명 리뷰)
+- `develop` → 개발 버전 (PR 필수, 1명 리뷰)
+- `feature/*` → 새 기능 (develop으로 PR)
+- `fix/*` → 버그 수정 (develop으로 PR)
+- `docs/*` → 문서 (develop으로 PR)
 
 ---
 
