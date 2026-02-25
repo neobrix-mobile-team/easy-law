@@ -1,146 +1,37 @@
-name: 🔍 Kotlin 린트 & 빌드
+name: 📦 Android Build & Test
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, 'feature/**' ]
   pull_request:
     branches: [ main, develop ]
 
 jobs:
-  ktlint:
-    name: 🎨 Kotlin 코드 스타일 검사 (ktlint)
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: 📥 코드 받아오기
-      uses: actions/checkout@v3
-    
-    - name: ☕ JDK 17 설정
-      uses: actions/setup-java@v3
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-    
-    - name: 🔧 Gradle 권한 설정
-      run: chmod +x ./gradlew
-    
-    - name: 🔍 ktlint 코드 스타일 검사 시작
-      run: |
-        echo "📝 Kotlin 코드 스타일 검사를 시작합니다..."
-        bash ./gradlew ktlint --info || true
-        echo "✅ ktlint 검사 완료"
-    
-    - name: 📤 ktlint 결과 업로드
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: ktlint-report
-        path: |
-          build/reports/ktlint/
-          app/build/reports/ktlint/
-        retention-days: 7
-
-  detekt:
-    name: 🔎 정적 코드 분석 (Detekt)
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: 📥 코드 받아오기
-      uses: actions/checkout@v3
-    
-    - name: ☕ JDK 17 설정
-      uses: actions/setup-java@v3
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-    
-    - name: 🔧 Gradle 권한 설정
-      run: chmod +x ./gradlew
-    
-    - name: 🔎 복잡한 코드, 성능 문제 분석
-      run: |
-        echo "🔍 Detekt 정적 분석을 시작합니다..."
-        bash ./gradlew detekt --info || true
-        echo "✅ Detekt 분석 완료"
-    
-    - name: 📤 Detekt 결과 업로드
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: detekt-report
-        path: |
-          build/reports/detekt/
-          app/build/reports/detekt/
-        retention-days: 7
-
   build:
-    name: 🔨 Debug APK 빌드
     runs-on: ubuntu-latest
     
     steps:
-    - name: 📥 코드 받아오기
-      uses: actions/checkout@v3
-    
-    - name: ☕ JDK 17 설정
-      uses: actions/setup-java@v3
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-    
-    - name: 🔧 Gradle 권한 설정
-      run: chmod +x ./gradlew
-    
-    - name: 🔨 Debug APK 빌드 시작
-      run: |
-        echo "🛠️ Android Debug APK를 빌드합니다..."
-        bash ./gradlew assembleDebug --info
-        echo "✅ 빌드 완료"
-    
-    - name: 📤 생성된 APK 아티팩트 업로드
-      if: success()
-      uses: actions/upload-artifact@v4
-      with:
-        name: debug-apk
-        path: app/build/outputs/apk/debug/
-        retention-days: 7
-
-  test:
-    name: 🧪 단위 테스트 (Unit Tests)
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: 📥 코드 받아오기
-      uses: actions/checkout@v3
-    
-    - name: ☕ JDK 17 설정
-      uses: actions/setup-java@v3
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-    
-    - name: 🔧 Gradle 권한 설정
-      run: chmod +x ./gradlew
-    
-    - name: 🧪 단위 테스트 실행 (JUnit, Mockito)
-      run: |
-        echo "🧬 ViewModel, Repository 등 단위 테스트를 실행합니다..."
-        bash ./gradlew testDebugUnitTest --info || true
-        echo "✅ 테스트 완료"
-    
-    - name: 📤 테스트 결과 업로드
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: unit-test-results
-        path: |
-          app/build/reports/tests/testDebugUnitTest/
-          app/build/test-results/testDebugUnitTest/
-        retention-days: 7
-    
-    - name: 📊 테스트 결과 요약
-      if: always()
-      run: |
-        if [ -f "app/build/test-results/testDebugUnitTest/TEST-*.xml" ]; then
-          echo "📋 테스트 리포트:"
-          cat app/build/test-results/testDebugUnitTest/TEST-*.xml 2>/dev/null || echo "테스트 결과 파일을 찾을 수 없습니다"
-        fi
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+      
+      - name: 🔧 Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+      
+      - name: 🔨 Build Debug APK
+        run: chmod +x ./gradlew && ./gradlew assembleDebug
+      
+      - name: 🧪 Run Unit Tests
+        run: ./gradlew testDebugUnitTest
+      
+      - name: 📤 Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-build-artifacts
+          path: |
+            app/build/outputs/apk/
+            app/build/reports/
