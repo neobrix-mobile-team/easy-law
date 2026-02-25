@@ -1,8 +1,8 @@
 pluginManagement {
     repositories {
+        gradlePluginPortal()  // ktlint 플러그인은 여기 있음
         google()
         mavenCentral()
-        gradlePluginPortal()
     }
 }
 
