@@ -128,7 +128,8 @@ dependencies {
     // TODO: Naver Map SDK 추가 (별도 설정 필요)
     
     // ============ Speech Recognition & TTS ============
-    implementation 'com.google.android.gms:play-services-mlkit-speech-recognition:16.3.0'
+    // TODO: MLKit Speech Recognition 나중에 추가
+    // implementation 'com.google.android.gms:play-services-mlkit-speech-recognition:...'
     
     // ============ OCR (Google Vision) ============
     // TODO: Google Vision API 설정 필요
