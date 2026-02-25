@@ -7,6 +7,17 @@ plugins {
     id 'io.gitlab.arturbosch.detekt'
 }
 
+ktlint {
+    version.set("1.0.0")  // 최신 ktlint 버전 사용
+    android.set(true)
+    
+    filter {
+        exclude { element ->
+            element.file.path.contains("generated/")
+        }
+    }
+}
+
 detekt {
     // $rootDir 대신 ".." 또는 현재 경로 기준으로 직접 지정
     config.setFrom(files("${project.rootDir}/config/detekt/detekt.yml"))
