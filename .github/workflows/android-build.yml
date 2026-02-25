@@ -9,14 +9,12 @@ on:
 jobs:
   android-ci:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30 # 빌드 안정성을 위해 살짝 늘림
 
     steps:
-      # 1️⃣ 체크아웃
       - name: 📥 Checkout
         uses: actions/checkout@v4
 
-      # 2️⃣ JDK 설정
       - name: ☕ JDK 17 설정
         uses: actions/setup-java@v4
         with:
@@ -24,53 +22,40 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      # 3️⃣ Wrapper 존재 확인
-      - name: 🔎 Wrapper 파일 확인
-        run: |
-          ls -al
-          ls -al gradle/wrapper
-
-      # 4️⃣ 실행 권한 부여
-      - name: 🔧 Gradle 실행 권한
+      - name: 🔧 Gradle 실행 권한 부여
         run: chmod +x ./gradlew
 
-      # 5️⃣ 캐시 꼬임 방지
-      - name: 🧹 Gradle Wrapper 캐시 삭제
-        run: rm -rf ~/.gradle/wrapper
-
-      # 6️⃣ 실제 사용 버전 확인 (핵심)
-      - name: 🔎 Gradle Version Check
-        run: ./gradlew --version
-
-      # 7️⃣ google-services.json 생성
+      # 🔐 env와 -di 옵션을 사용하여 base64 에러 원천 차단
       - name: 🔐 Google Services JSON 생성
+        env:
+          G_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
-          if [ -n "${{ secrets.GOOGLE_SERVICES_JSON }}" ]; then
-            echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 --decode > app/google-services.json
+          if [ -n "$G_SERVICES" ]; then
+            echo "$G_SERVICES" | base64 -di > app/google-services.json
+          else
+            echo "⚠️ GOOGLE_SERVICES_JSON secret is missing!"
           fi
 
-      # 8️⃣ 빌드
-      - name: 🚀 Lint + Detekt + Test + Build
-        run: |
-               ./gradlew \
-          #            ktlintCheck \
-          #            detekt \
-               testDebugUnitTest \
-               assembleDebug \
-               --parallel \
-               --build-cache \
-               --no-daemon
+      # 🧹 캐시 꼬임 방지는 필요할 때만 하는 것이 좋지만, 유지하신다면 명령어를 명확히 합니다.
+      - name: 🧹 Gradle Wrapper 캐시 정리
+        run: ./gradlew clean
 
-      # 9️⃣ APK 업로드
+      # 🚀 빌드 단계 (주석을 제거하고 한 줄씩 명확히 실행하거나 백슬래시를 정확히 사용)
+      - name: 🚀 Unit Test & Build APK
+        run: |
+          ./gradlew testDebugUnitTest assembleDebug \
+            --parallel \
+            --build-cache \
+            --no-daemon
+
       - name: 📤 APK 업로드
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: debug-apk
-          path: app/build/outputs/apk/debug/
+          path: app/build/outputs/apk/debug/*.apk # 경로 구체화
           retention-days: 7
 
-      # 🔟 테스트 결과 업로드
       - name: 📤 테스트 결과 업로드
         if: always()
         uses: actions/upload-artifact@v4
