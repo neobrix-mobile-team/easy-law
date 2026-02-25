@@ -10,7 +10,6 @@ jobs:
   lint:
     name: 🔍 Android Lint 품질 검사
     runs-on: ubuntu-latest
-    
     steps:
       - name: 📥 코드 받아오기
         uses: actions/checkout@v4
@@ -19,13 +18,8 @@ jobs:
         env:
           G_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
-          # 1. app 폴더 생성
           mkdir -p app
-          
-          # 2. 정확한 파일명(google-services.json)으로 디코딩 및 저장
           echo "${G_SERVICES//[[:space:]]/}" | base64 -d > app/google-services.json
-          
-          # 3. 파일 생성 여부 최종 확인
           echo "📍 파일 생성 확인:"
           ls -l app/google-services.json
 
@@ -55,7 +49,6 @@ jobs:
   security-scan:
     name: 🔒 의존성 보안 취약점 검사 (OWASP)
     runs-on: ubuntu-latest
-
     steps:
       - name: 📥 코드 받아오기
         uses: actions/checkout@v4
@@ -63,7 +56,10 @@ jobs:
       - name: 🔐 Firebase 설정 (google-services.json 생성)
         env:
           G_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON }}
-        run: echo "$G_SERVICES" | base64 -di > app/google-services.json
+        run: |
+          mkdir -p app
+          echo "${G_SERVICES//[[:space:]]/}" | base64 -d > app/google-services.json
+          ls -l app/google-services.json
 
       - name: ☕ JDK 17 설정
         uses: actions/setup-java@v4
@@ -89,7 +85,6 @@ jobs:
   coverage:
     name: 📊 코드 커버리지 (Jacoco)
     runs-on: ubuntu-latest
-
     steps:
       - name: 📥 코드 받아오기
         uses: actions/checkout@v4
@@ -97,7 +92,10 @@ jobs:
       - name: 🔐 Firebase 설정 (google-services.json 생성)
         env:
           G_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON }}
-        run: echo "$G_SERVICES" | base64 -di > app/google-services.json
+        run: |
+          mkdir -p app
+          echo "${G_SERVICES//[[:space:]]/}" | base64 -d > app/google-services.json
+          ls -l app/google-services.json
 
       - name: ☕ JDK 17 설정
         uses: actions/setup-java@v4
@@ -124,13 +122,3 @@ jobs:
             app/build/reports/coverage/debugCodeCoverage/
             app/build/jacoco/
           retention-days: 7
-
-      - name: 📊 커버리지 요약
-        if: always()
-        run: |
-          echo "📈 코드 커버리지 목표: 70%+"
-          if [ -f "app/build/reports/coverage/debugCodeCoverage/index.html" ]; then
-            echo "✅ 커버리지 리포트 생성 완료"
-          else
-            echo "⚠️ 리포트를 찾을 수 없습니다."
-          fi
