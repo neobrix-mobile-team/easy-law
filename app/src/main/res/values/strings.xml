@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">EasyLaw</string>
+    <string name="title_activity_main">EasyLaw - 이해하기 쉬운 법률 가이드</string>
+</resources>
