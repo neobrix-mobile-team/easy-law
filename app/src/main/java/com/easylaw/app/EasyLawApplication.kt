@@ -1,4 +1,4 @@
-package com.neobrix.easylaw
+package com.easylaw.app
 
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp

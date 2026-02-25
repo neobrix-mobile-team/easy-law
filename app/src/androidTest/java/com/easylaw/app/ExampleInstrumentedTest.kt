@@ -1,4 +1,4 @@
-package com.neobrix.easylaw
+package com.easylaw.app
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -22,6 +22,6 @@ class ExampleInstrumentedTest {
     @Test
     fun useAppContext() {
         // Context of the app under test.
-        // assertThat(appContext.packageName, `is`("com.neobrix.easylaw"))
+        // assertThat(appContext.packageName, `is`("com.easylaw.app"))
     }
 }

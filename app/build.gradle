@@ -8,11 +8,11 @@ plugins {
 }
 
 android {
-    namespace 'com.neobrix.easylaw'
+    namespace 'com.easylaw.app'
     compileSdk 34
 
     defaultConfig {
-        applicationId 'com.neobrix.easylaw'
+        applicationId 'com.easylaw.app'
         minSdk 26
         targetSdk 34
         versionCode 1
