@@ -30,7 +30,7 @@ jobs:
     
     - name: 📤 ktlint 결과 업로드
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ktlint-report
         path: |
@@ -61,7 +61,7 @@ jobs:
     
     - name: 📤 Detekt 결과 업로드
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: detekt-report
         path: |
@@ -95,7 +95,7 @@ jobs:
     
     - name: 📤 생성된 APK 아티팩트 업로드
       if: success()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: debug-apk
         path: app/build/outputs/apk/debug/
@@ -124,7 +124,7 @@ jobs:
     
     - name: 📤 테스트 결과 업로드
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: unit-test-results
         path: |
