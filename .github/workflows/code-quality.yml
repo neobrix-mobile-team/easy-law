@@ -10,10 +10,6 @@ jobs:
   lint:
     name: 🔍 Android Lint 품질 검사
     runs-on: ubuntu-latest
-    # 핵심: 모든 run 명령어가 이 폴더 안에서 실행되도록 설정
-    defaults:
-      run:
-        working-directory: ./easy-law
 
     steps:
       - name: 📥 코드 받아오기
@@ -23,10 +19,12 @@ jobs:
         env:
           G_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
+          # 1. 현재 위치에 app 폴더가 없으면 생성
           mkdir -p app
+          # 2. Base64 디코딩하여 google-services.json 생성 (s 확인!)
           echo "${G_SERVICES//[[:space:]]/}" | base64 -d > app/google-services.json
-          echo "✅ 파일 생성 완료 및 경로 확인:"
-          pwd
+          # 3. 파일 생성 위치와 경로 확인 (디버깅용)
+          echo "📍 현재 경로: $(pwd)"
           ls -l app/google-services.json
 
       - name: ☕ JDK 17 설정
@@ -48,22 +46,19 @@ jobs:
         with:
           name: lint-report
           path: |
-            easy-law/app/build/reports/lint-results*.html
-            easy-law/app/build/reports/lint-results*.xml
+            app/build/reports/lint-results*.html
+            app/build/reports/lint-results*.xml
           retention-days: 7
 
   security-scan:
     name: 🔒 의존성 보안 취약점 검사 (OWASP)
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./easy-law
 
     steps:
       - name: 📥 코드 받아오기
         uses: actions/checkout@v4
 
-      - name: 🔐 Firebase 설정 (google-services.json 생성)
+      - name: 🔐 Firebase 설정
         env:
           G_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
@@ -88,21 +83,18 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: security-scan-report
-          path: easy-law/build/reports/dependency-check/
+          path: build/reports/dependency-check/
           retention-days: 7
 
   coverage:
     name: 📊 코드 커버리지 (Jacoco)
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./easy-law
 
     steps:
       - name: 📥 코드 받아오기
         uses: actions/checkout@v4
 
-      - name: 🔐 Firebase 설정 (google-services.json 생성)
+      - name: 🔐 Firebase 설정
         env:
           G_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
@@ -131,6 +123,6 @@ jobs:
         with:
           name: coverage-report
           path: |
-            easy-law/app/build/reports/coverage/debugCodeCoverage/
-            easy-law/app/jacoco/
+            app/build/reports/coverage/debugCodeCoverage/
+            app/build/jacoco/
           retention-days: 7
