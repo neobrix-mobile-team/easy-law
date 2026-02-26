@@ -47,7 +47,7 @@ jobs:
           
           # API Key가 비어있지 않은지 확인 후 파일에 기록
           if [ -n "$GEMINI_API_KEY" ]; then
-            echo "api.key=$GEMINI_API_KEY" >> local.properties
+            echo "GEMINI_API_KEY=$GEMINI_API_KEY" >> local.properties
           else
             echo "⚠️ GEMINI_API_KEY secret is missing!"
           fi
