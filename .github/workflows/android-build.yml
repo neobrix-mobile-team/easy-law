@@ -52,7 +52,7 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: debug-apk
+          name: easylaw_debug-apk
           path: app/build/outputs/apk/debug/*.apk # 경로 구체화
           retention-days: 7
 

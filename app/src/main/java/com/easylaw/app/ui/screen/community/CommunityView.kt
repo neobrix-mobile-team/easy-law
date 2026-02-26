@@ -38,7 +38,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.easylaw.app.dto.Post
+import com.easylaw.app.data.models.Post
+import com.easylaw.app.viewmodel.CommunityViewModel
 
 @Composable
 fun CommunityView(

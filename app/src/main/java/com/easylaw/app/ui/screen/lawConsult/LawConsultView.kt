@@ -46,9 +46,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import com.easylaw.app.dto.precModel
+import com.easylaw.app.data.models.precModel
 import com.easylaw.app.ui.components.CommonButton
 import com.easylaw.app.ui.components.CommonTextField
+import com.easylaw.app.viewmodel.LawConsultViewModel
 
 @Composable
 fun LawConsultView(

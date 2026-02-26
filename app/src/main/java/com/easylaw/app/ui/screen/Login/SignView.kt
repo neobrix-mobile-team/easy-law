@@ -32,6 +32,18 @@ import com.easylaw.app.ui.components.CommonButton
 import com.easylaw.app.ui.components.CommonDialog
 import com.easylaw.app.ui.components.CommonIndicator
 import com.easylaw.app.ui.components.CommonTextField
+import com.easylaw.app.viewmodel.SignViewModel
+
+/**
+ * [SignView]
+ * * 서비스의 회원가입 화면을 구성하는 컴포저블 함수입니다.
+ * [SignViewModel]의 상태([SignViewState])를 관찰하여 UI를 갱신하며, 사용자 입력을 ViewModel로 전달합니다.
+ * * 주요 설계 포인트:
+ * 1. 상태 중심 UI: 입력 필드, 버튼의 활성화 상태, 다이얼로그 노출 여부가 모두 ViewModel의 단일 상태에 의존합니다.
+ * 2. 반응형 유효성 검사: 사용자가 입력하는 즉시 에러 텍스트와 버튼 활성 상태가 업데이트되어 직관적인 UX를 제공합니다.
+ * 3. 사용자 피드백: 로딩 중에는 인디케이터를, 결과에 따라 성공/실패 팝업을 띄워 프로세스 상태를 명확히 전달합니다.
+ */
+
 
 @Composable
 fun SignView(

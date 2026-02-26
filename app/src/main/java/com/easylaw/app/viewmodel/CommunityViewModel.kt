@@ -1,9 +1,9 @@
-package com.easylaw.app.ui.screen.community
+package com.easylaw.app.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.easylaw.app.dto.Post
+import com.easylaw.app.data.models.Post
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from

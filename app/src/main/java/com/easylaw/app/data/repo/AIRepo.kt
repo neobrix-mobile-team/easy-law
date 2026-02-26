@@ -1,4 +1,4 @@
-package com.easylaw.app.repository
+package com.easylaw.app.data.repo
 
 import android.util.Log
 import com.google.ai.client.generativeai.GenerativeModel

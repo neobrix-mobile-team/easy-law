@@ -1,11 +1,11 @@
-package com.easylaw.app.ui.screen.lawConsult
+package com.easylaw.app.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.easylaw.app.dto.precModel
-import com.easylaw.app.repository.AIRepo
-import com.easylaw.app.repository.LawApiRepo
+import com.easylaw.app.data.models.precModel
+import com.easylaw.app.data.repo.AIRepo
+import com.easylaw.app.data.repo.LawApiRepo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

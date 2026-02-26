@@ -32,7 +32,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,6 +45,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.easylaw.app.R
 import com.easylaw.app.ui.components.CommonButton
+import com.easylaw.app.viewmodel.OnboardingViewModel
+
+/**
+ * [OnboardingView]
+ * * 앱 최초 진입 사용자를 위한 3단계 온보딩 프로세스를 구현한 화면입니다.
+ * [OnboardingViewModel]의 상태에 따라 환영 인사, 역할 선택, 권한 안내 화면을 순차적으로 렌더링합니다.
+ * * 주요 특징:
+ * 실시간 언어 최적화: 사용자가 역할을 선택하는 즉시 앱의 Locale을 변경(ko/en)하고 Activity를 재실행(recreate)하여 언어 환경을 동기화합니다.
+ */
+
+
 
 @Composable
 fun OnboardingView(
@@ -87,7 +97,7 @@ fun OnboardingView(
                 1 -> WelcomeView()
                 2 ->
                     RoleSelectionView(
-                        selectedRole = onboardingViewState.userRole,
+                        selectedRole = onboardingViewState.user_role,
                         onRoleSelected = { viewModel.selectRole(it) },
                     )
                 3 -> FinalView()
@@ -96,7 +106,7 @@ fun OnboardingView(
 
         val isNextEnabled =
             when (onboardingViewState.currentStep) {
-                2 -> onboardingViewState.userRole.isNotEmpty()
+                2 -> onboardingViewState.user_role.isNotEmpty()
                 else -> true
             }
 
@@ -107,7 +117,7 @@ fun OnboardingView(
                     .height(56.dp),
             onClick = {
                 if (onboardingViewState.currentStep == 3) {
-                    viewModel.completeOnboarding()
+//                    viewModel.completeOnboarding()
                     goToLoginView()
                 } else {
                     viewModel.nextStep()

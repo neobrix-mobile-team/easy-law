@@ -1,6 +1,6 @@
-package com.easylaw.app.service
+package com.easylaw.app.data.remote
 
-import com.easylaw.app.dto.LawApiResModel
+import com.easylaw.app.data.models.LawApiResModel
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Query

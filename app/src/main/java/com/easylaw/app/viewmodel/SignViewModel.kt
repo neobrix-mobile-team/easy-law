@@ -1,8 +1,10 @@
-package com.easylaw.app.ui.screen.Login
+package com.easylaw.app.viewmodel
 
 import android.util.Log
+import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.easylaw.app.domain.model.UserSession
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.gotrue.auth
@@ -16,11 +18,25 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import javax.inject.Inject
 
+/**
+ * [SignViewModel]
+ *
+ * 앱의 회원가입(Sign Up) 프로세스를 관리하는 ViewModel입니다.
+ * Supabase Auth를 통한 계정 생성과 서비스 DB(users 테이블)에 사용자 정보를 동기화하는 역할을 수행합니다.
+ *
+ * 주요 기능:
+ * 1. UI 상태 관리: 이름, 이메일, 비밀번호 입력값의 유효성 검사 및 에러 상태 관리
+ * 2. 계정 생성: Supabase Auth를 이용한 Email/Password 기반 회원가입 처리.
+
+ */
+
+
 @Serializable
 data class UserRequest(
     val id: String? = null,
     val name: String,
     val email: String,
+    val user_role:String,
     @SerialName("fcm_token")
     val fcmToken: String? = null,
 )
@@ -44,6 +60,7 @@ class SignViewModel
     @Inject
     constructor(
         private val supabase: SupabaseClient,
+        private val userSession: UserSession
     ) : ViewModel() {
         private val _signViewState = MutableStateFlow(SignViewState())
         val signViewState = _signViewState.asStateFlow()
@@ -53,7 +70,7 @@ class SignViewModel
         }
 
         fun onEmailChanged(email: String) {
-            val isValid = android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+            val isValid = Patterns.EMAIL_ADDRESS.matcher(email).matches()
             _signViewState.update { it.copy(email = email, isEmailError = email.isNotEmpty() && !isValid) }
         }
 
@@ -86,6 +103,9 @@ class SignViewModel
                     val email = _signViewState.value.email
                     val password = _signViewState.value.password
                     val name = _signViewState.value.name
+                    val user_role = userSession.getuser_role()
+
+                    Log.d("현재 유저상태", user_role)
 
                     supabase.auth.signUpWith(Email) {
                         this.email = email
@@ -101,6 +121,7 @@ class SignViewModel
                                 id = userId,
                                 name = name,
                                 email = email,
+                                user_role = user_role
                             )
                         supabase.from("users").insert(userRequest)
                         _signViewState.update { it.copy(isSignSuccess = true) }
