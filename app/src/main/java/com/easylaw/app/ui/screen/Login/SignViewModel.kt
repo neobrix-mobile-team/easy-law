@@ -53,7 +53,10 @@ class SignViewModel
         }
 
         fun onEmailChanged(email: String) {
-            val isValid = android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+            val isValid =
+                android.util.Patterns.EMAIL_ADDRESS
+                    .matcher(email)
+                    .matches()
             _signViewState.update { it.copy(email = email, isEmailError = email.isNotEmpty() && !isValid) }
         }
 
@@ -66,8 +69,7 @@ class SignViewModel
         fun onPasswordConfirmChanged(pwd: String) {
             val isPwdVaildConfirm = pwd.isNotEmpty() && _signViewState.value.password != pwd
 
-            _signViewState.update {
-                    it ->
+            _signViewState.update { it ->
                 it.copy(
                     passwordConfirm = pwd,
                     isPasswordConfirmError = isPwdVaildConfirm,
@@ -109,16 +111,14 @@ class SignViewModel
                     val errorMsg = e.message ?: ""
                     if (errorMsg.contains("already", ignoreCase = true)) {
                         Log.d("sign error", "이미 가입된 이메일입니다.")
-                        _signViewState.update {
-                                it ->
+                        _signViewState.update { it ->
                             it.copy(
                                 isSignError = "이미 가입된 이메일입니다.",
                             )
                         }
                     } else {
                         Log.d("sign error", "회원가입 실패: ${e.localizedMessage}")
-                        _signViewState.update {
-                                it ->
+                        _signViewState.update { it ->
                             it.copy(
                                 isSignError = e.localizedMessage ?: "",
                             )

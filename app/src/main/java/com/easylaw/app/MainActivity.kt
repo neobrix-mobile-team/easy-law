@@ -21,8 +21,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.easylaw.app.repository.AIRepo
 import com.easylaw.app.ui.Route.AppRoute
-import com.easylaw.app.ui.Route.navRoute
-import com.easylaw.app.ui.Route.navRoute.bottomItems
+import com.easylaw.app.ui.Route.NavRoute
+import com.easylaw.app.ui.Route.NavRoute.bottomItems
 import com.easylaw.app.ui.components.CommonIndicator
 import com.easylaw.app.ui.theme.EasyLawTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -51,7 +51,7 @@ class MainActivity : ComponentActivity() {
 
                 val geminiState by aiManager.loadingState.collectAsState()
 
-                val hideBottomBarRoutes = listOf(navRoute.onboarding, navRoute.login, navRoute.signUp)
+                val hideBottomBarRoutes = listOf(NavRoute.ONBOARDING, NavRoute.LOGIN, NavRoute.SIGNUP)
 
                 Scaffold(
                     bottomBar = {

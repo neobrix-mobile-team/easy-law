@@ -1,10 +1,14 @@
 package com.easylaw.app.ui.screen.Login
 
 import android.content.Context
-// import android.credentials.CredentialManager
 import android.util.Log
+import androidx.credentials.ClearCredentialStateRequest
+import androidx.credentials.CredentialManager
+import androidx.credentials.GetCredentialRequest
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.easylaw.app.common.UserInfo
+import com.easylaw.app.common.UserSession
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.Firebase
@@ -14,19 +18,14 @@ import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.gotrue.auth
+import io.github.jan.supabase.gotrue.providers.builtin.Email
+import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import com.easylaw.app.common.UserSession
 import javax.inject.Inject
-import io.github.jan.supabase.gotrue.providers.builtin.Email
-import io.github.jan.supabase.postgrest.from
-import com.easylaw.app.common.UserInfo
-import androidx.credentials.ClearCredentialStateRequest
-import androidx.credentials.GetCredentialRequest
-import androidx.credentials.CredentialManager
 
 data class LoginViewState(
     val idInput: String = "",
@@ -51,7 +50,10 @@ class LoginViewModel
 
         fun onChangedIdTextField(id: String) {
             // 이메일 정규식 확인
-            val isEmailValid = android.util.Patterns.EMAIL_ADDRESS.matcher(id).matches()
+            val isEmailValid =
+                android.util.Patterns.EMAIL_ADDRESS
+                    .matcher(id)
+                    .matches()
             _loginViewState.update { currentState ->
                 currentState.copy(
                     idInput = id,
@@ -97,7 +99,8 @@ class LoginViewModel
 
                     if (userId != null) {
                         val userInfo =
-                            supabase.from("users")
+                            supabase
+                                .from("users")
                                 .select {
                                     filter {
                                         eq("id", userId)
@@ -208,13 +211,15 @@ class LoginViewModel
                 try {
                     // 구글 로그인 옵션 설정
                     val googleIdOption =
-                        GetGoogleIdOption.Builder()
+                        GetGoogleIdOption
+                            .Builder()
                             .setFilterByAuthorizedAccounts(false)
                             .setServerClientId("607557323201-jeej7j1udj6iilbn3npbrfeuus71b14g.apps.googleusercontent.com")
                             .build()
 
                     val request =
-                        GetCredentialRequest.Builder()
+                        GetCredentialRequest
+                            .Builder()
                             .addCredentialOption(googleIdOption)
                             .build()
 

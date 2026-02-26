@@ -1,8 +1,19 @@
 package com.easylaw.app.ui.screen
 
 import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.*
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -11,9 +22,18 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.*
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
-import androidx.compose.runtime.*
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,7 +68,7 @@ fun LegalSearchRoute(viewModel: LegalSearchViewModel = hiltViewModel()) {
             onSituationChange = viewModel::updateSituation,
             onCourtTypeChange = viewModel::updateCourtType,
             onDetailsChange = viewModel::updateDetails,
-            onSearchClick = viewModel::searchLegalAdvice
+            onSearchClick = viewModel::searchLegalAdvice,
         )
 
         if (uiState.showResults) {
@@ -56,7 +76,7 @@ fun LegalSearchRoute(viewModel: LegalSearchViewModel = hiltViewModel()) {
                 uiState = uiState,
                 pagingItems = searchResults,
                 onPrecedentClick = viewModel::onPrecedentClick,
-                onDismiss = viewModel::closeResults
+                onDismiss = viewModel::closeResults,
             )
         }
 
@@ -64,7 +84,7 @@ fun LegalSearchRoute(viewModel: LegalSearchViewModel = hiltViewModel()) {
             PrecedentDetailDialog(
                 uiState = uiState,
                 onDismiss = viewModel::closeDetailDialog,
-                onTabSelected = viewModel::toggleDetailViewMode
+                onTabSelected = viewModel::toggleDetailViewMode,
             )
         }
     }
@@ -76,20 +96,22 @@ fun SituationDiagnosisScreen(
     onSituationChange: (String) -> Unit,
     onCourtTypeChange: (CourtTypeOption) -> Unit,
     onDetailsChange: (String) -> Unit,
-    onSearchClick: () -> Unit
+    onSearchClick: () -> Unit,
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFFAFAFA))
-            .imePadding()
-            .safeDrawingPadding()
-            .padding(24.dp)
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(Color(0xFFFAFAFA))
+                .imePadding()
+                .safeDrawingPadding()
+                .padding(24.dp),
     ) {
         Column(
-            modifier = Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState())
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState()),
         ) {
             Text(text = "상황 진단하기", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.Black)
             Spacer(modifier = Modifier.height(8.dp))
@@ -106,7 +128,7 @@ fun SituationDiagnosisScreen(
                 value = uiState.situation,
                 onValueChange = onSituationChange,
                 placeholder = "예: 임금을 석달째 못받았어요",
-                isError = uiState.isSituationError
+                isError = uiState.isSituationError,
             )
 
             if (uiState.isSituationError) {
@@ -114,7 +136,7 @@ fun SituationDiagnosisScreen(
                     text = "필수 항목입니다.",
                     color = Color.Red,
                     fontSize = 12.sp,
-                    modifier = Modifier.padding(top = 4.dp, start = 4.dp)
+                    modifier = Modifier.padding(top = 4.dp, start = 4.dp),
                 )
             }
 
@@ -124,7 +146,7 @@ fun SituationDiagnosisScreen(
             Spacer(modifier = Modifier.height(8.dp))
             CourtTypeSpinner(
                 selectedOption = uiState.selectedCourt,
-                onOptionSelected = onCourtTypeChange
+                onOptionSelected = onCourtTypeChange,
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -135,7 +157,7 @@ fun SituationDiagnosisScreen(
                 value = uiState.details,
                 onValueChange = onDetailsChange,
                 placeholder = "발생한 일을 구체적으로 적어주세요 (선택)",
-                minLines = 3
+                minLines = 3,
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -144,13 +166,14 @@ fun SituationDiagnosisScreen(
         val isButtonEnabled = uiState.situation.isNotBlank() && !uiState.isLoadingGemini
 
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp)
-                .clip(RoundedCornerShape(28.dp))
-                .background(if (isButtonEnabled) Color.Black else Color(0xFFE0E0E0))
-                .debouncedClickable { if (isButtonEnabled) onSearchClick() },
-            contentAlignment = Alignment.Center
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+                    .clip(RoundedCornerShape(28.dp))
+                    .background(if (isButtonEnabled) Color.Black else Color(0xFFE0E0E0))
+                    .debouncedClickable { if (isButtonEnabled) onSearchClick() },
+            contentAlignment = Alignment.Center,
         ) {
             if (uiState.isLoadingGemini) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -164,19 +187,18 @@ fun SituationDiagnosisScreen(
                         imageVector = Icons.Default.Star,
                         contentDescription = null,
                         tint = if (isButtonEnabled) Color.White else Color.Gray,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(20.dp),
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "판례 검색",
                         color = if (isButtonEnabled) Color.White else Color.Gray,
                         fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
                     )
                 }
             }
         }
-
     }
 }
 
@@ -184,32 +206,35 @@ fun SituationDiagnosisScreen(
 @Composable
 fun CourtTypeSpinner(
     selectedOption: CourtTypeOption,
-    onOptionSelected: (CourtTypeOption) -> Unit
+    onOptionSelected: (CourtTypeOption) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
 
     ExposedDropdownMenuBox(
         expanded = expanded,
-        onExpandedChange = { expanded = !expanded }
+        onExpandedChange = { expanded = !expanded },
     ) {
         OutlinedTextField(
             value = selectedOption.displayName,
             onValueChange = {},
             readOnly = true, // 사용자가 직접 타이핑할 수 없게 막음
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .menuAnchor(MenuAnchorType.PrimaryNotEditable, true), // 메뉴가 텍스트 필드 바로 아래에 뜨도록 고정하는 역할
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .menuAnchor(MenuAnchorType.PrimaryNotEditable, true),
+            // 메뉴가 텍스트 필드 바로 아래에 뜨도록 고정하는 역할
             shape = RoundedCornerShape(16.dp),
-            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
-                focusedBorderColor = Color(0xFFE0E0E0),
-                unfocusedBorderColor = Color(0xFFE0E0E0)
-            )
+            colors =
+                ExposedDropdownMenuDefaults.outlinedTextFieldColors(
+                    focusedBorderColor = Color(0xFFE0E0E0),
+                    unfocusedBorderColor = Color(0xFFE0E0E0),
+                ),
         )
         ExposedDropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
-            modifier = Modifier.background(Color.White)
+            modifier = Modifier.background(Color.White),
         ) {
             // Enum 클래스에 정의된 모든 옵션을 리스트로 뿌려줍니다.
             CourtTypeOption.entries.forEach { option ->
@@ -218,7 +243,7 @@ fun CourtTypeSpinner(
                     onClick = {
                         onOptionSelected(option)
                         expanded = false
-                    }
+                    },
                 )
             }
         }
@@ -231,16 +256,17 @@ fun CustomTextField(
     onValueChange: (String) -> Unit,
     placeholder: String,
     isError: Boolean = false,
-    minLines: Int = 1
+    minLines: Int = 1,
 ) {
     val borderColor = if (isError) Color.Red else Color(0xFFE0E0E0)
 
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(width = 1.dp, color = borderColor, shape = RoundedCornerShape(16.dp))
-            .background(Color.White, shape = RoundedCornerShape(16.dp))
-            .padding(horizontal = 16.dp, vertical = 16.dp)
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .border(width = 1.dp, color = borderColor, shape = RoundedCornerShape(16.dp))
+                .background(Color.White, shape = RoundedCornerShape(16.dp))
+                .padding(horizontal = 16.dp, vertical = 16.dp),
     ) {
         if (value.isEmpty()) {
             Text(text = placeholder, color = Color(0xFFBDBDBD), fontSize = 16.sp)
@@ -248,9 +274,11 @@ fun CustomTextField(
         BasicTextField(
             value = value,
             onValueChange = onValueChange,
-            textStyle = androidx.compose.ui.text.TextStyle(fontSize = 16.sp, color = Color.Black),
+            textStyle =
+                androidx.compose.ui.text
+                    .TextStyle(fontSize = 16.sp, color = Color.Black),
             modifier = Modifier.fillMaxWidth(),
-            minLines = minLines
+            minLines = minLines,
         )
     }
 }
@@ -261,24 +289,25 @@ fun PrecedentResultDialog(
     uiState: LegalSearchUiState,
     pagingItems: LazyPagingItems<Precedent>,
     onPrecedentClick: (Precedent) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     Dialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
+        properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
         Surface(
             modifier = Modifier.fillMaxSize(),
-            color = Color.White
+            color = Color.White,
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
                 // 상단 헤더
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(24.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Top
+                    verticalAlignment = Alignment.Top,
                 ) {
                     Column {
                         Text(text = "판례 검색 결과", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.Black)
@@ -289,7 +318,7 @@ fun PrecedentResultDialog(
                             text = "AI 분석 키워드: ${uiState.extractedKeyword}",
                             fontSize = 14.sp,
                             color = Color(0xFF1967D2),
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
                         )
                         Spacer(modifier = Modifier.height(4.dp))
 
@@ -299,7 +328,7 @@ fun PrecedentResultDialog(
                             Text(
                                 text = "총 ${uiState.totalSearchCount}건이 검색되었습니다.",
                                 fontSize = 14.sp,
-                                color = Color.Gray
+                                color = Color.Gray,
                             )
                         }
                     }
@@ -307,7 +336,7 @@ fun PrecedentResultDialog(
                         Icon(
                             imageVector = Icons.Default.Close,
                             contentDescription = "닫기",
-                            modifier = Modifier.size(32.dp)
+                            modifier = Modifier.size(32.dp),
                         )
                     }
                 }
@@ -316,11 +345,12 @@ fun PrecedentResultDialog(
 
                 // 검색 결과 리스트
                 LazyColumn(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(horizontal = 24.dp),
+                    modifier =
+                        Modifier
+                            .weight(1f)
+                            .padding(horizontal = 24.dp),
                     contentPadding = PaddingValues(vertical = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     items(count = pagingItems.itemCount) { index ->
                         val precedent = pagingItems[index]
@@ -332,10 +362,11 @@ fun PrecedentResultDialog(
                     if (pagingItems.loadState.append is LoadState.Loading) {
                         item {
                             Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                contentAlignment = Alignment.Center
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                contentAlignment = Alignment.Center,
                             ) {
                                 CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color(0xFF6B9DE8))
                             }
@@ -346,11 +377,12 @@ fun PrecedentResultDialog(
                 Box(modifier = Modifier.padding(24.dp)) {
                     Button(
                         onClick = onDismiss,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .height(56.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6B9DE8)),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(12.dp),
                     ) {
                         Text(text = "확인", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     }
@@ -363,16 +395,17 @@ fun PrecedentResultDialog(
 @Composable
 fun PrecedentCard(
     precedent: Precedent,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(1.dp, Color(0xFFEEEEEE), RoundedCornerShape(16.dp))
-            .background(Color.White, RoundedCornerShape(16.dp))
-            .clip(RoundedCornerShape(16.dp))
-            .clickable { onClick() }
-            .padding(20.dp)
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .border(1.dp, Color(0xFFEEEEEE), RoundedCornerShape(16.dp))
+                .background(Color.White, RoundedCornerShape(16.dp))
+                .clip(RoundedCornerShape(16.dp))
+                .clickable { onClick() }
+                .padding(20.dp),
     ) {
         Text(
             text = precedent.title,
@@ -380,7 +413,7 @@ fun PrecedentCard(
             fontWeight = FontWeight.Bold,
             color = Color.Black,
             maxLines = 2,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -388,9 +421,10 @@ fun PrecedentCard(
         Row(verticalAlignment = Alignment.CenterVertically) {
             if (precedent.category.isNotEmpty()) {
                 Box(
-                    modifier = Modifier
-                        .background(Color(0xFFE8F0FE), RoundedCornerShape(8.dp))
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                    modifier =
+                        Modifier
+                            .background(Color(0xFFE8F0FE), RoundedCornerShape(8.dp))
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
                 ) {
                     Text(text = precedent.category, color = Color(0xFF1967D2), fontSize = 12.sp)
                 }
@@ -412,18 +446,22 @@ fun PrecedentCard(
 }
 
 @Composable
-fun ExpandableLegalSection(title: String, content: String) {
+fun ExpandableLegalSection(
+    title: String,
+    content: String,
+) {
     var isExpanded by remember { mutableStateOf(false) }
 
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(1.dp, Color(0xFFE0E0E0), RoundedCornerShape(12.dp))
-            .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFFFAFAFA))
-            .clickable { isExpanded = !isExpanded } // 터치 시 확장/축소 토글
-            .padding(16.dp)
-            .animateContentSize() // 부드러운 전개 애니메이션
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .border(1.dp, Color(0xFFE0E0E0), RoundedCornerShape(12.dp))
+                .clip(RoundedCornerShape(12.dp))
+                .background(Color(0xFFFAFAFA))
+                .clickable { isExpanded = !isExpanded } // 터치 시 확장/축소 토글
+                .padding(16.dp)
+                .animateContentSize(), // 부드러운 전개 애니메이션
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(text = title, fontWeight = FontWeight.Bold, color = Color(0xFF1967D2), fontSize = 16.sp)
@@ -431,7 +469,7 @@ fun ExpandableLegalSection(title: String, content: String) {
             Icon(
                 imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                 contentDescription = if (isExpanded) "접기" else "펼치기",
-                tint = Color.Gray
+                tint = Color.Gray,
             )
         }
         Spacer(modifier = Modifier.height(12.dp))
@@ -441,7 +479,7 @@ fun ExpandableLegalSection(title: String, content: String) {
             lineHeight = 24.sp,
             color = Color.DarkGray,
             maxLines = if (isExpanded) Int.MAX_VALUE else 2, // 접혀있을 때는 최대 2줄 제한
-            overflow = TextOverflow.Ellipsis // 2줄 초과 시 "..." 표시
+            overflow = TextOverflow.Ellipsis, // 2줄 초과 시 "..." 표시
         )
     }
 }
@@ -452,20 +490,21 @@ fun ExpandableLegalSection(title: String, content: String) {
 fun PrecedentDetailDialog(
     uiState: LegalSearchUiState,
     onDismiss: () -> Unit,
-    onTabSelected: (DetailViewMode) -> Unit
+    onTabSelected: (DetailViewMode) -> Unit,
 ) {
     Dialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
+        properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
         Surface(modifier = Modifier.fillMaxSize(), color = Color.White) {
             Column(modifier = Modifier.fillMaxSize()) {
                 // 상단 닫기 버튼
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    horizontalArrangement = Arrangement.End
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.End,
                 ) {
                     IconButton(onClick = onDismiss) {
                         Icon(imageVector = Icons.Default.Close, contentDescription = "닫기")
@@ -487,7 +526,7 @@ fun PrecedentDetailDialog(
                         color = Color.Black,
                         modifier = Modifier.padding(horizontal = 24.dp),
                         maxLines = 3,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
                     )
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -503,15 +542,15 @@ fun PrecedentDetailDialog(
                         indicator = { tabPositions ->
                             TabRowDefaults.SecondaryIndicator(
                                 Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
-                                color = Color(0xFF1967D2)
+                                color = Color(0xFF1967D2),
                             )
-                        }
+                        },
                     ) {
                         tabs.forEachIndexed { index, (mode, title) ->
                             Tab(
                                 selected = selectedTabIndex == index,
                                 onClick = { onTabSelected(mode) },
-                                text = { Text(title, fontWeight = FontWeight.Bold) }
+                                text = { Text(title, fontWeight = FontWeight.Bold) },
                             )
                         }
                     }
@@ -519,11 +558,12 @@ fun PrecedentDetailDialog(
                     // 3. 탭에 따른 본문 콘텐츠 출력 (스크롤 가능)
                     val scrollState = rememberScrollState()
                     Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f)
-                            .padding(24.dp)
-                            .verticalScroll(scrollState)
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .weight(1f)
+                                .padding(24.dp)
+                                .verticalScroll(scrollState),
                     ) {
                         when (uiState.detailViewMode) {
                             DetailViewMode.ORIGINAL -> {
@@ -543,17 +583,18 @@ fun PrecedentDetailDialog(
                             DetailViewMode.SUMMARY -> {
                                 if (uiState.isSummaryLoading) {
                                     Column(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(top = 40.dp),
-                                        horizontalAlignment = Alignment.CenterHorizontally
+                                        modifier =
+                                            Modifier
+                                                .fillMaxWidth()
+                                                .padding(top = 40.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
                                     ) {
                                         CircularProgressIndicator(color = Color(0xFF1967D2))
                                         Spacer(modifier = Modifier.height(16.dp))
                                         Text(
                                             "판결문을 분석하여\n요약하고 있습니다...",
                                             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                                            color = Color.Gray
+                                            color = Color.Gray,
                                         )
                                     }
                                 } else {
@@ -561,7 +602,7 @@ fun PrecedentDetailDialog(
                                         text = uiState.summaryText,
                                         fontSize = 16.sp,
                                         lineHeight = 26.sp,
-                                        color = Color.Black
+                                        color = Color.Black,
                                     )
                                 }
                             }

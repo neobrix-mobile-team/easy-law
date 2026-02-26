@@ -37,7 +37,8 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         notificationManager.createNotificationChannel(channel)
 
         val notification =
-            NotificationCompat.Builder(this, channelId)
+            NotificationCompat
+                .Builder(this, channelId)
                 .setSmallIcon(R.drawable.ic_dialog_info) // 아이콘 설정
                 .setContentTitle(title)
                 .setContentText(body)

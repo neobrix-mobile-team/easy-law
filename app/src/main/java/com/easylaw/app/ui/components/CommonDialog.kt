@@ -27,7 +27,10 @@ fun CommonDialog(
 ) {
     androidx.compose.ui.window.Dialog(onDismissRequest = { }) {
         androidx.compose.material3.Surface(
-            shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp), // 토스 특유의 깊은 곡률
+            shape =
+                androidx.compose.foundation.shape
+                    .RoundedCornerShape(24.dp),
+            // 토스 특유의 깊은 곡률
             color = Color.White,
             modifier =
                 Modifier
@@ -79,7 +82,9 @@ fun CommonDialog(
                         Modifier
                             .fillMaxWidth()
                             .height(54.dp),
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
+                    shape =
+                        androidx.compose.foundation.shape
+                            .RoundedCornerShape(14.dp),
                     colors =
                         androidx.compose.material3.ButtonDefaults.buttonColors(
                             containerColor = Color(0xFF3182F6), // 토스 블루

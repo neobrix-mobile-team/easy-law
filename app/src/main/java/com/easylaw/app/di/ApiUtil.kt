@@ -77,13 +77,15 @@ object ApiUtil {
             }.apply { level = HttpLoggingInterceptor.Level.BODY }
 
         val okHttpClient =
-            OkHttpClient.Builder()
+            OkHttpClient
+                .Builder()
                 .addInterceptor(ErrorLoggingInterceptor())
                 .addInterceptor(showErrorInterceptor)
                 .addInterceptor(logger) // 가독성이 개선된 로거 적용
                 .build()
 
-        return Retrofit.Builder()
+        return Retrofit
+            .Builder()
             .baseUrl(BASE_URL)
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
@@ -114,7 +116,8 @@ class ShowErrorInterceptor
 
             showError(res.code)?.let { msg ->
                 android.os.Handler(android.os.Looper.getMainLooper()).post {
-                    android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT)
+                    android.widget.Toast
+                        .makeText(context, msg, android.widget.Toast.LENGTH_SHORT)
                         .show()
                 }
             }
@@ -122,12 +125,11 @@ class ShowErrorInterceptor
         }
 
         // 에러코드에 따라 추가
-        private fun showError(code: Int): String? {
-            return when (code) {
+        private fun showError(code: Int): String? =
+            when (code) {
                 401 -> "인증에 실패했습니다."
                 403 -> "접근 권한이 없습니다."
                 in 500..599 -> "법령 서버 에러"
                 else -> null
             }
-        }
     }

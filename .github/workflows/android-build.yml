@@ -9,7 +9,7 @@ on:
 jobs:
   android-ci:
     runs-on: ubuntu-latest
-    timeout-minutes: 30 # 빌드 안정성을 위해 살짝 늘림
+    timeout-minutes: 20 # MVP: 빠른 검증을 위해 20분으로 단축
 
     steps:
       - name: 📥 Checkout
@@ -25,7 +25,6 @@ jobs:
       - name: 🔧 Gradle 실행 권한 부여
         run: chmod +x ./gradlew
 
-      # 🔐 env와 -di 옵션을 사용하여 base64 에러 원천 차단
       - name: 🔐 Google Services JSON 생성
         env:
           G_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON }}
@@ -38,45 +37,31 @@ jobs:
 
       - name: 🔐 local.properties 생성
         env:
-          # GitHub Secrets에 저장한 이름을 그대로 가져옵니다.
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           LAW_API_KEY: ${{ secrets.LAW_API_KEY }}
         run: |
-          # 파일 생성
           touch local.properties
-          
-          # API Key가 비어있지 않은지 확인 후 파일에 기록
-          if [ -n "$GEMINI_API_KEY" ]; then
-            echo "GEMINI_API_KEY=$GEMINI_API_KEY" >> local.properties
-          else
-            echo "⚠️ GEMINI_API_KEY secret is missing!"
-          fi
-          
-          if [ -n "$LAW_API_KEY" ]; then
-            echo "LAW_API_KEY=$LAW_API_KEY" >> local.properties
-          else
-            echo "⚠️ LAW_API_KEY secret is missing!"
-          fi
+          [ -n "$GEMINI_API_KEY" ] && echo "GEMINI_API_KEY=$GEMINI_API_KEY" >> local.properties
+          [ -n "$LAW_API_KEY" ] && echo "LAW_API_KEY=$LAW_API_KEY" >> local.properties
 
-      # 🧹 캐시 꼬임 방지는 필요할 때만 하는 것이 좋지만, 유지하신다면 명령어를 명확히 합니다.
-      - name: 🧹 Gradle Wrapper 캐시 정리
-        run: ./gradlew clean
+      - name: 🎨 KtLint 코드 스타일 검사
+        run: ./gradlew ktlintCheck --parallel --build-cache --no-daemon
 
-      # 🚀 빌드 단계 (주석을 제거하고 한 줄씩 명확히 실행하거나 백슬래시를 정확히 사용)
-      - name: 🚀 Unit Test & Build APK
+      - name: 🚀 Unit Test & Build APK (병렬 처리)
         run: |
           ./gradlew testDebugUnitTest assembleDebug \
             --parallel \
             --build-cache \
-            --no-daemon
+            --daemon \
+            -Dorg.gradle.workers.max=4
 
       - name: 📤 APK 업로드
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: debug-apk
-          path: app/build/outputs/apk/debug/*.apk # 경로 구체화
-          retention-days: 7
+          path: app/build/outputs/apk/debug/*.apk
+          retention-days: 5
 
       - name: 📤 테스트 결과 업로드
         if: always()
@@ -86,3 +71,4 @@ jobs:
           path: |
             app/build/reports/tests/testDebugUnitTest/
             app/build/test-results/testDebugUnitTest/
+          retention-days: 5

@@ -1,0 +1,6 @@
+repos:
+  -   repo: https://github.com/pinterest/ktlint
+      rev: 1.0.1  # build.gradle에 적은 버전과 맞추세요
+      hooks:
+        -   id: ktlint
+            args: ["--android"] # 안드로이드 스타일 적용

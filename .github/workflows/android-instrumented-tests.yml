@@ -10,7 +10,8 @@ jobs:
   instrumented-test:
     name: 📱 기기/에뮬레이터 통합 테스트
     runs-on: ubuntu-latest
-    
+    timeout-minutes: 30
+
     strategy:
       matrix:
         api-level: [ 30, 33 ]
@@ -22,10 +23,10 @@ jobs:
     
     steps:
       - name: 📥 코드 받아오기
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: ☕ JDK 17 설정
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
@@ -42,11 +43,7 @@ jobs:
           arch: x86_64
           ram-size: 2048M
           disk-size: 4096M
-          script: |
-            echo "🚀 에뮬레이터 기동 완료 (API ${{ matrix.api-level }})"
-            echo "🧪 UI 통합 테스트를 실행합니다 (Espresso)..."
-            ./gradlew connectedAndroidTest --info || true
-            echo "✅ 통합 테스트 완료"
+          script: ./gradlew connectedAndroidTest --parallel --build-cache --daemon
 
       - name: 📤 통합 테스트 결과 업로드
         if: always()
@@ -56,12 +53,4 @@ jobs:
           path: |
             app/build/reports/androidTests/connected/
             app/build/outputs/androidTest-results/
-          retention-days: 7
-
-      - name: 📊 테스트 결과 요약
-        if: always()
-        run: |
-          echo "📋 API Level ${{ matrix.api-level }} 통합 테스트 완료"
-          echo "- Firebase 연동 테스트 ✅"
-          echo "- UI 상호작용 테스트 ✅"
-          echo "- 권한 요청 테스트 ✅"
+          retention-days: 5

@@ -34,14 +34,14 @@ data class BottomNavItem(
 )
 
 // 앱의 네비게이션 설정
-object navRoute {
-    const val onboarding = "onboarding"
-    const val login = "login"
-    const val signUp = "signUp"
-    const val lawConsult = "lawConsult"
-    const val community = "community"
-    const val self = "self"
-    const val carCrush = "carCrush"
+object NavRoute {
+    const val ONBOARDING = "onboarding"
+    const val LOGIN = "login"
+    const val SIGNUP = "signUp"
+    const val LAW_CONSULT = "lawConsult"
+    const val COMMUNITY = "community"
+    const val SELF = "self"
+    const val CAR_CRUSH = "carCrush"
 
     val bottomItems =
         listOf(
@@ -76,7 +76,7 @@ fun AppRoute(
     NavHost(
         navController = navController,
 //        startDestination = navRoute.community,
-        startDestination = navRoute.onboarding,
+        startDestination = NavRoute.ONBOARDING,
         enterTransition = {
             slideIntoContainer(
                 towards = AnimatedContentTransitionScope.SlideDirection.Left,
@@ -91,51 +91,51 @@ fun AppRoute(
         },
     ) {
         // 온보딩
-        composable(route = navRoute.onboarding) {
+        composable(route = NavRoute.ONBOARDING) {
             val onboardingViewModel: OnboardingViewModel = hiltViewModel()
             OnboardingView(
                 viewModel = onboardingViewModel,
                 goToLoginView = {
-                    navController.navigate(navRoute.login) {
+                    navController.navigate(NavRoute.LOGIN) {
                         // popUpTo(navRoute.onboarding) : onboarding 까지 경로찾기
                         // inclusive : 해당 경로까지 제거
-                        popUpTo(navRoute.onboarding) { inclusive = true }
+                        popUpTo(NavRoute.ONBOARDING) { inclusive = true }
                     }
                 },
             )
         }
         // 로그인
-        composable(route = navRoute.login) {
+        composable(route = NavRoute.LOGIN) {
             val loginViewModel: LoginViewModel = hiltViewModel()
             LoginView(
                 viewModel = loginViewModel,
                 goToSignUpView = {
                     navController.navigate(
-                        navRoute.signUp,
+                        NavRoute.SIGNUP,
                     )
                 },
                 goToMainView = {
-                    navController.navigate(navRoute.community) {
-                        popUpTo(navRoute.login) { inclusive = true }
+                    navController.navigate(NavRoute.COMMUNITY) {
+                        popUpTo(NavRoute.LOGIN) { inclusive = true }
                     }
                 },
             )
         }
         // 회원가입
-        composable(route = navRoute.signUp) {
+        composable(route = NavRoute.SIGNUP) {
             val signViewModel: SignViewModel = hiltViewModel()
             SignView(
                 viewModel = signViewModel,
                 goToLoginView = {
-                    navController.navigate(navRoute.login) {
-                        popUpTo(navRoute.login) { inclusive = true }
+                    navController.navigate(NavRoute.LOGIN) {
+                        popUpTo(NavRoute.LOGIN) { inclusive = true }
                     }
                 },
             )
         }
 
         // 판례검색 화면
-        composable(route = navRoute.lawConsult) {
+        composable(route = NavRoute.lawConsult) {
 //            val lawConsultViewModel: LawConsultViewModel = hiltViewModel()
 //            LawConsultView(
 //                modifier = modifier,
@@ -145,7 +145,7 @@ fun AppRoute(
         }
         // 커뮤니티 화면
         composable(
-            route = navRoute.community,
+            route = NavRoute.community,
         ) {
             val communityViewModel: CommunityViewModel = hiltViewModel()
             CommunityView(
@@ -155,7 +155,7 @@ fun AppRoute(
         }
         // 자가진단 화면
         composable(
-            route = navRoute.self,
+            route = NavRoute.self,
         ) {
             val selfViewModel: SelfViewModel = hiltViewModel()
             SelfView(

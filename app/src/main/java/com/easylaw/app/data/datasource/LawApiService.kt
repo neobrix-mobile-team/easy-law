@@ -13,12 +13,12 @@ interface LawApiService {
         @Query("query") query: String,
         @Query("org") org: String?,
         @Query("page") page: Int,
-        @Query("display") display: Int = 20
+        @Query("display") display: Int = 20,
     ): LawListResponse
 
     @GET("DRF/lawService.do?target=prec&type=JSON")
     suspend fun getPrecedentDetail(
         @Query("OC") apiKey: String = BuildConfig.LAW_API_KEY,
-        @Query("ID") caseId: String
+        @Query("ID") caseId: String,
     ): LawDetailResponse
 }

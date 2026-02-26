@@ -46,7 +46,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import com.easylaw.app.dto.precModel
+import com.easylaw.app.dto.PrecModel
 import com.easylaw.app.ui.components.CommonButton
 import com.easylaw.app.ui.components.CommonTextField
 
@@ -148,7 +148,7 @@ fun LawConsultView(
 
 @Composable
 fun LawSearchResultDialog(
-    precList: List<precModel>,
+    precList: List<PrecModel>,
     onDismiss: () -> Unit,
 ) {
     Dialog(
@@ -226,7 +226,7 @@ fun LawSearchResultDialog(
 }
 
 @Composable
-fun PrecedentItemRow(item: precModel) {
+fun PrecedentItemRow(item: PrecModel) {
     Card(
         modifier =
             Modifier

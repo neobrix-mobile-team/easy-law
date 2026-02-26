@@ -8,7 +8,7 @@ import com.google.gson.annotations.SerializedName
 import java.lang.reflect.Type
 
 data class LawListResponse(
-    @SerializedName("PrecSearch") val precSearch: PrecSearchData?
+    @SerializedName("PrecSearch") val precSearch: PrecSearchData?,
 )
 
 data class PrecSearchData(
@@ -16,7 +16,7 @@ data class PrecSearchData(
     @SerializedName("page") val page: String?,
     @SerializedName("prec")
     @JsonAdapter(PrecItemListDeserializer::class)
-    val precList: List<PrecItem>?
+    val precList: List<PrecItem>?,
 )
 
 data class PrecItem(
@@ -25,7 +25,7 @@ data class PrecItem(
     @SerializedName("사건종류명") val category: String?,
     @SerializedName("법원명") val court: String?,
     @SerializedName("선고일자") val date: String?,
-    @SerializedName("판례상세링크") val detailLink: String?
+    @SerializedName("판례상세링크") val detailLink: String?,
 )
 
 // 역직렬화
@@ -33,9 +33,9 @@ class PrecItemListDeserializer : JsonDeserializer<List<PrecItem>> {
     override fun deserialize(
         json: JsonElement,
         typeOfT: Type,
-        context: JsonDeserializationContext
-    ): List<PrecItem> {
-        return when {
+        context: JsonDeserializationContext,
+    ): List<PrecItem> =
+        when {
             json.isJsonArray -> {
                 json.asJsonArray.map { context.deserialize(it, PrecItem::class.java) }
             }
@@ -47,5 +47,4 @@ class PrecItemListDeserializer : JsonDeserializer<List<PrecItem>> {
 
             else -> emptyList()
         }
-    }
 }

@@ -1,4 +1,4 @@
-package com.easylaw.app.common.util
+package com.easylaw.app.di
 
 import dagger.Module
 import dagger.Provides
@@ -15,13 +15,15 @@ import javax.inject.Singleton
 object SupabaseModule {
     @Provides
     @Singleton
-    fun provideSupabaseClient(): SupabaseClient {
-        return createSupabaseClient(
+    fun provideSupabaseClient(): SupabaseClient =
+        createSupabaseClient(
             supabaseUrl = "https://qecbifdhdjebqxpzucal.supabase.co",
-            supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFlY2JpZmRoZGplYnF4cHp1Y2FsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA4NjI5MTUsImV4cCI6MjA4NjQzODkxNX0.YrUAPYN33L3KTpwyk09PMxQ1-nSHVIH84ZaQ37KTJEc",
+            supabaseKey =
+                "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFlY2JpZmRoZGplYnF" +
+                    "4cHp1Y2FsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA4NjI5MTUsImV4cCI6MjA4NjQzODkxNX0.YrUAPYN33L3KTpwyk09PMxQ1-" +
+                    "nSHVIH84ZaQ37KTJEc",
         ) {
             install(Postgrest)
             install(Auth)
         }
-    }
 }

@@ -22,7 +22,5 @@ import javax.inject.Singleton
 object ServiceModule {
     @Provides
     @Singleton
-    fun provideLawApiService(retrofit: Retrofit): LawApiServiceImpl {
-        return retrofit.create(LawApiServiceImpl::class.java)
-    }
+    fun provideLawApiService(retrofit: Retrofit): LawApiServiceImpl = retrofit.create(LawApiServiceImpl::class.java)
 }
