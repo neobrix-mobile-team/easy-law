@@ -32,7 +32,8 @@ class CommunityViewModel
             viewModelScope.launch {
                 try {
                     val result =
-                        supabase.from("posts")
+                        supabase
+                            .from("posts")
                             .select(columns = Columns.raw("*, comments(*)"))
                             .decodeList<Post>()
 

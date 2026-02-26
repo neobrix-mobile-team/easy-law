@@ -34,34 +34,34 @@ data class BottomNavItem(
 )
 
 // 앱의 네비게이션 설정
-object navRoute {
-    const val onboarding = "onboarding"
-    const val login = "login"
-    const val signUp = "signUp"
-    const val lawConsult = "lawConsult"
-    const val community = "community"
-    const val self = "self"
-    const val carCrush = "carCrush"
+object NavRoute {
+    const val ONBOARDING = "onboarding"
+    const val LOGIN = "login"
+    const val SIGN_UP = "signUp"
+    const val LAW_CONSULT = "lawConsult"
+    const val COMMUNITY = "community"
+    const val SELF = "self"
+    const val CAR_CRUSH = "carCrush"
 
     val bottomItems =
         listOf(
             BottomNavItem(
-                route = community,
+                route = COMMUNITY,
                 title = "커뮤니티",
                 icon = Icons.Default.Share,
             ),
             BottomNavItem(
-                route = lawConsult,
+                route = LAW_CONSULT,
                 title = "판례검색",
                 icon = Icons.Default.Gavel,
             ),
             BottomNavItem(
-                route = self,
+                route = SELF,
                 title = "자가진단",
                 icon = Icons.Default.Check,
             ),
 //        BottomNavItem(
-//            route = carCrush,
+//            route = CAR_CRUSH,
 //            title = "영상 분석",
 //            icon = Icons.Default.Videocam
 //        )
@@ -72,11 +72,11 @@ object navRoute {
 fun AppRoute(
     modifier: Modifier,
     navController: NavHostController,
-    startDestination: String = navRoute.onboarding,
+    startDestination: String = NavRoute.ONBOARDING,
 ) {
     NavHost(
         navController = navController,
-//        startDestination = navRoute.community,
+//        startDestination = NavRoute.COMMUNITY,
         startDestination = startDestination,
         enterTransition = {
             slideIntoContainer(
@@ -92,51 +92,51 @@ fun AppRoute(
         },
     ) {
         // 온보딩
-        composable(route = navRoute.onboarding) {
+        composable(route = NavRoute.ONBOARDING) {
             val onboardingViewModel: OnboardingViewModel = hiltViewModel()
             OnboardingView(
                 viewModel = onboardingViewModel,
                 goToLoginView = {
-                    navController.navigate(navRoute.login) {
-                        // popUpTo(navRoute.onboarding) : onboarding 까지 경로찾기
+                    navController.navigate(NavRoute.LOGIN) {
+                        // popUpTo(NavRoute.ONBOARDING) : onboarding 까지 경로찾기
                         // inclusive : 해당 경로까지 제거
-                        popUpTo(navRoute.onboarding) { inclusive = true }
+                        popUpTo(NavRoute.ONBOARDING) { inclusive = true }
                     }
                 },
             )
         }
         // 로그인
-        composable(route = navRoute.login) {
+        composable(route = NavRoute.LOGIN) {
             val loginViewModel: LoginViewModel = hiltViewModel()
             LoginView(
                 viewModel = loginViewModel,
                 goToSignUpView = {
                     navController.navigate(
-                        navRoute.signUp,
+                        NavRoute.SIGN_UP,
                     )
                 },
                 goToMainView = {
-                    navController.navigate(navRoute.community) {
-                        popUpTo(navRoute.login) { inclusive = true }
+                    navController.navigate(NavRoute.COMMUNITY) {
+                        popUpTo(NavRoute.LOGIN) { inclusive = true }
                     }
                 },
             )
         }
         // 회원가입
-        composable(route = navRoute.signUp) {
+        composable(route = NavRoute.SIGN_UP) {
             val signViewModel: SignViewModel = hiltViewModel()
             SignView(
                 viewModel = signViewModel,
                 goToLoginView = {
-                    navController.navigate(navRoute.login) {
-                        popUpTo(navRoute.login) { inclusive = true }
+                    navController.navigate(NavRoute.LOGIN) {
+                        popUpTo(NavRoute.LOGIN) { inclusive = true }
                     }
                 },
             )
         }
 
         // 판례검색 화면
-        composable(route = navRoute.lawConsult) {
+        composable(route = NavRoute.LAW_CONSULT) {
 //            val lawConsultViewModel: LawConsultViewModel = hiltViewModel()
 //            LawConsultView(
 //                modifier = modifier,
@@ -146,7 +146,7 @@ fun AppRoute(
         }
         // 커뮤니티 화면
         composable(
-            route = navRoute.community,
+            route = NavRoute.COMMUNITY,
         ) {
             val communityViewModel: CommunityViewModel = hiltViewModel()
             CommunityView(
@@ -156,7 +156,7 @@ fun AppRoute(
         }
         // 자가진단 화면
         composable(
-            route = navRoute.self,
+            route = NavRoute.SELF,
         ) {
             val selfViewModel: SelfViewModel = hiltViewModel()
             SelfView(

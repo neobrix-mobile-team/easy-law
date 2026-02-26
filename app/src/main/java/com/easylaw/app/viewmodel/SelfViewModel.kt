@@ -68,7 +68,8 @@ class SelfViewModel
                     Log.d("자가진단 결과", responseText)
 
                     val resultList =
-                        responseText.split("\n")
+                        responseText
+                            .split("\n")
                             .map { it.trim() }
                             .filter { it.isNotEmpty() }
 

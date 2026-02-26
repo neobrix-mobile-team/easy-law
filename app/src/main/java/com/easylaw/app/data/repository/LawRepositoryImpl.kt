@@ -20,8 +20,8 @@ class LawRepositoryImpl
             query: String,
             org: String?,
             onTotalCountFetched: (Int) -> Unit,
-        ): Flow<PagingData<Precedent>> {
-            return Pager(
+        ): Flow<PagingData<Precedent>> =
+            Pager(
                 config =
                     PagingConfig(
                         pageSize = 20,
@@ -33,7 +33,6 @@ class LawRepositoryImpl
                     PrecedentPagingSource(apiService, query, org, onTotalCountFetched)
                 },
             ).flow
-        }
 
         override suspend fun getPrecedentDetail(caseId: String): PrecedentDetail? {
             return try {

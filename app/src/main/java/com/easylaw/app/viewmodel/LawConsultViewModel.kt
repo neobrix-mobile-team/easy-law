@@ -38,8 +38,7 @@ class LawConsultViewModel
         }
 
         fun onDismiss() {
-            _lawConsultViewState.update {
-                    it ->
+            _lawConsultViewState.update { it ->
                 it.copy(
                     precSuccess = false,
                     precList = emptyList(),

@@ -20,10 +20,10 @@ data class PrecSearchModel(
     @SerializedName("section")
     val section: String,
     @SerializedName("prec")
-    val prec: List<precModel>,
+    val prec: List<PrecModel>,
 )
 
-data class precModel(
+data class PrecModel(
     @SerializedName("id")
     val id: String,
     @SerializedName("사건번호")

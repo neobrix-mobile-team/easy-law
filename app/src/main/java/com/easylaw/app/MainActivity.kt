@@ -4,11 +4,19 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExitToApp
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -20,8 +28,8 @@ import com.easylaw.app.data.repo.AIRepo
 import com.easylaw.app.domain.model.UserInfo
 import com.easylaw.app.domain.model.UserSession
 import com.easylaw.app.navigation.AppRoute
-import com.easylaw.app.navigation.navRoute
-import com.easylaw.app.navigation.navRoute.bottomItems
+import com.easylaw.app.navigation.NavRoute
+import com.easylaw.app.navigation.NavRoute.bottomItems
 import com.easylaw.app.ui.components.CommonIndicator
 import com.easylaw.app.ui.theme.EasyLawTheme
 import com.easylaw.app.util.PreferenceManager
@@ -70,9 +78,9 @@ class MainActivity : ComponentActivity() {
 
                 val geminiState by aiManager.loadingState.collectAsState()
 
-                val hideBarsRoutes = listOf(navRoute.onboarding, navRoute.login, navRoute.signUp)
+                val hideBarsRoutes = listOf(NavRoute.ONBOARDING, NavRoute.LOGIN, NavRoute.SIGN_UP)
 
-                val startRoute = if (userInfo.id.isNotEmpty()) navRoute.community else navRoute.onboarding
+                val startRoute = if (userInfo.id.isNotEmpty()) NavRoute.COMMUNITY else NavRoute.ONBOARDING
 
                 // 세션정보를 가져오는 동안 빈 화면 출력
                 if (!isInitialized) {
@@ -93,8 +101,8 @@ class MainActivity : ComponentActivity() {
 
                                     drawerState.close()
 
-                                    if (navController.currentBackStackEntry?.destination?.route != navRoute.onboarding) {
-                                        navController.navigate(navRoute.onboarding) {
+                                    if (navController.currentBackStackEntry?.destination?.route != NavRoute.ONBOARDING) {
+                                        navController.navigate(NavRoute.ONBOARDING) {
                                             popUpTo(navController.graph.id) {
                                                 inclusive = true
                                             }

@@ -32,8 +32,8 @@ class AIRepo
         private val _loadingState = MutableStateFlow(AlLoading())
         val loadingState = _loadingState.asStateFlow()
 
-        suspend fun execute(prompt: String): String {
-            return try {
+        suspend fun execute(prompt: String): String =
+            try {
                 _loadingState.update { it.copy(isLoading = true) }
                 val response = generativeModel.generateContent(prompt)
                 response.text?.trim() ?: ""
@@ -43,5 +43,4 @@ class AIRepo
             } finally {
                 _loadingState.update { it.copy(isLoading = false) }
             }
-        }
     }

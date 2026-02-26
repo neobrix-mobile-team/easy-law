@@ -21,7 +21,7 @@ import javax.inject.Inject
 
 data class OnboardingViewState(
     val currentStep: Int = 1,
-    val user_role: String = "",
+    val userRole: String = "",
 )
 
 @HiltViewModel
@@ -35,16 +35,16 @@ class OnboardingViewModel
 
         // 사용자 유형 선택 (선택 시 상태 업데이트)
         fun selectRole(role: String) {
-            _onboardingVState.update { it.copy(user_role = role) }
+            _onboardingVState.update { it.copy(userRole = role) }
 
-            val user_role =
+            val userRole =
                 when (role) {
                     "내국인" -> "내국인"
                     else -> "외국인"
                 }
 
             userSession.setuser_role(
-                user_role,
+                userRole,
             )
         }
 

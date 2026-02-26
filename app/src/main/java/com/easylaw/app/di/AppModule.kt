@@ -32,7 +32,8 @@ object AppModule {
                 level = HttpLoggingInterceptor.Level.BODY
             }
 
-        return OkHttpClient.Builder()
+        return OkHttpClient
+            .Builder()
             .addInterceptor(loggingInterceptor)
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
@@ -41,24 +42,20 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideLawApiService(okHttpClient: OkHttpClient): LawApiService {
-        return Retrofit.Builder()
+    fun provideLawApiService(okHttpClient: OkHttpClient): LawApiService =
+        Retrofit
+            .Builder()
             .baseUrl("https://www.law.go.kr/")
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(LawApiService::class.java)
-    }
 
     @Provides
     @Singleton
-    fun provideLawRepository(apiService: LawApiService): LawRepository {
-        return LawRepositoryImpl(apiService)
-    }
+    fun provideLawRepository(apiService: LawApiService): LawRepository = LawRepositoryImpl(apiService)
 
     @Provides
     @Singleton
-    fun provideGeminiService(): PrecedentService {
-        return PrecedentService()
-    }
+    fun provideGeminiService(): PrecedentService = PrecedentService()
 }

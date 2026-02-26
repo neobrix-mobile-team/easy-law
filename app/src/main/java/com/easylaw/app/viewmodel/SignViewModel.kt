@@ -35,7 +35,8 @@ data class UserRequest(
     val id: String? = null,
     val name: String,
     val email: String,
-    val user_role: String,
+    @SerialName("user_role")
+    val userRole: String,
     @SerialName("fcm_token")
     val fcmToken: String? = null,
 )
@@ -82,8 +83,7 @@ class SignViewModel
         fun onPasswordConfirmChanged(pwd: String) {
             val isPwdVaildConfirm = pwd.isNotEmpty() && _signViewState.value.password != pwd
 
-            _signViewState.update {
-                    it ->
+            _signViewState.update { it ->
                 it.copy(
                     passwordConfirm = pwd,
                     isPasswordConfirmError = isPwdVaildConfirm,
@@ -102,9 +102,9 @@ class SignViewModel
                     val email = _signViewState.value.email
                     val password = _signViewState.value.password
                     val name = _signViewState.value.name
-                    val user_role = userSession.getuser_role()
+                    val userRole = userSession.getuser_role()
 
-                    Log.d("현재 유저상태", user_role)
+                    Log.d("현재 유저상태", userRole)
 
                     supabase.auth.signUpWith(Email) {
                         this.email = email
@@ -120,7 +120,7 @@ class SignViewModel
                                 id = userId,
                                 name = name,
                                 email = email,
-                                user_role = user_role,
+                                userRole = userRole,
                             )
                         supabase.from("users").insert(userRequest)
                         _signViewState.update { it.copy(isSignSuccess = true) }
@@ -129,16 +129,14 @@ class SignViewModel
                     val errorMsg = e.message ?: ""
                     if (errorMsg.contains("already", ignoreCase = true)) {
                         Log.d("sign error", "이미 가입된 이메일입니다.")
-                        _signViewState.update {
-                                it ->
+                        _signViewState.update { it ->
                             it.copy(
                                 isSignError = "이미 가입된 이메일입니다.",
                             )
                         }
                     } else {
                         Log.d("sign error", "회원가입 실패: ${e.localizedMessage}")
-                        _signViewState.update {
-                                it ->
+                        _signViewState.update { it ->
                             it.copy(
                                 isSignError = e.localizedMessage ?: "",
                             )

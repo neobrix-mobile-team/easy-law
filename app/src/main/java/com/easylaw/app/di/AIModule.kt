@@ -12,11 +12,10 @@ import javax.inject.Singleton
 object AIModule {
     @Provides
     @Singleton
-    fun provideGenerativeModel(): GenerativeModel {
-        return GenerativeModel(
+    fun provideGenerativeModel(): GenerativeModel =
+        GenerativeModel(
             modelName = "gemini-2.5-flash",
 //            apiKey = "AIzaSyDAHMokux1Lg5Jx9PwfkzIigI8my9Jvamw"
             apiKey = "AIzaSyDDkAUVkk_EdyhW6S3etuVchfJBiAQn-5U",
         )
-    }
 }

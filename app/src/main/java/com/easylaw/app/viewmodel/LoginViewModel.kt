@@ -1,11 +1,14 @@
 package com.easylaw.app.viewmodel
 
 import android.content.Context
-// import android.credentials.CredentialManager
 import android.util.Log
 import android.util.Patterns
+import androidx.credentials.CredentialManager
+import androidx.credentials.GetCredentialRequest
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.easylaw.app.domain.model.UserInfo
+import com.easylaw.app.domain.model.UserSession
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.Firebase
@@ -15,18 +18,14 @@ import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.gotrue.auth
+import io.github.jan.supabase.gotrue.providers.builtin.Email
+import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
-import io.github.jan.supabase.gotrue.providers.builtin.Email
-import io.github.jan.supabase.postgrest.from
-import androidx.credentials.GetCredentialRequest
-import androidx.credentials.CredentialManager
-import com.easylaw.app.domain.model.UserInfo
-import com.easylaw.app.domain.model.UserSession
 
 /**
  * [LoginViewModel]
@@ -103,11 +102,11 @@ class LoginViewModel
 
                     if (userId != null) {
                         val userInfo =
-                            supabase.from("users")
+                            supabase
+                                .from("users")
                                 .select {
                                     filter { eq("id", userId) }
-                                }
-                                .decodeSingle<UserInfo>()
+                                }.decodeSingle<UserInfo>()
 
                         userSession.setLoginInfo(userInfo)
                         Log.d("userInfo", userSession.getUserState().toString())
@@ -149,7 +148,7 @@ class LoginViewModel
                             val userEmail = user.email ?: ""
                             val userName = user.displayName ?: ""
                             val userId = user?.uid
-                            val user_role = userSession.getuser_role()
+                            val userRole = userSession.getuser_role()
 
                             val fcmToken =
                                 try {
@@ -165,15 +164,15 @@ class LoginViewModel
                                         id = userId,
                                         name = userName,
                                         email = userEmail,
-                                        user_role = user_role,
+                                        userRole = userRole,
                                         fcmToken = fcmToken,
                                     )
                                 val userInfo =
-                                    supabase.from("users")
+                                    supabase
+                                        .from("users")
                                         .upsert(value = userData, onConflict = "email") {
                                             select()
-                                        }
-                                        .decodeSingle<UserInfo>()
+                                        }.decodeSingle<UserInfo>()
 
                                 userSession.setLoginInfo(userInfo)
 
@@ -217,13 +216,15 @@ class LoginViewModel
                 try {
                     // 구글 로그인 옵션 설정
                     val googleIdOption =
-                        GetGoogleIdOption.Builder()
+                        GetGoogleIdOption
+                            .Builder()
                             .setFilterByAuthorizedAccounts(false)
                             .setServerClientId("607557323201-jeej7j1udj6iilbn3npbrfeuus71b14g.apps.googleusercontent.com")
                             .build()
 
                     val request =
-                        GetCredentialRequest.Builder()
+                        GetCredentialRequest
+                            .Builder()
                             .addCredentialOption(googleIdOption)
                             .build()
 

@@ -11,11 +11,17 @@ import com.easylaw.app.domain.model.Precedent
 import com.easylaw.app.util.KeywordOptimizer
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-data class SearchParams(val query: String, val orgCode: String?)
+data class SearchParams(
+    val query: String,
+    val orgCode: String?,
+)
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
@@ -42,8 +48,7 @@ class LegalSearchViewModel
                             _uiState.update { it.copy(totalSearchCount = totalCnt) }
                         },
                     )
-                }
-                .cachedIn(viewModelScope)
+                }.cachedIn(viewModelScope)
                 .stateIn(viewModelScope, SharingStarted.Lazily, PagingData.empty())
 
         fun updateSituation(newSituation: String) {
