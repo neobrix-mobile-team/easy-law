@@ -26,6 +26,15 @@ jobs:
       - name: 🔧 Gradle wrapper 권한 설정
         run: chmod +x ./gradlew
 
+      - name: 🔐 local.properties 생성
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          LAW_API_KEY: ${{ secrets.LAW_API_KEY }}
+        run: |
+          : > local.properties
+          [ -n "$GEMINI_API_KEY" ] && echo "GEMINI_API_KEY=$GEMINI_API_KEY" >> local.properties
+          [ -n "$LAW_API_KEY" ] && echo "LAW_API_KEY=$LAW_API_KEY" >> local.properties
+
       - name: 🔍 Lint 검사
         run: ./gradlew lint --build-cache --daemon
 
