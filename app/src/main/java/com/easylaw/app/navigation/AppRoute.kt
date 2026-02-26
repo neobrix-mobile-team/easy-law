@@ -16,17 +16,17 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.easylaw.app.ui.screen.Login.LoginView
-import com.easylaw.app.viewmodel.LoginViewModel
 import com.easylaw.app.ui.screen.Login.SignView
-import com.easylaw.app.viewmodel.SignViewModel
 import com.easylaw.app.ui.screen.Self.SelfView
-import com.easylaw.app.viewmodel.SelfViewModel
 import com.easylaw.app.ui.screen.community.CommunityView
-import com.easylaw.app.viewmodel.CommunityViewModel
 import com.easylaw.app.ui.screen.lawConsult.LawConsultView
-import com.easylaw.app.viewmodel.LawConsultViewModel
 import com.easylaw.app.ui.screen.onboarding.OnboardingView
+import com.easylaw.app.viewmodel.CommunityViewModel
+import com.easylaw.app.viewmodel.LawConsultViewModel
+import com.easylaw.app.viewmodel.LoginViewModel
 import com.easylaw.app.viewmodel.OnboardingViewModel
+import com.easylaw.app.viewmodel.SelfViewModel
+import com.easylaw.app.viewmodel.SignViewModel
 
 data class BottomNavItem(
     val route: String,
@@ -73,7 +73,7 @@ object navRoute {
 fun AppRoute(
     modifier: Modifier,
     navController: NavHostController,
-    startDestination: String = navRoute.onboarding
+    startDestination: String = navRoute.onboarding,
 ) {
     NavHost(
         navController = navController,

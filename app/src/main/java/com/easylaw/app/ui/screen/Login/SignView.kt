@@ -44,7 +44,6 @@ import com.easylaw.app.viewmodel.SignViewModel
  * 3. 사용자 피드백: 로딩 중에는 인디케이터를, 결과에 따라 성공/실패 팝업을 띄워 프로세스 상태를 명확히 전달합니다.
  */
 
-
 @Composable
 fun SignView(
     viewModel: SignViewModel,

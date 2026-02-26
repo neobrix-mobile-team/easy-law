@@ -7,7 +7,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExitToApp
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -33,11 +32,12 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-
     @Inject
     lateinit var userSession: UserSession
+
     @Inject
     lateinit var preferenceManager: PreferenceManager
+
     @Inject
     lateinit var aiManager: AIRepo
 
@@ -50,7 +50,7 @@ class MainActivity : ComponentActivity() {
             val savedUser = preferenceManager.userData.firstOrNull()
             if (savedUser != null) {
                 userSession.setLoginInfo(savedUser)
-            }else {
+            } else {
                 userSession.finishInitialzed()
             }
         }
@@ -102,9 +102,9 @@ class MainActivity : ComponentActivity() {
                                         }
                                     }
                                 }
-                            }
+                            },
                         )
-                    }
+                    },
                 ) {
                     Scaffold(
                         bottomBar = {
@@ -119,12 +119,13 @@ class MainActivity : ComponentActivity() {
                                             selected = isSelected,
                                             label = { Text(text = item.title) },
                                             icon = { Icon(imageVector = item.icon, contentDescription = item.title) },
-                                            colors = NavigationBarItemDefaults.colors(
-                                                selectedIconColor = Color(0xFFD95F1E),
-                                                selectedTextColor = Color(0xFFD95F1E),
-                                                unselectedIconColor = Color(0xFF797573),
-                                                unselectedTextColor = Color(0xFF797573),
-                                            ),
+                                            colors =
+                                                NavigationBarItemDefaults.colors(
+                                                    selectedIconColor = Color(0xFFD95F1E),
+                                                    selectedTextColor = Color(0xFFD95F1E),
+                                                    unselectedIconColor = Color(0xFF797573),
+                                                    unselectedTextColor = Color(0xFF797573),
+                                                ),
                                             onClick = {
                                                 if (currentRoute != item.route) {
                                                     navController.navigate(item.route) {
@@ -140,12 +141,12 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
                             }
-                        }
+                        },
                     ) { innerPadding ->
                         AppRoute(
                             modifier = if (currentRoute in hideBarsRoutes) Modifier else Modifier.padding(innerPadding),
                             navController = navController,
-                            startDestination = startRoute
+                            startDestination = startRoute,
                         )
                     }
                 }
@@ -162,27 +163,28 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun EasylawSideBar(
     userInfo: UserInfo,
-    onLogoutClick: () -> Unit
+    onLogoutClick: () -> Unit,
 ) {
     ModalDrawerSheet(
         drawerContainerColor = Color.White,
-        modifier = Modifier.width(280.dp)
+        modifier = Modifier.width(280.dp),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxHeight()
-                .padding(20.dp)
+            modifier =
+                Modifier
+                    .fillMaxHeight()
+                    .padding(20.dp),
         ) {
             // 상단 유저 정보 영역
             Text(
                 text = if (userInfo.id.isNotEmpty()) "${userInfo.name}님 환영합니다" else "로그인이 필요합니다",
                 style = MaterialTheme.typography.titleMedium,
-                color = Color.Black
+                color = Color.Black,
             )
             Text(
                 text = userInfo.email,
                 style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray
+                color = Color.Gray,
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -195,9 +197,8 @@ fun EasylawSideBar(
                 selected = false,
                 onClick = onLogoutClick,
                 icon = { Icon(Icons.Default.ExitToApp, contentDescription = null, tint = Color.Red) },
-                colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
+                colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent),
             )
-
         }
     }
 }

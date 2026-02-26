@@ -13,7 +13,6 @@ import kotlinx.serialization.json.Json
 import javax.inject.Inject
 import javax.inject.Singleton
 
-
 /*
 로그인 유저의 세션 관리
 
@@ -24,32 +23,36 @@ import javax.inject.Singleton
  */
 
 @Singleton
-class PreferenceManager @Inject constructor(
-    private val dataStore: DataStore<Preferences>
-) {
-    private val USER_DATA_KEY = stringPreferencesKey("user_data")
+class PreferenceManager
+    @Inject
+    constructor(
+        private val dataStore: DataStore<Preferences>,
+    ) {
+        private val USER_DATA_KEY = stringPreferencesKey("user_data")
 
-    // 기기에 저장된 값 가져오기
-    val userData: Flow<UserInfo?> = dataStore.data.map { prefs ->
-        val json = prefs[USER_DATA_KEY] ?: return@map null
-        try {
-            // 문자열로 저장된 값을 다시 객체화
-            Json.decodeFromString<UserInfo>(json)
-        } catch (e: Exception) {
-            Log.e("error",e.toString() )
-            null
+        // 기기에 저장된 값 가져오기
+        val userData: Flow<UserInfo?> =
+            dataStore.data.map { prefs ->
+                val json = prefs[USER_DATA_KEY] ?: return@map null
+                try {
+                    // 문자열로 저장된 값을 다시 객체화
+                    Json.decodeFromString<UserInfo>(json)
+                } catch (e: Exception) {
+                    Log.e("error", e.toString())
+                    null
+                }
+            }
+
+        // 로그인 시 세션 정보 저장
+        suspend fun saveUser(userInfo: UserInfo) {
+            val json = Json.encodeToString(userInfo)
+            dataStore.edit { prefs ->
+                prefs[USER_DATA_KEY] = json
+            }
+        }
+
+        // 로그아웃
+        suspend fun sessionClear() {
+            dataStore.edit { it.clear() }
         }
     }
-
-    // 로그인 시 세션 정보 저장
-    suspend fun saveUser(userInfo: UserInfo) {
-        val json = Json.encodeToString(userInfo)
-        dataStore.edit { prefs ->
-            prefs[USER_DATA_KEY] = json
-        }
-    }
-    // 로그아웃
-    suspend fun sessionClear() {
-        dataStore.edit { it.clear() }
-    }
-}

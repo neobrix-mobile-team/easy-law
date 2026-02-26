@@ -43,8 +43,6 @@ import com.easylaw.app.viewmodel.LoginViewModel
  * [LoginViewModel]의 상태를 관찰하여 이메일 로그인, 구글 소셜 로그인, 그리고 회원가입 화면으로의 전환을 관리합니다.
  */
 
-
-
 @Composable
 fun LoginView(
     viewModel: LoginViewModel,
@@ -125,7 +123,7 @@ fun LoginView(
             Spacer(modifier = Modifier.weight(1f))
 
             // 로그인 버튼
-           // TODO:google 로그인 안됨
+            // TODO:google 로그인 안됨
             CommonButton(
                 modifier =
                     Modifier

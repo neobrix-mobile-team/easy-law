@@ -1,6 +1,5 @@
 package com.easylaw.app.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.easylaw.app.domain.model.UserSession
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,7 +19,6 @@ import javax.inject.Inject
  * 3. 데이터 임시 저장: 선택된 역할 정보를 [UserSession]에 즉시 반영하여, 이후 회원가입 시 DB에 올바른 역할이 저장되도록 징검다리 역할을 수행합니다.
  */
 
-
 data class OnboardingViewState(
     val currentStep: Int = 1,
     val user_role: String = "",
@@ -39,13 +37,14 @@ class OnboardingViewModel
         fun selectRole(role: String) {
             _onboardingVState.update { it.copy(user_role = role) }
 
-            val user_role = when(role){
-                "내국인" -> "내국인"
-                else -> "외국인"
-            }
+            val user_role =
+                when (role) {
+                    "내국인" -> "내국인"
+                    else -> "외국인"
+                }
 
             userSession.setuser_role(
-                user_role
+                user_role,
             )
         }
 

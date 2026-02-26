@@ -30,13 +30,12 @@ import javax.inject.Inject
 
  */
 
-
 @Serializable
 data class UserRequest(
     val id: String? = null,
     val name: String,
     val email: String,
-    val user_role:String,
+    val user_role: String,
     @SerialName("fcm_token")
     val fcmToken: String? = null,
 )
@@ -60,7 +59,7 @@ class SignViewModel
     @Inject
     constructor(
         private val supabase: SupabaseClient,
-        private val userSession: UserSession
+        private val userSession: UserSession,
     ) : ViewModel() {
         private val _signViewState = MutableStateFlow(SignViewState())
         val signViewState = _signViewState.asStateFlow()
@@ -121,7 +120,7 @@ class SignViewModel
                                 id = userId,
                                 name = name,
                                 email = email,
-                                user_role = user_role
+                                user_role = user_role,
                             )
                         supabase.from("users").insert(userRequest)
                         _signViewState.update { it.copy(isSignSuccess = true) }

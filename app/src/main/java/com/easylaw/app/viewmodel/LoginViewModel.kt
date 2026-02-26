@@ -23,7 +23,6 @@ import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import io.github.jan.supabase.gotrue.providers.builtin.Email
 import io.github.jan.supabase.postgrest.from
-import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.CredentialManager
 import com.easylaw.app.domain.model.UserInfo
@@ -41,7 +40,6 @@ import com.easylaw.app.domain.model.UserSession
  * 4. 데이터 동기화 (Upsert): 소셜 로그인 시 유저 정보를 DB에 저장하거나 업데이트하며, 동시에 FCM 토큰을 갱신하여 서버와 동기화합니다.
  * 5. 세션 관리: 인증 성공 시 [UserSession]을 통해 앱 전역에서 사용할 유저 상태 정보를 최신화합니다.
  */
-
 
 data class LoginViewState(
     val idInput: String = "",
@@ -88,48 +86,47 @@ class LoginViewModel
             _loginViewState.update { it.copy(isLoginError = "") }
         }
 
-    fun login(goToMainView: () -> Unit) {
-        viewModelScope.launch {
-            _loginViewState.update { it.copy(isLoginLoading = true) }
+        fun login(goToMainView: () -> Unit) {
+            viewModelScope.launch {
+                _loginViewState.update { it.copy(isLoginLoading = true) }
 
-            try {
-                val email = _loginViewState.value.idInput
-                val password = _loginViewState.value.pwdInput
+                try {
+                    val email = _loginViewState.value.idInput
+                    val password = _loginViewState.value.pwdInput
 
-                supabase.auth.signInWith(Email) {
-                    this.email = email
-                    this.password = password
+                    supabase.auth.signInWith(Email) {
+                        this.email = email
+                        this.password = password
+                    }
+
+                    val userId = supabase.auth.currentUserOrNull()?.id
+
+                    if (userId != null) {
+                        val userInfo =
+                            supabase.from("users")
+                                .select {
+                                    filter { eq("id", userId) }
+                                }
+                                .decodeSingle<UserInfo>()
+
+                        userSession.setLoginInfo(userInfo)
+                        Log.d("userInfo", userSession.getUserState().toString())
+
+                        goToMainView()
+                    } else {
+                        throw Exception("유저 정보를 찾을 수 없습니다.")
+                    }
+                } catch (e: Exception) {
+                    Log.e("loginError", "로그인 실패: ${e.message}")
+                    _loginViewState.update {
+                        it.copy(isLoginError = "아이디 또는 비밀번호가 일치하지 않습니다.")
+                    }
+                } finally {
+                    _loginViewState.update { it.copy(isLoginLoading = false) }
                 }
-
-                val userId = supabase.auth.currentUserOrNull()?.id
-
-                if (userId != null) {
-                    val userInfo = supabase.from("users")
-                        .select {
-                            filter { eq("id", userId) }
-                        }
-                        .decodeSingle<UserInfo>()
-
-                    userSession.setLoginInfo(userInfo)
-                    Log.d("userInfo", userSession.getUserState().toString())
-
-
-
-                    goToMainView()
-                } else {
-                    throw Exception("유저 정보를 찾을 수 없습니다.")
-                }
-
-            } catch (e: Exception) {
-                Log.e("loginError", "로그인 실패: ${e.message}")
-                _loginViewState.update {
-                    it.copy(isLoginError = "아이디 또는 비밀번호가 일치하지 않습니다.")
-                }
-            } finally {
-                _loginViewState.update { it.copy(isLoginLoading = false) }
             }
         }
-    }
+
         fun logInGoogle(
             context: Context,
             onSuccess: () -> Unit,
@@ -163,18 +160,20 @@ class LoginViewModel
                                 }
 
                             try {
-                                val userData = UserRequest(
-                                    id = userId,
-                                    name = userName,
-                                    email = userEmail,
-                                    user_role = user_role,
-                                    fcmToken = fcmToken
-                                )
-                                val userInfo = supabase.from("users")
-                                    .upsert(value = userData, onConflict = "email") {
-                                        select()
-                                    }
-                                    .decodeSingle<UserInfo>()
+                                val userData =
+                                    UserRequest(
+                                        id = userId,
+                                        name = userName,
+                                        email = userEmail,
+                                        user_role = user_role,
+                                        fcmToken = fcmToken,
+                                    )
+                                val userInfo =
+                                    supabase.from("users")
+                                        .upsert(value = userData, onConflict = "email") {
+                                            select()
+                                        }
+                                        .decodeSingle<UserInfo>()
 
                                 userSession.setLoginInfo(userInfo)
 
@@ -195,7 +194,6 @@ class LoginViewModel
 //                            sessionState.value.userInfo?.name
 //                            val info = sessionState.value
 //                            Log.d("login_user", "이름: ${info.userInfo?.name}, 이메일: ${info.userInfo?.email}")
-
 
                             onSuccess()
                         }

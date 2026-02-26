@@ -55,8 +55,6 @@ import com.easylaw.app.viewmodel.OnboardingViewModel
  * 실시간 언어 최적화: 사용자가 역할을 선택하는 즉시 앱의 Locale을 변경(ko/en)하고 Activity를 재실행(recreate)하여 언어 환경을 동기화합니다.
  */
 
-
-
 @Composable
 fun OnboardingView(
     viewModel: OnboardingViewModel,
