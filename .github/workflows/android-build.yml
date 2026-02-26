@@ -15,9 +15,6 @@ jobs:
       - name: 📥 Checkout
         uses: actions/checkout@v4
 
-      - name: Create local.properties
-        run: touch local.properties # 서버에 빈 파일이라도 만들어줘서 에러를 방지합니다
-
       - name: ☕ JDK 17 설정
         uses: actions/setup-java@v4
         with:
@@ -39,7 +36,7 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           LAW_API_KEY: ${{ secrets.LAW_API_KEY }}
         run: |
-          touch local.properties
+          : > local.properties
           [ -n "$GEMINI_API_KEY" ] && echo "GEMINI_API_KEY=$GEMINI_API_KEY" >> local.properties
           [ -n "$LAW_API_KEY" ] && echo "LAW_API_KEY=$LAW_API_KEY" >> local.properties
 
@@ -53,4 +50,3 @@ jobs:
           name: debug-apk
           path: app/build/outputs/apk/debug/*.apk
           retention-days: 5
-
