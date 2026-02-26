@@ -1,0 +1,43 @@
+// Top-level build.gradle
+plugins {
+    id 'com.android.application' version '8.0.0' apply false
+    id 'com.android.library' version '8.0.0' apply false
+    id 'org.jetbrains.kotlin.android' version '1.9.10' apply false
+    id 'org.jetbrains.kotlin.kapt' version '1.9.10' apply false
+    id 'com.google.dagger.hilt.android' version '2.48' apply false
+    id 'org.jlleitschuh.gradle.ktlint' version '12.0.0'
+    id 'io.gitlab.arturbosch.detekt' version '1.23.0'
+    id 'org.owasp.dependencycheck' version '8.4.0'
+}
+
+// ktlint 설정
+subprojects {
+    apply plugin: 'org.jlleitschuh.gradle.ktlint'
+    
+    ktlint {
+        version = '1.0.1'
+        verbose = true
+        outputToConsole = true
+        coloredOutput = true
+        android = true
+        reporters {
+            reporter 'plain'
+            reporter 'sarif'
+        }
+    }
+}
+
+// detekt 설정
+detekt {
+    toolVersion = '1.23.0'
+    config = files('detekt.yml')
+    reports {
+        html.enabled = true
+        sarif.enabled = true
+    }
+}
+
+// OWASP Dependency Check
+dependencyCheck {
+    format = 'ALL'
+}

@@ -1,0 +1,197 @@
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+    id 'kotlin-kapt'
+    id 'com.google.dagger.hilt.android'
+    id 'jacoco'
+    id 'io.gitlab.arturbosch.detekt'
+}
+
+android {
+    namespace 'com.easylaw.app'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'com.easylaw.app'
+        minSdk 26
+        targetSdk 34
+        versionCode 1
+        versionName '0.1.0-MVP'
+        
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+        vectorDrawables.useSupportLibrary = true
+    }
+
+    buildTypes {
+        debug {
+            debuggable true
+            minifyEnabled false
+            enableUnitTestCoverage true
+        }
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+
+    buildFeatures {
+        compose true
+        aidl false
+        renderScript false
+        resValues false
+        shaders false
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = '1.5.0'
+    }
+
+    packagingOptions {
+        resources {
+            excludes += '/META-INF/{AL2.0,LGPL2.1}'
+        }
+    }
+}
+
+dependencies {
+    // ============ Core Android ============
+    implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.11.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    
+    // ============ Jetpack Compose ============
+    def composeBom = platform('androidx.compose:compose-bom:2023.10.00')
+    implementation composeBom
+    
+    implementation 'androidx.compose.ui:ui'
+    implementation 'androidx.compose.ui:ui-graphics'
+    implementation 'androidx.compose.ui:ui-tooling-preview'
+    implementation 'androidx.compose.material3:material3'
+    implementation 'androidx.compose.material:material'
+    implementation 'androidx.compose.material:material-icons-extended'
+    
+    implementation 'androidx.activity:activity-compose:1.8.0'
+    implementation 'androidx.lifecycle:lifecycle-runtime-compose:2.6.2'
+    
+    // ============ Navigation ============
+    implementation 'androidx.navigation:navigation-compose:2.7.5'
+    implementation 'androidx.navigation:navigation-fragment-ktx:2.7.5'
+    implementation 'androidx.navigation:navigation-ui-ktx:2.7.5'
+    
+    // ============ Firebase ============
+    implementation platform('com.google.firebase:firebase-bom:32.7.0')
+    implementation 'com.google.firebase:firebase-auth'
+    implementation 'com.google.firebase:firebase-firestore'
+    implementation 'com.google.firebase:firebase-analytics'
+    implementation 'com.google.android.gms:play-services-auth:20.7.0'
+    
+    // ============ Jetpack Libraries ============
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.2'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2'
+    implementation 'androidx.datastore:datastore-preferences:1.0.0'
+    
+    // ============ Kotlin Coroutines ============
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3'
+    
+    // ============ Dependency Injection (Hilt) ============
+    implementation 'com.google.dagger:hilt-android:2.48'
+    kapt 'com.google.dagger:hilt-compiler:2.48'
+    implementation 'androidx.hilt:hilt-navigation-compose:1.1.0'
+    
+    // ============ Networking ============
+    implementation 'com.squareup.retrofit2:retrofit:2.10.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.10.0'
+    implementation 'com.squareup.okhttp3:okhttp:4.11.0'
+    implementation 'com.squareup.okhttp3:logging-interceptor:4.11.0'
+    
+    // ============ JSON Parsing ============
+    implementation 'com.google.code.gson:gson:2.10.1'
+    
+    // ============ Image Loading ============
+    implementation 'io.coil-kt:coil-compose:2.5.0'
+    
+    // ============ Location ============
+    implementation 'com.google.android.gms:play-services-location:21.0.1'
+    
+    // ============ Maps (Naver) ============
+    // TODO: Naver Map SDK 추가 (별도 설정 필요)
+    
+    // ============ Speech Recognition & TTS ============
+    implementation 'com.google.android.gms:play-services-mlkit-speech-recognition:16.3.0'
+    
+    // ============ OCR (Google Vision) ============
+    // TODO: Google Vision API 설정 필요
+    
+    // ============ Testing - Unit Tests ============
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.mockito:mockito-core:5.6.0'
+    testImplementation 'org.mockito.kotlin:mockito-kotlin:5.1.0'
+    testImplementation 'io.mockk:mockk:1.13.8'
+    testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3'
+    testImplementation 'androidx.arch.core:core-testing:2.2.0'
+    
+    // ============ Testing - Instrumented Tests ============
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    androidTestImplementation 'androidx.compose.ui:ui-test-junit4'
+    androidTestImplementation 'androidx.test:rules:1.5.0'
+    androidTestImplementation 'androidx.test:runner:1.5.2'
+    
+    // ============ Debugging ============
+    debugImplementation 'androidx.compose.ui:ui-tooling'
+    debugImplementation 'androidx.compose.ui:ui-test-manifest'
+}
+
+// Jacoco 설정 (코드 커버리지)
+jacoco {
+    toolVersion = '0.8.10'
+}
+
+task jacocoTestDebugUnitTestReport(type: JacocoReport) {
+    dependsOn testDebugUnitTest
+    
+    reports {
+        xml.required = true
+        html.required = true
+        csv.required = false
+    }
+    
+    def fileFilter = [
+        '**/R.class',
+        '**/R$*.class',
+        '**/BuildConfig.*',
+        '**/Manifest*.*',
+        '**/*Test*.*',
+        '**/*$Lambda$*.*',
+        '**/*$inlined$*.*'
+    ]
+    
+    def debugTree = fileTree(dir: "$buildDir/intermediates/classes/debug", excludes: fileFilter)
+    def mainSrc = "$project.projectDir/src/main/java"
+    
+    sourceDirectories.setFrom(files([mainSrc]))
+    classDirectories.setFrom(files([debugTree]))
+    executionData.setFrom(fileTree(dir: buildDir, includes: ['jacoco/testDebugUnitTest.exec']))
+}
+
+// detekt 설정
+detekt {
+    config = rootProject.file('detekt.yml')
+    reports {
+        html.enabled = true
+        sarif.enabled = true
+    }
+}

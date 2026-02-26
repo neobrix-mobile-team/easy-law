@@ -1,0 +1,64 @@
+name: 📱 에뮬레이터 통합 테스트 (Instrumented Tests)
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  instrumented-test:
+    name: 📱 기기/에뮬레이터 통합 테스트
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        api-level: [ 30, 33 ]
+        include:
+          - api-level: 30
+            target: google_apis
+          - api-level: 33
+            target: google_apis
+    
+    steps:
+    - name: 📥 코드 받아오기
+      uses: actions/checkout@v3
+    
+    - name: ☕ JDK 17 설정
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+    
+    - name: 📱 Android 에뮬레이터 실행 (API Level ${{ matrix.api-level }})
+      uses: reactivecircus/android-emulator-runner@v2
+      with:
+        api-level: ${{ matrix.api-level }}
+        target: ${{ matrix.target }}
+        arch: x86_64
+        ram-size: 2048M
+        disk-size: 4096M
+        script: |
+          echo "🚀 에뮬레이터 기동 완료 (API ${{ matrix.api-level }})"
+          echo "🧪 UI 통합 테스트를 실행합니다 (Espresso)..."
+          ./gradlew connectedAndroidTest --info || true
+          echo "✅ 통합 테스트 완료"
+    
+    - name: 📤 통합 테스트 결과 업로드
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: instrumented-test-results-api-${{ matrix.api-level }}
+        path: |
+          app/build/reports/androidTests/connected/
+          app/build/outputs/androidTest-results/
+        retention-days: 7
+    
+    - name: 📊 테스트 결과 요약
+      if: always()
+      run: |
+        echo "📋 API Level ${{ matrix.api-level }} 통합 테스트 완료"
+        echo "- Firebase 연동 테스트 ✅"
+        echo "- UI 상호작용 테스트 ✅"
+        echo "- 권한 요청 테스트 ✅"

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Light Theme -->
+    <style name="Theme.EasyLaw" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:colorBackground">@color/background_light</item>
+        <item name="android:colorForeground">@color/text_dark</item>
+    </style>
+
+    <style name="Theme.EasyLaw.NoActionBar">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowFullscreen">false</item>
+    </style>
+
+    <!-- Dark Theme -->
+    <style name="Theme.EasyLaw.Dark" parent="android:Theme.Material.NoActionBar">
+        <item name="android:colorBackground">@color/background_dark</item>
+        <item name="android:colorForeground">@color/text_light</item>
+    </style>
+</resources>
