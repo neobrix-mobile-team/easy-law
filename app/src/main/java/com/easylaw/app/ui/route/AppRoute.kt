@@ -17,15 +17,15 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.easylaw.app.ui.screen.LegalSearchRoute
 import com.easylaw.app.ui.screen.Login.LoginView
-import com.easylaw.app.ui.screen.Login.LoginViewModel
 import com.easylaw.app.ui.screen.Login.SignView
-import com.easylaw.app.ui.screen.Login.SignViewModel
 import com.easylaw.app.ui.screen.Self.SelfView
-import com.easylaw.app.ui.screen.Self.SelfViewModel
 import com.easylaw.app.ui.screen.community.CommunityView
-import com.easylaw.app.ui.screen.community.CommunityViewModel
 import com.easylaw.app.ui.screen.onboarding.OnboardingView
-import com.easylaw.app.ui.screen.onboarding.OnboardingViewModel
+import com.easylaw.app.viewModel.LoginViewModel
+import com.easylaw.app.viewModel.OnboardingViewModel
+import com.easylaw.app.viewModel.SignViewModel
+import com.easylaw.app.viewmodel.CommunityViewModel
+import com.easylaw.app.viewmodel.SelfViewModel
 
 data class BottomNavItem(
     val route: String,
@@ -72,11 +72,12 @@ object NavRoute {
 fun AppRoute(
     modifier: Modifier,
     navController: NavHostController,
+    startDestination: String = NavRoute.ONBOARDING,
 ) {
     NavHost(
         navController = navController,
 //        startDestination = navRoute.community,
-        startDestination = NavRoute.ONBOARDING,
+        startDestination = startDestination,
         enterTransition = {
             slideIntoContainer(
                 towards = AnimatedContentTransitionScope.SlideDirection.Left,

@@ -69,10 +69,10 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.easylaw.app.domain.model.Precedent
 import com.easylaw.app.util.debouncedClickable
-import com.easylaw.app.viewModel.CourtTypeOption
-import com.easylaw.app.viewModel.DetailViewMode
-import com.easylaw.app.viewModel.LegalSearchUiState
-import com.easylaw.app.viewModel.LegalSearchViewModel
+import com.easylaw.app.viewmodel.CourtTypeOption
+import com.easylaw.app.viewmodel.DetailViewMode
+import com.easylaw.app.viewmodel.LegalSearchUiState
+import com.easylaw.app.viewmodel.LegalSearchViewModel
 
 @Composable
 fun LegalSearchRoute(viewModel: LegalSearchViewModel = hiltViewModel()) {
