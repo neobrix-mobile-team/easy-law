@@ -36,6 +36,26 @@ jobs:
             echo "⚠️ GOOGLE_SERVICES_JSON secret is missing!"
           fi
 
+      - name: 🔐 local.properties 생성
+        env:
+          # GitHub Secrets에 저장한 이름을 그대로 가져옵니다.
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          LAW_API_KEY: ${{ secrets.LAW_API_KEY }}
+        run: |
+          # 파일이 없다면 생성하고, 있다면 내용을 추가합니다.
+          touch local.properties
+          
+          # API Key가 비어있지 않은지 확인 후 파일에 기록
+          if [ -n "$MY_API_KEY" ]; then
+            echo "api.key=$MY_API_KEY" >> local.properties
+          else
+            echo "⚠️ MY_API_KEY secret is missing!"
+          fi
+          
+          if [ -n "$ANOTHER_KEY" ]; then
+            echo "another.key=$ANOTHER_KEY" >> local.properties
+          fi
+
       # 🧹 캐시 꼬임 방지는 필요할 때만 하는 것이 좋지만, 유지하신다면 명령어를 명확히 합니다.
       - name: 🧹 Gradle Wrapper 캐시 정리
         run: ./gradlew clean
