@@ -1,4 +1,4 @@
-package com.easylaw.app.ui.Route
+package com.easylaw.app.ui.route
 
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween

@@ -20,10 +20,10 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.easylaw.app.repository.AIRepo
-import com.easylaw.app.ui.Route.AppRoute
-import com.easylaw.app.ui.Route.NavRoute
-import com.easylaw.app.ui.Route.NavRoute.bottomItems
 import com.easylaw.app.ui.components.CommonIndicator
+import com.easylaw.app.ui.route.AppRoute
+import com.easylaw.app.ui.route.NavRoute
+import com.easylaw.app.ui.route.NavRoute.bottomItems
 import com.easylaw.app.ui.theme.EasyLawTheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
