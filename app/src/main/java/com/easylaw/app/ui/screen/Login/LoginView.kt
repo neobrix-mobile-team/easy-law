@@ -34,6 +34,14 @@ import com.easylaw.app.ui.components.CommonButton
 import com.easylaw.app.ui.components.CommonDialog
 import com.easylaw.app.ui.components.CommonIndicator
 import com.easylaw.app.ui.components.CommonTextField
+import com.easylaw.app.viewmodel.LoginViewModel
+
+/**
+ * [LoginView]
+ *
+ * 앱의 사용자 인증을 담당하는 UI 화면입니다.
+ * [LoginViewModel]의 상태를 관찰하여 이메일 로그인, 구글 소셜 로그인, 그리고 회원가입 화면으로의 전환을 관리합니다.
+ */
 
 @Composable
 fun LoginView(
@@ -115,7 +123,7 @@ fun LoginView(
             Spacer(modifier = Modifier.weight(1f))
 
             // 로그인 버튼
-           // TODO:google 로그인 안됨
+            // TODO:google 로그인 안됨
             CommonButton(
                 modifier =
                     Modifier
@@ -125,7 +133,7 @@ fun LoginView(
                 isEnable = loginState.idInput.isNotEmpty() && loginState.pwdInput.isNotEmpty() && !loginState.isIdError && !loginState.isPwdError,
                 icon = Icons.Default.Login,
                 onClick = {
-                    viewModel.loadingLogin({ goToMainView() })
+                    viewModel.login({ goToMainView() })
                 },
                 color = Color(0xFF3182F6),
             )
@@ -141,7 +149,7 @@ fun LoginView(
                 text = stringResource(id = R.string.login_google_btn),
                 isEnable = true,
                 onClick = {
-                    viewModel.signInGoogle(context, { goToMainView() })
+                    viewModel.logInGoogle(context, { goToMainView() })
                 },
                 color = Color(0xff78aef5),
                 icon = Icons.Default.Login,

@@ -4,38 +4,40 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.easylaw.app.repository.AIRepo
-import com.easylaw.app.ui.Route.AppRoute
-import com.easylaw.app.ui.Route.navRoute
-import com.easylaw.app.ui.Route.navRoute.bottomItems
+import com.easylaw.app.data.repo.AIRepo
+import com.easylaw.app.domain.model.UserInfo
+import com.easylaw.app.domain.model.UserSession
+import com.easylaw.app.navigation.AppRoute
+import com.easylaw.app.navigation.navRoute
+import com.easylaw.app.navigation.navRoute.bottomItems
 import com.easylaw.app.ui.components.CommonIndicator
 import com.easylaw.app.ui.theme.EasyLawTheme
+import com.easylaw.app.util.PreferenceManager
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/**
- * EasyLaw 메인 액티비티
- *
- * 앱의 진입점이 되는 액티비티입니다.
- * Jetpack Compose를 사용하여 UI를 구성합니다.
- */
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    @Inject
+    lateinit var userSession: UserSession
+
+    @Inject
+    lateinit var preferenceManager: PreferenceManager
+
     @Inject
     lateinit var aiManager: AIRepo
 
@@ -43,90 +45,160 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        // 앱 시작 시 로컬 저장소에서 유저 정보 불러오기
+        lifecycleScope.launch {
+            val savedUser = preferenceManager.userData.firstOrNull()
+            if (savedUser != null) {
+                userSession.setLoginInfo(savedUser)
+            } else {
+                userSession.finishInitialzed()
+            }
+        }
+
         setContent {
             EasyLawTheme {
                 val navController = rememberNavController()
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route
 
+                val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+                val scope = rememberCoroutineScope()
+
+                val userInfo by userSession.userInfo.collectAsState()
+                // 유저 상태랑 별개로 로딩변수만 따로 감지
+                val isInitialized by userSession.isInitialized.collectAsState()
+
                 val geminiState by aiManager.loadingState.collectAsState()
 
-                val hideBottomBarRoutes = listOf(navRoute.onboarding, navRoute.login, navRoute.signUp)
+                val hideBarsRoutes = listOf(navRoute.onboarding, navRoute.login, navRoute.signUp)
 
-                Scaffold(
-                    bottomBar = {
-                        if (currentRoute !in hideBottomBarRoutes) {
-                            NavigationBar(
-                                containerColor = Color(0xFFEAEFEF),
-                                tonalElevation = 8.dp,
-                            ) {
-                                bottomItems.forEach { item ->
-                                    val isSelected = currentRoute == item.route
+                val startRoute = if (userInfo.id.isNotEmpty()) navRoute.community else navRoute.onboarding
 
-                                    NavigationBarItem(
-                                        colors =
-                                            NavigationBarItemDefaults.colors(
-                                                selectedIconColor = Color(0xFFD95F1E),
-                                                selectedTextColor = Color(0xFFD95F1E),
-                                                unselectedIconColor = Color(0xFF797573),
-                                                unselectedTextColor = Color(0xFF797573),
-                                            ),
-                                        selected = isSelected,
-                                        label = { Text(text = item.title) },
-                                        icon = {
-                                            Icon(
-                                                imageVector = item.icon,
-                                                contentDescription = item.title,
-                                            )
-                                        },
-                                        /*
+                // 세션정보를 가져오는 동안 빈 화면 출력
+                if (!isInitialized) {
+                    Box(modifier = Modifier.fillMaxSize())
+                    return@EasyLawTheme
+                }
 
-                                        popUpTo(id) : 이동할 떄 id까지만 남기고 중간에 있는건 다 날린다.
-                                       보통 초기화면으로 설정
+                ModalNavigationDrawer(
+                    drawerState = drawerState,
+                    gesturesEnabled = currentRoute !in hideBarsRoutes,
+                    drawerContent = {
+                        EasylawSideBar(
+                            userInfo = userInfo,
+                            onLogoutClick = {
+                                scope.launch {
+                                    userSession.sessionClear()
+                                    preferenceManager.sessionClear()
 
-                                        saveState = true,
-                                        이동시 해당 화면에 사용된 데이터 유지(필요없다면 false)
-                                        restoreState = true
-                                        바텀바에서 이동을 해도 데이터 유지
+                                    drawerState.close()
 
-                                        보통 세트로 saveState = true,restoreState = true 두개는 같이 사용
-
-                                        launchSingleTop = true
-                                         바텀바 중복 이동 방지
-
-                                         */
-                                        onClick = {
-                                            if (currentRoute != item.route) {
-                                                navController.navigate(item.route) {
-                                                    popUpTo(navController.graph.findStartDestination().id) {
-                                                        saveState = true
-                                                    }
-                                                    /*
-                                                    currentRoute != item.route
-                                                    if문에서 중복방지긴 하지만 복잡해짐에 따라 못막을 수도 있으니 설정
-                                                     */
-                                                    launchSingleTop = true
-                                                    restoreState = true
-                                                }
+                                    if (navController.currentBackStackEntry?.destination?.route != navRoute.onboarding) {
+                                        navController.navigate(navRoute.onboarding) {
+                                            popUpTo(navController.graph.id) {
+                                                inclusive = true
                                             }
-                                        },
-                                    )
+                                            launchSingleTop = true
+                                        }
+                                    }
+                                }
+                            },
+                        )
+                    },
+                ) {
+                    Scaffold(
+                        bottomBar = {
+                            if (currentRoute !in hideBarsRoutes) {
+                                NavigationBar(
+                                    containerColor = Color(0xFFEAEFEF),
+                                    tonalElevation = 8.dp,
+                                ) {
+                                    bottomItems.forEach { item ->
+                                        val isSelected = currentRoute == item.route
+                                        NavigationBarItem(
+                                            selected = isSelected,
+                                            label = { Text(text = item.title) },
+                                            icon = { Icon(imageVector = item.icon, contentDescription = item.title) },
+                                            colors =
+                                                NavigationBarItemDefaults.colors(
+                                                    selectedIconColor = Color(0xFFD95F1E),
+                                                    selectedTextColor = Color(0xFFD95F1E),
+                                                    unselectedIconColor = Color(0xFF797573),
+                                                    unselectedTextColor = Color(0xFF797573),
+                                                ),
+                                            onClick = {
+                                                if (currentRoute != item.route) {
+                                                    navController.navigate(item.route) {
+                                                        popUpTo(navController.graph.findStartDestination().id) {
+                                                            saveState = true
+                                                        }
+                                                        launchSingleTop = true
+                                                        restoreState = true
+                                                    }
+                                                }
+                                            },
+                                        )
+                                    }
                                 }
                             }
-                        }
-                    },
-                ) { innerPadding ->
-                    AppRoute(
-                        modifier = if (currentRoute in hideBottomBarRoutes) Modifier else Modifier.padding(innerPadding),
-                        navController = navController,
-                    )
+                        },
+                    ) { innerPadding ->
+                        AppRoute(
+                            modifier = if (currentRoute in hideBarsRoutes) Modifier else Modifier.padding(innerPadding),
+                            navController = navController,
+                            startDestination = startRoute,
+                        )
+                    }
                 }
+
+                // AI 로딩 인디케이터
                 if (geminiState.isLoading) {
-                    CommonIndicator(
-                        geminiState.message,
-                    )
+                    CommonIndicator(geminiState.message)
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun EasylawSideBar(
+    userInfo: UserInfo,
+    onLogoutClick: () -> Unit,
+) {
+    ModalDrawerSheet(
+        drawerContainerColor = Color.White,
+        modifier = Modifier.width(280.dp),
+    ) {
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxHeight()
+                    .padding(20.dp),
+        ) {
+            // 상단 유저 정보 영역
+            Text(
+                text = if (userInfo.id.isNotEmpty()) "${userInfo.name}님 환영합니다" else "로그인이 필요합니다",
+                style = MaterialTheme.typography.titleMedium,
+                color = Color.Black,
+            )
+            Text(
+                text = userInfo.email,
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray,
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+            HorizontalDivider(thickness = 1.dp, color = Color(0xFFEEEEEE))
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // 메뉴 리스트
+            NavigationDrawerItem(
+                label = { Text(text = "로그아웃", color = Color.Red) },
+                selected = false,
+                onClick = onLogoutClick,
+                icon = { Icon(Icons.Default.ExitToApp, contentDescription = null, tint = Color.Red) },
+                colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent),
+            )
         }
     }
 }

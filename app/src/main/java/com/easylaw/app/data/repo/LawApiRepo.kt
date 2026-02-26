@@ -1,7 +1,7 @@
-package com.easylaw.app.repository
+package com.easylaw.app.data.repo
 
-import com.easylaw.app.dto.LawApiResModel
-import com.easylaw.app.service.LawApiServiceImpl
+import com.easylaw.app.data.models.LawApiResModel
+import com.easylaw.app.data.remote.LawApiServiceImpl
 import javax.inject.Inject
 import javax.inject.Singleton
 

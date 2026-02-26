@@ -1,4 +1,4 @@
-package com.easylaw.app.dto
+package com.easylaw.app.data.models
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

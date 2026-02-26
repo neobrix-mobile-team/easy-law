@@ -9,7 +9,7 @@ interface LawRepository {
     fun getPrecedentsStream(
         query: String,
         org: String?,
-        onTotalCountFetched: (Int) -> Unit
+        onTotalCountFetched: (Int) -> Unit,
     ): Flow<PagingData<Precedent>>
 
     suspend fun getPrecedentDetail(caseId: String): PrecedentDetail?

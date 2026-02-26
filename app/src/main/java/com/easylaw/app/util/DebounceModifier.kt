@@ -7,7 +7,7 @@ import androidx.compose.ui.Modifier
 @Composable
 inline fun Modifier.debouncedClickable(
     debounceTime: Long = 500L,
-    crossinline onClick: () -> Unit
+    crossinline onClick: () -> Unit,
 ): Modifier {
     var lastClickTime by remember { mutableLongStateOf(0L) }
     return this.clickable {
