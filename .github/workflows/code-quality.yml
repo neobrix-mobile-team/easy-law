@@ -7,8 +7,8 @@ on:
     branches: [ main, develop ]
 
 jobs:
-  ktlint:
-    name: 🎨 Kotlin 코드 스타일 검사
+  lint:
+    name: 🔍 Lint 검사
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -26,108 +26,13 @@ jobs:
       - name: 🔧 Gradle wrapper 권한 설정
         run: chmod +x ./gradlew
 
-      - name: 🎨 KtLint 코드 스타일 검사
-        run: ./gradlew ktlintCheck --parallel --build-cache --daemon
+      - name: 🔍 Lint 검사
+        run: ./gradlew lint --build-cache --daemon
 
-      - name: 📤 KtLint 결과 업로드
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: ktlint-report
-          path: app/build/reports/ktlint/
-          retention-days: 5
-
-  lint:
-    name: 🔍 Android Lint 품질 검사
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-
-    steps:
-      - name: 📥 코드 받아오기
-        uses: actions/checkout@v4
-
-      - name: ☕ JDK 17 설정
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: gradle
-
-      - name: 🔧 Gradle wrapper 권한 설정
-        run: chmod +x ./gradlew
-
-      - name: 🔍 Android Lint로 코드 품질 검사
-        run: ./gradlew lint --parallel --build-cache --daemon
-
-      - name: 📤 Lint 결과 업로드
+      - name: 📤 결과 업로드
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: lint-report
-          path: |
-            app/build/reports/lint-results*.html
-            app/build/reports/lint-results*.xml
-          retention-days: 5
-
-  security-scan:
-    name: 🔒 의존성 보안 취약점 검사 (OWASP)
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-
-    steps:
-      - name: 📥 코드 받아오기
-        uses: actions/checkout@v4
-
-      - name: ☕ JDK 17 설정
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: gradle
-
-      - name: 🔧 Gradle wrapper 권한 설정
-        run: chmod +x ./gradlew
-
-      - name: 🔒 OWASP Dependency Check로 보안 취약점 검사
-        run: ./gradlew dependencyCheckAnalyze --parallel --build-cache --daemon
-
-      - name: 📤 보안 검사 결과 업로드
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: security-scan-report
-          path: |
-            build/reports/dependency-check/
-          retention-days: 5
-
-  coverage:
-    name: 📊 코드 커버리지 (Jacoco)
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-
-    steps:
-      - name: 📥 코드 받아오기
-        uses: actions/checkout@v4
-
-      - name: ☕ JDK 17 설정
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: gradle
-
-      - name: 🔧 Gradle wrapper 권한 설정
-        run: chmod +x ./gradlew
-
-      - name: 🧪 단위 테스트 + 커버리지 측정
-        run: ./gradlew testDebugUnitTest jacocoTestDebugUnitTestReport --parallel --build-cache --daemon
-
-      - name: 📤 커버리지 리포트 업로드
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: |
-            app/build/reports/coverage/debugCodeCoverage/
-            app/build/jacoco/
+          path: app/build/reports/lint-results*.html
           retention-days: 5

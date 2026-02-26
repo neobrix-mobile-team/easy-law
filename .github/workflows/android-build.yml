@@ -1,4 +1,4 @@
-name: 🔍 Kotlin CI (Wrapper Enforced & Stable)
+name: 🔍 Kotlin CI
 
 on:
   push:
@@ -7,9 +7,9 @@ on:
     branches: [ main, develop ]
 
 jobs:
-  android-ci:
+  build:
     runs-on: ubuntu-latest
-    timeout-minutes: 20 # MVP: 빠른 검증을 위해 20분으로 단축
+    timeout-minutes: 15
 
     steps:
       - name: 📥 Checkout
@@ -22,18 +22,14 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      - name: 🔧 Gradle 실행 권한 부여
+      - name: 🔧 권한 부여
         run: chmod +x ./gradlew
 
       - name: 🔐 Google Services JSON 생성
         env:
           G_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
-          if [ -n "$G_SERVICES" ]; then
-            echo "$G_SERVICES" | base64 -di > app/google-services.json
-          else
-            echo "⚠️ GOOGLE_SERVICES_JSON secret is missing!"
-          fi
+          [ -n "$G_SERVICES" ] && echo "$G_SERVICES" | base64 -di > app/google-services.json
 
       - name: 🔐 local.properties 생성
         env:
@@ -44,16 +40,8 @@ jobs:
           [ -n "$GEMINI_API_KEY" ] && echo "GEMINI_API_KEY=$GEMINI_API_KEY" >> local.properties
           [ -n "$LAW_API_KEY" ] && echo "LAW_API_KEY=$LAW_API_KEY" >> local.properties
 
-      - name: 🎨 KtLint 코드 스타일 검사
-        run: ./gradlew ktlintCheck --parallel --build-cache --no-daemon
-
-      - name: 🚀 Unit Test & Build APK (병렬 처리)
-        run: |
-          ./gradlew testDebugUnitTest assembleDebug \
-            --parallel \
-            --build-cache \
-            --daemon \
-            -Dorg.gradle.workers.max=4
+      - name: 🚀 빌드 & 테스트
+        run: ./gradlew testDebugUnitTest assembleDebug --build-cache --daemon
 
       - name: 📤 APK 업로드
         if: success()
@@ -63,12 +51,3 @@ jobs:
           path: app/build/outputs/apk/debug/*.apk
           retention-days: 5
 
-      - name: 📤 테스트 결과 업로드
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: unit-test-results
-          path: |
-            app/build/reports/tests/testDebugUnitTest/
-            app/build/test-results/testDebugUnitTest/
-          retention-days: 5

@@ -1,4 +1,4 @@
-name: 📱 에뮬레이터 통합 테스트 (Instrumented Tests)
+name: 📱 Instrumented Tests
 
 on:
   push:
@@ -8,49 +8,34 @@ on:
 
 jobs:
   instrumented-test:
-    name: 📱 기기/에뮬레이터 통합 테스트
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 25
 
     strategy:
       matrix:
         api-level: [ 30, 33 ]
-        include:
-          - api-level: 30
-            target: google_apis
-          - api-level: 33
-            target: google_apis
-    
-    steps:
-      - name: 📥 코드 받아오기
-        uses: actions/checkout@v4
+        target: [ google_apis ]
 
-      - name: ☕ JDK 17 설정
-        uses: actions/setup-java@v4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
           cache: gradle
+      - run: chmod +x ./gradlew
 
-      - name: 🔧 Gradle wrapper 권한 설정
-        run: chmod +x ./gradlew
-
-      - name: 📱 Android 에뮬레이터 실행 (API Level ${{ matrix.api-level }})
-        uses: reactivecircus/android-emulator-runner@v2
+      - uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: ${{ matrix.api-level }}
           target: ${{ matrix.target }}
           arch: x86_64
-          ram-size: 2048M
-          disk-size: 4096M
-          script: ./gradlew connectedAndroidTest --parallel --build-cache --daemon
+          script: ./gradlew connectedAndroidTest --build-cache --daemon
 
-      - name: 📤 통합 테스트 결과 업로드
+      - name: 📤 테스트 결과 업로드
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: instrumented-test-results-api-${{ matrix.api-level }}
-          path: |
-            app/build/reports/androidTests/connected/
-            app/build/outputs/androidTest-results/
+          name: instrumented-test-api-${{ matrix.api-level }}
+          path: app/build/reports/androidTests/connected/
           retention-days: 5
