@@ -74,7 +74,7 @@ class SignViewModel
         }
 
         fun onPasswordChanged(pwd: String) {
-            val isPwdValid = pwd.isNotEmpty() && pwd.length < 7
+            val isPwdValid = pwd.isNotEmpty() && pwd.length < 8
 
             _signViewState.update { it.copy(password = pwd, isPasswordError = isPwdValid) }
         }

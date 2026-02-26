@@ -15,14 +15,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.easylaw.app.ui.screen.LegalSearchRoute
 import com.easylaw.app.ui.screen.Login.LoginView
 import com.easylaw.app.ui.screen.Login.SignView
 import com.easylaw.app.ui.screen.Self.SelfView
 import com.easylaw.app.ui.screen.community.CommunityView
-import com.easylaw.app.ui.screen.lawConsult.LawConsultView
 import com.easylaw.app.ui.screen.onboarding.OnboardingView
 import com.easylaw.app.viewmodel.CommunityViewModel
-import com.easylaw.app.viewmodel.LawConsultViewModel
 import com.easylaw.app.viewmodel.LoginViewModel
 import com.easylaw.app.viewmodel.OnboardingViewModel
 import com.easylaw.app.viewmodel.SelfViewModel
@@ -138,11 +137,12 @@ fun AppRoute(
 
         // 판례검색 화면
         composable(route = navRoute.lawConsult) {
-            val lawConsultViewModel: LawConsultViewModel = hiltViewModel()
-            LawConsultView(
-                modifier = modifier,
-                viewModel = lawConsultViewModel,
-            )
+//            val lawConsultViewModel: LawConsultViewModel = hiltViewModel()
+//            LawConsultView(
+//                modifier = modifier,
+//                viewModel = lawConsultViewModel,
+//            )
+            LegalSearchRoute()
         }
         // 커뮤니티 화면
         composable(

@@ -72,7 +72,7 @@ class LoginViewModel
         }
 
         fun onChangedPwdTextField(pwd: String) {
-            val isPwdValid = pwd.isNotEmpty() && pwd.length < 7
+            val isPwdValid = pwd.isNotEmpty() && pwd.length < 8
 
             _loginViewState.update { currentState ->
                 currentState.copy(
