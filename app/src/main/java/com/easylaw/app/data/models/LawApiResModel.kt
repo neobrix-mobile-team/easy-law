@@ -2,14 +2,23 @@ package com.easylaw.app.data.models
 
 import com.google.gson.annotations.SerializedName
 
-// 판례 검색 응답 모델
+/**
+ * 판례 검색 API 응답 모델
+ *
+ * 법원 판례 검색 API의 응답 데이터 구조를 정의합니다.
+ */
 data class LawApiResModel(
     @SerializedName("PrecSearch")
     val precSearch: PrecSearchModel,
 )
 
+/**
+ * 판례 검색 결과 모델
+ *
+ * 검색 조건 및 판례 목록을 포함합니다.
+ */
 data class PrecSearchModel(
-    @SerializedName("키워드")
+    @SerializedName("keyword")
     val keyword: String,
     @SerializedName("page")
     val page: String,
@@ -23,25 +32,30 @@ data class PrecSearchModel(
     val prec: List<PrecModel>,
 )
 
+/**
+ * 개별 판례 모델
+ *
+ * 판례의 기본 정보를 포함합니다.
+ */
 data class PrecModel(
     @SerializedName("id")
     val id: String,
-    @SerializedName("사건번호")
+    @SerializedName("case_number")
     val caseNumber: String,
-    @SerializedName("사건명")
+    @SerializedName("case_name")
     val caseName: String,
-    @SerializedName("선고일자")
+    @SerializedName("judgment_date")
     val judgmentDate: String,
-    @SerializedName("법원명")
+    @SerializedName("court_name")
     val courtName: String,
-    @SerializedName("판례일련번호")
+    @SerializedName("serial_number")
     val serialNumber: String,
-    @SerializedName("사건종류명")
+    @SerializedName("case_type_name")
     val caseTypeName: String,
-    @SerializedName("판례상세링크")
+    @SerializedName("detail_link")
     val detailLink: String,
-    @SerializedName("데이터출처명")
-    val dataSource: String,
-    @SerializedName("판결유형")
-    val judgment: String,
+    @SerializedName("data_source_name")
+    val dataSourceName: String,
+    @SerializedName("judgment_type")
+    val judgmentType: String,
 )
