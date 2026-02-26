@@ -25,20 +25,19 @@ jobs:
       - name: 🔧 권한 부여
         run: chmod +x ./gradlew
 
+      # 이 부분을 더 표준적인 방식으로 수정했습니다
       - name: 🔐 Google Services JSON 생성
-        env:
-          G_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
-          [ -n "$G_SERVICES" ] && echo "$G_SERVICES" | base64 -di > app/google-services.json
+          echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 --decode > app/google-services.json
 
       - name: 🔐 local.properties 생성
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           LAW_API_KEY: ${{ secrets.LAW_API_KEY }}
         run: |
-          : > local.properties
-          [ -n "$GEMINI_API_KEY" ] && echo "GEMINI_API_KEY=$GEMINI_API_KEY" >> local.properties
-          [ -n "$LAW_API_KEY" ] && echo "LAW_API_KEY=$LAW_API_KEY" >> local.properties
+          touch local.properties
+          echo "GEMINI_API_KEY=$GEMINI_API_KEY" >> local.properties
+          echo "LAW_API_KEY=$LAW_API_KEY" >> local.properties
 
       - name: 🚀 빌드 & 테스트
         run: ./gradlew testDebugUnitTest assembleDebug --build-cache --daemon
