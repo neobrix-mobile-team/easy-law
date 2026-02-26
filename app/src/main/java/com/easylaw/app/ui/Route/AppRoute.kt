@@ -46,17 +46,17 @@ object NavRoute {
     val bottomItems =
         listOf(
             BottomNavItem(
-                route = community,
+                route = COMMUNITY,
                 title = "커뮤니티",
                 icon = Icons.Default.Share,
             ),
             BottomNavItem(
-                route = lawConsult,
+                route = LAW_CONSULT,
                 title = "판례검색",
                 icon = Icons.Default.Gavel,
             ),
             BottomNavItem(
-                route = self,
+                route = SELF,
                 title = "자가진단",
                 icon = Icons.Default.Check,
             ),
@@ -135,7 +135,7 @@ fun AppRoute(
         }
 
         // 판례검색 화면
-        composable(route = NavRoute.lawConsult) {
+        composable(route = NavRoute.LAW_CONSULT) {
 //            val lawConsultViewModel: LawConsultViewModel = hiltViewModel()
 //            LawConsultView(
 //                modifier = modifier,
@@ -144,9 +144,7 @@ fun AppRoute(
             LegalSearchRoute()
         }
         // 커뮤니티 화면
-        composable(
-            route = NavRoute.community,
-        ) {
+        composable(route = NavRoute.COMMUNITY) {
             val communityViewModel: CommunityViewModel = hiltViewModel()
             CommunityView(
                 modifier = modifier,
@@ -154,9 +152,7 @@ fun AppRoute(
             )
         }
         // 자가진단 화면
-        composable(
-            route = NavRoute.self,
-        ) {
+        composable(route = NavRoute.SELF) {
             val selfViewModel: SelfViewModel = hiltViewModel()
             SelfView(
                 modifier = modifier,
