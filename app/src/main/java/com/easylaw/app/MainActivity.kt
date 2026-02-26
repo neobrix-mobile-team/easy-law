@@ -5,8 +5,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -17,14 +15,16 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.easylaw.app.data.repo.AIRepo
-import com.easylaw.app.domain.model.UserInfo
 import com.easylaw.app.domain.model.UserSession
 import com.easylaw.app.navigation.AppRoute
 import com.easylaw.app.navigation.navRoute
 import com.easylaw.app.navigation.navRoute.bottomItems
 import com.easylaw.app.ui.components.CommonIndicator
+import com.easylaw.app.ui.components.EasylawSideBar
+import com.easylaw.app.ui.components.LanguageBottombar
 import com.easylaw.app.ui.theme.EasyLawTheme
 import com.easylaw.app.util.PreferenceManager
+import com.easylaw.app.viewmodel.RememberMainViewState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
@@ -41,6 +41,7 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var aiManager: AIRepo
 
+    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -57,22 +58,20 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             EasyLawTheme {
-                val navController = rememberNavController()
-                val navBackStackEntry by navController.currentBackStackEntryAsState()
+
+                val mainState = RememberMainViewState()
+
+                val navBackStackEntry by mainState.navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route
 
-                val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-                val scope = rememberCoroutineScope()
-
+                // 유저 세션 감지
                 val userInfo by userSession.userInfo.collectAsState()
-                // 유저 상태랑 별개로 로딩변수만 따로 감지
                 val isInitialized by userSession.isInitialized.collectAsState()
+                val startRoute = if (userInfo.id.isNotEmpty()) navRoute.community else navRoute.onboarding
 
                 val geminiState by aiManager.loadingState.collectAsState()
 
                 val hideBarsRoutes = listOf(navRoute.onboarding, navRoute.login, navRoute.signUp)
-
-                val startRoute = if (userInfo.id.isNotEmpty()) navRoute.community else navRoute.onboarding
 
                 // 세션정보를 가져오는 동안 빈 화면 출력
                 if (!isInitialized) {
@@ -81,21 +80,27 @@ class MainActivity : ComponentActivity() {
                 }
 
                 ModalNavigationDrawer(
-                    drawerState = drawerState,
+                    drawerState = mainState.drawerState,
                     gesturesEnabled = currentRoute !in hideBarsRoutes,
                     drawerContent = {
                         EasylawSideBar(
                             userInfo = userInfo,
+                            selectedLanguage = "한국어",
+                            onLanguageClick = {
+                                mainState.scope.launch {
+                                    mainState.drawerState.close()
+                                    mainState.showLanguageSheet.value = true
+                                }
+                            },
                             onLogoutClick = {
-                                scope.launch {
+                                mainState.scope.launch {
                                     userSession.sessionClear()
                                     preferenceManager.sessionClear()
+                                    mainState.drawerState.close()
 
-                                    drawerState.close()
-
-                                    if (navController.currentBackStackEntry?.destination?.route != navRoute.onboarding) {
-                                        navController.navigate(navRoute.onboarding) {
-                                            popUpTo(navController.graph.id) {
+                                    if (mainState.navController.currentBackStackEntry?.destination?.route != navRoute.onboarding) {
+                                        mainState.navController.navigate(navRoute.onboarding) {
+                                            popUpTo(mainState.navController.graph.id) {
                                                 inclusive = true
                                             }
                                             launchSingleTop = true
@@ -119,17 +124,16 @@ class MainActivity : ComponentActivity() {
                                             selected = isSelected,
                                             label = { Text(text = item.title) },
                                             icon = { Icon(imageVector = item.icon, contentDescription = item.title) },
-                                            colors =
-                                                NavigationBarItemDefaults.colors(
-                                                    selectedIconColor = Color(0xFFD95F1E),
-                                                    selectedTextColor = Color(0xFFD95F1E),
-                                                    unselectedIconColor = Color(0xFF797573),
-                                                    unselectedTextColor = Color(0xFF797573),
-                                                ),
+                                            colors = NavigationBarItemDefaults.colors(
+                                                selectedIconColor = Color(0xFFD95F1E),
+                                                selectedTextColor = Color(0xFFD95F1E),
+                                                unselectedIconColor = Color(0xFF797573),
+                                                unselectedTextColor = Color(0xFF797573),
+                                            ),
                                             onClick = {
                                                 if (currentRoute != item.route) {
-                                                    navController.navigate(item.route) {
-                                                        popUpTo(navController.graph.findStartDestination().id) {
+                                                    mainState.navController.navigate(item.route) {
+                                                        popUpTo(mainState.navController.graph.findStartDestination().id) {
                                                             saveState = true
                                                         }
                                                         launchSingleTop = true
@@ -145,8 +149,29 @@ class MainActivity : ComponentActivity() {
                     ) { innerPadding ->
                         AppRoute(
                             modifier = if (currentRoute in hideBarsRoutes) Modifier else Modifier.padding(innerPadding),
-                            navController = navController,
+                            navController = mainState.navController,
                             startDestination = startRoute,
+                        )
+                    }
+                }
+
+                if ( mainState.showLanguageSheet.value) {
+                    ModalBottomSheet(
+                        onDismissRequest = {  mainState.showLanguageSheet.value = false },
+                        sheetState = mainState.sheetState,
+                        containerColor = Color.White,
+                        dragHandle = { BottomSheetDefaults.DragHandle() }
+                    ) {
+                        LanguageBottombar(
+                            onLanguageSelected = { language ->
+                                mainState.scope.launch {
+                                    mainState.sheetState.hide()
+                                }.invokeOnCompletion {
+                                    if (!mainState.sheetState.isVisible) {
+                                         mainState.showLanguageSheet.value = false
+                                    }
+                                }
+                            }
                         )
                     }
                 }
@@ -156,49 +181,6 @@ class MainActivity : ComponentActivity() {
                     CommonIndicator(geminiState.message)
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun EasylawSideBar(
-    userInfo: UserInfo,
-    onLogoutClick: () -> Unit,
-) {
-    ModalDrawerSheet(
-        drawerContainerColor = Color.White,
-        modifier = Modifier.width(280.dp),
-    ) {
-        Column(
-            modifier =
-                Modifier
-                    .fillMaxHeight()
-                    .padding(20.dp),
-        ) {
-            // 상단 유저 정보 영역
-            Text(
-                text = if (userInfo.id.isNotEmpty()) "${userInfo.name}님 환영합니다" else "로그인이 필요합니다",
-                style = MaterialTheme.typography.titleMedium,
-                color = Color.Black,
-            )
-            Text(
-                text = userInfo.email,
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray,
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-            HorizontalDivider(thickness = 1.dp, color = Color(0xFFEEEEEE))
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // 메뉴 리스트
-            NavigationDrawerItem(
-                label = { Text(text = "로그아웃", color = Color.Red) },
-                selected = false,
-                onClick = onLogoutClick,
-                icon = { Icon(Icons.Default.ExitToApp, contentDescription = null, tint = Color.Red) },
-                colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent),
-            )
         }
     }
 }
