@@ -9,5 +9,6 @@ data class Precedent(
     val category: String,
     val court: String,
     val date: String,
-    val detailLink: String
+    val detailLink: String,
+    val judgmentType: String
 )

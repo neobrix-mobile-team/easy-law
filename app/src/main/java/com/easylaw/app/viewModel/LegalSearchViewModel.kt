@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
+import androidx.paging.filter
 import com.easylaw.app.data.datasource.PrecedentService
 import com.easylaw.app.data.repository.LawRepository
 import com.easylaw.app.domain.model.Precedent
@@ -30,6 +31,8 @@ class LegalSearchViewModel @Inject constructor(
 
     private val _searchParams = MutableStateFlow<SearchParams?>(null)
 
+    private val _listFilterText = MutableStateFlow("")
+
     val searchResults: Flow<PagingData<Precedent>> = _searchParams
         .filterNotNull()
         .flatMapLatest { params ->
@@ -40,6 +43,18 @@ class LegalSearchViewModel @Inject constructor(
                     _uiState.update { it.copy(totalSearchCount = totalCnt) }
                 }
             )
+        }
+        .cachedIn(viewModelScope)
+        .combine(_listFilterText) { pagingData, filterQuery ->
+            if (filterQuery.isBlank()) {
+                pagingData
+            } else {
+                pagingData.filter { precedent ->
+                    precedent.title.contains(filterQuery, ignoreCase = true) ||
+                            precedent.category.contains(filterQuery, ignoreCase = true) ||
+                            precedent.judgmentType.contains(filterQuery, ignoreCase = true)
+                }
+            }
         }
         .cachedIn(viewModelScope)
         .stateIn(viewModelScope, SharingStarted.Lazily, PagingData.empty())
@@ -56,8 +71,14 @@ class LegalSearchViewModel @Inject constructor(
         _uiState.update { it.copy(details = newDetails) }
     }
 
+    fun updateListFilterText(text: String) {
+        _listFilterText.value = text
+        _uiState.update { it.copy(listFilterText = text) }
+    }
+
     fun closeResults() {
-        _uiState.update { it.copy(showResults = false) }
+        _listFilterText.value = ""
+        _uiState.update { it.copy(showResults = false, listFilterText = "") }
     }
 
     fun searchLegalAdvice() {
@@ -67,6 +88,9 @@ class LegalSearchViewModel @Inject constructor(
             _uiState.update { it.copy(isSituationError = true) }
             return
         }
+
+        _listFilterText.value = ""
+        _uiState.update { it.copy(listFilterText = "") }
 
         val canBypass = keywordOptimizer.shouldBypassGemini(currentState.situation, currentState.details)
 
