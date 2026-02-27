@@ -4,11 +4,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -91,15 +89,15 @@ class MainActivity : ComponentActivity() {
                 // 유저 상태랑 별개로 로딩변수만 따로 감지
                 val isInitialized by userSession.isInitialized.collectAsState()
 
-                val hideBarsRoutes = listOf(NavRoute.ONBOARDING, NavRoute.LOGIN, NavRoute.SIGN_UP)
+                val hideBarsRoutes = listOf(NavRoute.ONBOARDING, NavRoute.LOGIN, NavRoute.SIGN_UP, NavRoute.COMMUNITY_WRITE)
 
                 val startRoute = if (userInfo.id.isNotEmpty()) NavRoute.COMMUNITY else NavRoute.ONBOARDING
 
                 // 세션정보를 가져오는 동안 빈 화면 출력
-                if (!isInitialized) {
-                    Box(modifier = Modifier.fillMaxSize())
-                    return@EasyLawTheme
-                }
+//                if (!isInitialized) {
+//                    Box(modifier = Modifier.fillMaxSize())
+//                    return@EasyLawTheme
+//                }
 
                 ModalNavigationDrawer(
                     drawerState = drawerState,
