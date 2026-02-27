@@ -1,35 +1,96 @@
 // Top-level build.gradle
+
 plugins {
-    id 'com.android.application' version '8.0.0' apply false
-    id 'com.android.library' version '8.0.0' apply false
-    id 'org.jetbrains.kotlin.android' version '1.9.10' apply false
-    id 'org.jetbrains.kotlin.kapt' version '1.9.10' apply false
-    id 'com.google.dagger.hilt.android' version '2.48' apply false
-    id 'org.jlleitschuh.gradle.ktlint' version '12.0.0'
-    id 'io.gitlab.arturbosch.detekt' version '1.23.0'
-    id 'org.owasp.dependencycheck' version '8.4.0'
+    id 'com.android.application' version '8.6.0' apply false
+    id 'com.android.library' version '8.6.0' apply false
+    id 'org.jetbrains.kotlin.android' version '2.1.0' apply false
+    id 'com.google.dagger.hilt.android' version '2.54' apply false
+    id 'org.jlleitschuh.gradle.ktlint' version '12.1.0' apply false
+    id 'io.gitlab.arturbosch.detekt' version '1.23.0' apply false
+    id 'org.owasp.dependencycheck' version '8.4.0' apply false
+    id 'com.google.devtools.ksp' version '2.1.0-1.0.29' apply false
+    id 'org.jetbrains.kotlin.plugin.serialization' version '2.1.0' apply false
+    id 'com.google.gms.google-services' version '4.4.2' apply false
+    id 'com.google.android.libraries.mapsplatform.secrets-gradle-plugin' version '2.0.1' apply false
 }
 
-// ktlint 설정
+apply plugin: 'io.gitlab.arturbosch.detekt'
+apply plugin: 'org.owasp.dependencycheck'
+
+// 1. ktlint 상세 설정 (모든 서브프로젝트 적용)
 subprojects {
     apply plugin: 'org.jlleitschuh.gradle.ktlint'
-    
+
     ktlint {
-        version = '1.0.1'
-        verbose = true
-        outputToConsole = true
-        coloredOutput = true
+        version = "1.3.1" // 최신 안정화 버전으로 업그레이드
+        ignoreFailures = false
         android = true
+        verbose = true
+        // 아래 설정을 추가하여 규칙 충돌을 방지합니다.
         reporters {
-            reporter 'plain'
-            reporter 'sarif'
+            reporter "plain"
         }
+    }
+}
+
+// 2. detekt 설정
+detekt {
+    toolVersion = "1.23.3"
+    config = files("detekt.yml")
+    buildUponDefaultConfig = true  // ← 추가 권장
+
+    reports {
+        html.enabled = true
+        sarif.enabled = true
+    }
+}
+
+// 3. Git Hook 자동 설치 작업
+tasks.register('installGitHooks') {
+    group = 'verification'
+    description = 'Installs the pre-commit git hooks'
+
+    doLast {
+        def hooksDir = new File(rootProject.rootDir, '.git/hooks')
+        if (!hooksDir.exists()) hooksDir.mkdirs()
+
+        def preCommitHook = new File(hooksDir, 'pre-commit')
+
+        // 스크립트: 커밋 전 ktlintCheck 실행
+        preCommitHook.text = """#!/bin/bash
+echo "[Git Hook] Running ktlint check before commit..."
+
+# ktlintCheck 실행 (루트 프로젝트 빌드 성공 후 반환)
+./gradlew ktlintCheck
+
+if [ \$? -ne 0 ]; then
+    echo ""
+    echo "[Error] ktlint check failed!"
+    echo "커밋하기 전에 코드 스타일을 수정해주세요."
+    echo "다음 './gradlew ktlintFormat' 명령어로 자동 수정 가능합니다."
+    echo ""
+    exit 1
+fi
+
+echo "[Success] ktlint passed! Committing..."
+"""
+        // 실행 권한 부여 (Mac/Linux 용도)
+        preCommitHook.setExecutable(true)
+        println "Git pre-commit hook has been installed to .git/hooks/"
+    }
+}
+
+// 빌드 과정 중 자동으로 훅이 설치되도록 처리
+project.afterEvaluate {
+    // Gradle Sync시 빌드 프로젝트 준비 단계에서 훅 설치
+    tasks.named('prepareKotlinBuildScriptModel').configure {
+        dependsOn installGitHooks
     }
 }
 
 // detekt 설정
 detekt {
-    toolVersion = '1.23.0'
+    toolVersion = '1.23.3'
     config = files('detekt.yml')
     reports {
         html.enabled = true

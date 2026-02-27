@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">EasyLaw</string>
+    <string name="title_activity_main">EasyLaw - Easy-to-Understand Legal Guide</string>
+
+<!--버튼-->
+    <string name="btn_next">next</string>
+    <string name="btn_start">start</string>
+<!--온보딩-->
+    <string name="onboarding_welcome_title">Nice to meet you!\nMaking law easy,\nthis is EasyLaw.</string>
+    <string name="onboarding_welcome_subtitle">We make complex legal terms easy to understand.</string>
+    <string name="onboarding_ask_help">How can we\nhelp you?</string>
+
+    <string name="btn_korean">Korean</string>
+    <string name="btn_foreigner">Foreigner</string>
+
+    <string name="permission_title">We\'ll only ask for\nnecessary permissions.</string>
+    <string name="permission_subtitle">Required for document translation.</string>
+    <string name="permission_camera_title">Camera</string>
+    <string name="permission_camera_desc">Scanning documents and recording accident videos</string>
+    <string name="permission_storage_title">Storage</string>
+    <string name="permission_storage_desc">Accessing photos saved on your device</string>
+
+<!--로그인-->
+    <string name="login_title">Safe Legal Service</string>
+    <string name="login_id_label">ID:</string>
+    <string name="login_id_hint">Please enter a valid email address.</string>
+    <string name="login_id_error">Invalid email format.</string>
+    <string name="login_pwd_label">Password:</string>
+    <string name="login_pwd_hint">Please enter your password.</string>
+    <string name="login_pwd_error">Must be at least 8 characters.</string>
+    <string name="login_btn">Login</string>
+    <string name="login_google_btn">Login with Google</string>
+    <string name="login_signup_link">Sign Up</string>
+    <string name="login_loading">Logging in…</string>
+    <string name="login_error_title">Login Failed</string>
+
+<!--회원가입-->
+    <string name="sign_title">Please enter your information\nto use the service</string>
+    <string name="sign_name_label">Name</string>
+    <string name="sign_name_hint">Enter your full name</string>
+    <string name="sign_email_label">Email Address</string>
+    <string name="sign_email_hint">example@mail.com</string>
+    <string name="sign_email_error">Please enter a valid email address</string>
+    <string name="sign_pwd_label">Password</string>
+    <string name="sign_pwd_hint">At least 8 characters</string>
+    <string name="sign_pwd_error">Must be at least 8 characters</string>
+    <string name="sign_pwd_confirm_label">Confirm Password</string>
+    <string name="sign_pwd_confirm_error">Passwords do not match.</string>
+    <string name="sign_btn">Agree and Sign Up</string>
+    <string name="sign_loading">Please wait a moment…</string>
+    <string name="sign_success_title">Sign Up Complete</string>
+    <string name="sign_success_desc">You can now use\nall of our services</string>
+    <string name="sign_error_title">Sign Up Failed</string>
+
+</resources>
