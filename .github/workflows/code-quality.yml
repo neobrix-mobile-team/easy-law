@@ -67,7 +67,6 @@ jobs:
     name: 🔒 의존성 보안 취약점 검사
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    if: github.event_name == 'push'
 
     steps:
       - name: 📥 코드 받아오기
