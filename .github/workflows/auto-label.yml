@@ -1,0 +1,129 @@
+name: 🏷️ Auto Label PR
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  add-labels:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 📊 PR 분석 및 라벨 추가
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const { execSync } = require('child_process');
+
+            // PR 정보 가져오기
+            const pr = context.payload.pull_request;
+            const labelsToAdd = [];
+
+            // 변경된 파일 목록 가져오기
+            const { data: files } = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number,
+            });
+
+            const changedFiles = files.map(f => f.filename);
+
+            console.log('📝 Changed files:');
+            changedFiles.forEach(file => console.log(`  - ${file}`));
+
+            // 파일 경로 기반 라벨 결정
+            if (changedFiles.some(f => f.includes('app/build.gradle'))) {
+              labelsToAdd.push('🔧 build');
+            }
+
+            if (changedFiles.some(f => f.includes('.github/workflows'))) {
+              labelsToAdd.push('🔄 CI/CD');
+            }
+
+            if (changedFiles.some(f => f.includes('app/src/main/java/com/easylaw/app/ui/'))) {
+              labelsToAdd.push('🎨 UI');
+            }
+
+            if (changedFiles.some(f => f.includes('app/src/main/java/com/easylaw/app/viewmodel/'))) {
+              labelsToAdd.push('⚙️ ViewModel');
+            }
+
+            if (changedFiles.some(f => f.includes('app/src/main/java/com/easylaw/app/domain/'))) {
+              labelsToAdd.push('📦 Domain');
+            }
+
+            if (changedFiles.some(f => f.includes('app/src/main/java/com/easylaw/app/repository/'))) {
+              labelsToAdd.push('🗄️ Repository');
+            }
+
+            if (changedFiles.some(f => f.includes('app/src/main/java/com/easylaw/app/util/'))) {
+              labelsToAdd.push('🛠️ Utility');
+            }
+
+            if (changedFiles.some(f => f.includes('app/src/test/') || f.includes('app/src/androidTest/'))) {
+              labelsToAdd.push('✅ Test');
+            }
+
+            if (changedFiles.some(f => f.includes('README') || f.includes('CONTRIBUTING') || f.includes('DEVELOPMENT'))) {
+              labelsToAdd.push('📚 Documentation');
+            }
+
+            // PR 제목으로 추가 라벨 결정
+            const title = pr.title.toLowerCase();
+
+            if (title.includes('fix:') || title.includes('hotfix')) {
+              labelsToAdd.push('🐛 bug');
+            }
+
+            if (title.includes('feat:') || title.includes('feature')) {
+              labelsToAdd.push('✨ feature');
+            }
+
+            if (title.includes('refactor:') || title.includes('refactoring')) {
+              labelsToAdd.push('♻️ refactor');
+            }
+
+            if (title.includes('docs:') || title.includes('documentation')) {
+              labelsToAdd.push('📚 Documentation');
+            }
+
+            if (title.includes('chore:') || title.includes('maintenance')) {
+              labelsToAdd.push('🧹 chore');
+            }
+
+            if (title.includes('style:') || title.includes('format')) {
+              labelsToAdd.push('💅 style');
+            }
+
+            if (title.includes('perf:') || title.includes('performance')) {
+              labelsToAdd.push('⚡ performance');
+            }
+
+            // 중복 제거
+            const uniqueLabels = [...new Set(labelsToAdd)];
+
+            if (uniqueLabels.length > 0) {
+              console.log('\n🏷️ Adding labels:');
+              uniqueLabels.forEach(label => console.log(`  - ${label}`));
+
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                labels: uniqueLabels,
+              });
+
+              console.log('\n✅ Labels added successfully!');
+            } else {
+              console.log('\n⚠️ No labels to add');
+            }
+

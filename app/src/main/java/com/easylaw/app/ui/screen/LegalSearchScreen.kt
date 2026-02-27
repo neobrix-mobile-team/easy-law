@@ -77,7 +77,7 @@ import com.easylaw.app.viewmodel.LegalSearchViewModel
 @Composable
 fun LegalSearchRoute(viewModel: LegalSearchViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val searchResults = viewModel.searchResults.collectAsLazyPagingItems()
+    val searchResults = viewModel.searchResults.collectAsLazyPagingItems<Precedent>()
 
     Box(modifier = Modifier.fillMaxSize()) {
         SituationDiagnosisScreen(
@@ -229,18 +229,17 @@ fun CourtTypeSpinner(
 
     ExposedDropdownMenuBox(
         expanded = expanded,
-        onExpandedChange = { expanded = !expanded },
+        onExpandedChange = { newValue -> expanded = newValue },
     ) {
         OutlinedTextField(
             value = selectedOption.displayName,
             onValueChange = {},
-            readOnly = true, // 사용자가 직접 타이핑할 수 없게 막음
+            readOnly = true,
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             modifier =
                 Modifier
                     .fillMaxWidth()
                     .menuAnchor(MenuAnchorType.PrimaryNotEditable, true),
-            // 메뉴가 텍스트 필드 바로 아래에 뜨도록 고정하는 역할
             shape = RoundedCornerShape(16.dp),
             colors =
                 ExposedDropdownMenuDefaults.outlinedTextFieldColors(
@@ -248,20 +247,22 @@ fun CourtTypeSpinner(
                     unfocusedBorderColor = Color(0xFFE0E0E0),
                 ),
         )
-        ExposedDropdownMenu(
+        ExposedDropdownMenuBox(
             expanded = expanded,
-            onDismissRequest = { expanded = false },
-            modifier = Modifier.background(Color.White),
+            onExpandedChange = {},
+            modifier = Modifier.exposedDropdownSize(),
         ) {
-            // Enum 클래스에 정의된 모든 옵션을 리스트로 뿌려줍니다.
-            CourtTypeOption.entries.forEach { option ->
-                DropdownMenuItem(
-                    text = { Text(text = option.displayName, color = Color.Black) },
-                    onClick = {
-                        onOptionSelected(option)
-                        expanded = false
-                    },
-                )
+            LazyColumn(modifier = Modifier.background(Color.White)) {
+                items(CourtTypeOption.entries.size) { index ->
+                    val option = CourtTypeOption.entries[index]
+                    DropdownMenuItem(
+                        text = { Text(text = option.displayName, color = Color.Black) },
+                        onClick = {
+                            onOptionSelected(option)
+                            expanded = false
+                        },
+                    )
+                }
             }
         }
     }

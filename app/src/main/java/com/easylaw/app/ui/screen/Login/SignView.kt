@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Login
@@ -152,7 +153,7 @@ fun SignView(
                         !signState.isPasswordError &&
                         !signState.isPasswordConfirmError,
                 color = Color(0xFF3182F6),
-                icon = Icons.Default.Login,
+                icon = Icons.AutoMirrored.Filled.Login,
             )
             Spacer(modifier = Modifier.height(16.dp))
         }
