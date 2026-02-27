@@ -30,20 +30,28 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: 📝 local.properties 생성
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          LAW_API_KEY: ${{ secrets.LAW_API_KEY }}
         run: |
           touch local.properties
           echo "sdk.dir=$ANDROID_HOME" >> local.properties
+          echo "GEMINI_API_KEY=${GEMINI_API_KEY}" >> local.properties
+          echo "LAW_API_KEY=${LAW_API_KEY}" >> local.properties
 
       - name: 🔥 google-services.json 생성
-        if: ${{ secrets.GOOGLE_SERVICES_JSON != '' }}
         env:
           G_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
-          echo "$G_SERVICES" | base64 -d > app/google-services.json
+          if [ -n "$G_SERVICES" ]; then
+            echo "$G_SERVICES" | base64 -d > app/google-services.json
+          else
+            echo "⚠️ GOOGLE_SERVICES_JSON secret is not configured"
+          fi
 
       - name: 🔍 Android Lint + Detekt 검사
         run: |
-          ./gradlew lint detekt \
+          ./gradlew lint detekt ktlintCheck \
             --parallel \
             --build-cache \
             --no-daemon \
@@ -56,8 +64,8 @@ jobs:
         with:
           name: lint-report
           path: |
-            app/build/reports/lint-results*.html
-            app/build/reports/lint-results*.xml
+            app/build/reports/lint-results-*.html
+            app/build/reports/lint-results-*.xml
           retention-days: 7
 
       - name: 📤 Detekt 리포트 업로드
@@ -66,64 +74,23 @@ jobs:
         with:
           name: detekt-report
           path: |
-            build/reports/detekt/
+            app/build/reports/detekt/
+          retention-days: 7
+
+      - name: 📤 Ktlint 리포트 업로드
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ktlint-report
+          path: |
+            app/build/reports/ktlint/
           retention-days: 7
 
   security-scan:
     name: 🔒 의존성 보안 취약점 검사
     runs-on: ubuntu-latest
     timeout-minutes: 10
-
-    steps:
-      - name: 📥 코드 받아오기
-        uses: actions/checkout@v4
-
-      - name: ☕ JDK 17 설정
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: gradle
-          cache-dependency-path: |
-            **/gradle.properties
-            **/build.gradle
-
-      - name: 🔧 Gradle wrapper 권한 설정
-        run: chmod +x ./gradlew
-
-      - name: 📝 local.properties 생성
-        run: |
-          touch local.properties
-          echo "sdk.dir=$ANDROID_HOME" >> local.properties
-
-      - name: 🔥 google-services.json 생성
-        if: ${{ secrets.GOOGLE_SERVICES_JSON != '' }}
-        env:
-          G_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON }}
-        run: |
-          echo "$G_SERVICES" | base64 -d > app/google-services.json
-
-      - name: 🔒 OWASP Dependency Check 실행
-        run: |
-          ./gradlew dependencyCheckAnalyze \
-            --parallel \
-            --build-cache \
-            --no-daemon \
-            -Dorg.gradle.workers.max=8 || true
-
-      - name: 📤 보안 검사 결과 업로드
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: security-scan-report
-          path: |
-            build/reports/dependency-check/
-          retention-days: 7
-
-  coverage:
-    name: 📊 코드 커버리지 (Jacoco)
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # main/develop에만 실행 (PR에서는 스킵하여 시간 절약)
     if: github.event_name == 'push'
 
     steps:
@@ -144,16 +111,85 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: 📝 local.properties 생성
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          LAW_API_KEY: ${{ secrets.LAW_API_KEY }}
         run: |
           touch local.properties
           echo "sdk.dir=$ANDROID_HOME" >> local.properties
+          echo "GEMINI_API_KEY=${GEMINI_API_KEY}" >> local.properties
+          echo "LAW_API_KEY=${LAW_API_KEY}" >> local.properties
 
       - name: 🔥 google-services.json 생성
-        if: ${{ secrets.GOOGLE_SERVICES_JSON != '' }}
         env:
           G_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
-          echo "$G_SERVICES" | base64 -d > app/google-services.json
+          if [ -n "$G_SERVICES" ]; then
+            echo "$G_SERVICES" | base64 -d > app/google-services.json
+          else
+            echo "⚠️ GOOGLE_SERVICES_JSON secret is not configured"
+          fi
+
+      - name: 🔒 OWASP Dependency Check 실행
+        run: |
+          ./gradlew dependencyCheckAnalyze \
+            --parallel \
+            --build-cache \
+            --no-daemon \
+            -Dorg.gradle.workers.max=8 || true
+
+      - name: 📤 보안 검사 결과 업로드
+        if: always() && hashFiles('build/reports/dependency-check/') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-scan-report
+          path: |
+            build/reports/dependency-check/
+          retention-days: 7
+
+  coverage:
+    name: 📊 코드 커버리지 (Jacoco)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # main/develop push에만 실행
+    if: github.event_name == 'push'
+
+    steps:
+      - name: 📥 코드 받아오기
+        uses: actions/checkout@v4
+
+      - name: ☕ JDK 17 설정
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+          cache-dependency-path: |
+            **/gradle.properties
+            **/build.gradle
+
+      - name: 🔧 Gradle wrapper 권한 설정
+        run: chmod +x ./gradlew
+
+      - name: 📝 local.properties 생성
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          LAW_API_KEY: ${{ secrets.LAW_API_KEY }}
+        run: |
+          touch local.properties
+          echo "sdk.dir=$ANDROID_HOME" >> local.properties
+          echo "GEMINI_API_KEY=${GEMINI_API_KEY}" >> local.properties
+          echo "LAW_API_KEY=${LAW_API_KEY}" >> local.properties
+
+      - name: 🔥 google-services.json 생성
+        env:
+          G_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          if [ -n "$G_SERVICES" ]; then
+            echo "$G_SERVICES" | base64 -d > app/google-services.json
+          else
+            echo "⚠️ GOOGLE_SERVICES_JSON secret is not configured"
+          fi
 
       - name: 🧪 단위 테스트 + 커버리지 생성
         run: |
