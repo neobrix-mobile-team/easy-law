@@ -7,17 +7,7 @@ on:
     branches: [ main, develop ]
 
 jobs:
-  setup:
-    uses: ./.github/workflows/setup-gradle.yml
-    with:
-      setup-api-keys: true
-    secrets:
-      GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
-      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-      LAW_API_KEY: ${{ secrets.LAW_API_KEY }}
-
   android-build:
-    needs: setup
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -37,6 +27,29 @@ jobs:
 
       - name: 🔧 Gradle 실행 권한 부여
         run: chmod +x ./gradlew
+
+      - name: 📝 local.properties 생성
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          LAW_API_KEY: ${{ secrets.LAW_API_KEY }}
+        run: |
+          touch local.properties
+          echo "sdk.dir=$ANDROID_HOME" >> local.properties
+          
+          if [ -n "$GEMINI_API_KEY" ]; then
+            echo "GEMINI_API_KEY=$GEMINI_API_KEY" >> local.properties
+          fi
+          
+          if [ -n "$LAW_API_KEY" ]; then
+            echo "LAW_API_KEY=$LAW_API_KEY" >> local.properties
+          fi
+
+      - name: 🔥 google-services.json 생성
+        if: ${{ secrets.GOOGLE_SERVICES_JSON != '' }}
+        env:
+          G_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          echo "$G_SERVICES" | base64 -d > app/google-services.json
 
 
       # 🚀 빌드 단계 - PR: 빠른 빌드만, Push: 테스트 포함

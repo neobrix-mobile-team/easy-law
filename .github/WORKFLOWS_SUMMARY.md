@@ -1,32 +1,32 @@
 # 🔄 GitHub Actions 워크플로우 요약
 
-## 📋 워크플로우 아키텍처 (최적화됨 ✨)
+## 📋 워크플로우 아키텍처 (최적화 및 재설계됨 ✨)
 
 ### 전체 구조
 ```
-코드 Push / PR 생성
+Push / PR 생성
   │
-  ├─ ⚙️ setup-gradle.yml (공통 환경 설정) [NEW 재사용!]
+  ├─ 🏗️ android-build.yml (빌드 & 테스트) [독립 실행]
   │   ├─ Checkout
   │   ├─ JDK 17 설정
-  │   ├─ Gradle 권한 설정
-  │   ├─ local.properties 생성
-  │   └─ google-services.json 생성
-  │
-  ├─ 🏗️ android-build.yml (빌드 & 테스트)
-  │   ├─ setup-gradle.yml 호출
+  │   ├─ Gradle 권한
+  │   ├─ local.properties 생성 (직접)
+  │   ├─ google-services.json 생성 (직접)
   │   ├─ PR: assembleDebug (~5분)
-  │   ├─ Push: testDebugUnitTest + assembleDebug (~8분)
-  │   └─ APK & 테스트 결과 업로드
+  │   └─ Push: testDebugUnitTest + assembleDebug (~8분)
   │
-  ├─ 🔐 code-quality.yml (코드 품질 & 보안)
-  │   ├─ setup-gradle.yml 호출
-  │   ├─ 🔍 lint-and-detekt (모든 Push/PR)
-  │   ├─ 🔒 security-scan (Push only)
-  │   └─ 📊 coverage (Push only)
-  │
-  └─ 🏷️ auto-label.yml (라벨 자동 추가)
-      └─ PR 제목 & 경로 기반 라벨 추가
+  └─ 🔐 code-quality.yml (코드 품질 & 보안) [병렬 3개 Job]
+      ├─ 🔍 lint-and-detekt (모든 Push/PR)
+      │   ├─ 환경 설정 (직접)
+      │   └─ Lint & Detekt 실행
+      │
+      ├─ 🔒 security-scan (Push only)
+      │   ├─ 환경 설정 (직접)
+      │   └─ OWASP 보안 검사
+      │
+      └─ 📊 coverage (Push only)
+          ├─ 환경 설정 (직접)
+          └─ Jacoco 커버리지
 ```
 
 ---
@@ -50,40 +50,26 @@
 
 | 워크플로우 | 책임 | 트리거 | 소요시간 | 상태 |
 |-----------|------|--------|---------|------|
-| **setup-gradle.yml** | 환경 설정 | 내부 호출 | ~2분 | ✨ NEW |
-| **android-build.yml** | 빌드 & 테스트 | Push/PR | 5-8분 | 🔄 개편 |
-| **code-quality.yml** | 품질 & 보안 검사 | Push/PR | ~15분 | 🔄 개편 |
-| **auto-label.yml** | 라벨 추가 | PR | ~1분 | ✅ 기존 |
+| **android-build.yml** | 빌드 & 테스트 | Push/PR | 5-8분 | ✅ 독립 실행 |
+| **code-quality.yml** | 품질 & 보안 검사 | Push/PR | ~15분 | ✅ 병렬 3개 Job |
+| **auto-label.yml** | 라벨 추가 | PR | ~1분 | ✅ 기존 유지 |
+| **setup-gradle.yml** | 참고용 (미사용) | - | - | ⚠️ 문서화용 |
 
 ---
 
 ## ⚙️ 각 워크플로우 상세
 
-### 1️⃣ setup-gradle.yml ⭐ 신규
+### 1️⃣ setup-gradle.yml ⚠️ 참고용 (현재 미사용)
 
-**목적**: 모든 빌드/검사 작업의 공통 설정을 한 곳에서 관리
+> **참고**: Reusable Workflow로 설계했으나, GitHub Actions의 제약으로 인해 파일 전달이 불가능하여 현재는 각 워크플로우가 독립적으로 환경 설정합니다.
 
-**포함 작업**:
-- 📥 Checkout
-- ☕ JDK 17 설정 (Gradle 캐싱)
-- 🔧 Gradle wrapper 권한 설정
-- 📝 local.properties 생성
-  - 기본값: `sdk.dir=$ANDROID_HOME`
-  - 선택값: API 키 (GEMINI_API_KEY, LAW_API_KEY)
-- 🔥 google-services.json 생성
+**설계 의도**:
+- 공통 Checkout, JDK, Gradle 설정 재사용
+- 단일 진실 공급원(SSOT)
 
-**사용 예시**:
-```yaml
-jobs:
-  setup:
-    uses: ./.github/workflows/setup-gradle.yml
-    with:
-      setup-api-keys: true  # API 키 포함 여부
-    secrets:
-      GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
-      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-      LAW_API_KEY: ${{ secrets.LAW_API_KEY }}
-```
+**제약사항**:
+- Reusable Workflow에서 생성한 파일이 다음 Job의 `$GITHUB_WORKSPACE`로 자동 전달되지 않음
+- Artifact 없이는 파일 공유 불가
 
 ---
 
@@ -92,10 +78,12 @@ jobs:
 **책임**: 안드로이드 빌드 및 단위 테스트
 
 **작동 방식**:
-1. setup-gradle.yml 호출 (API 키 포함)
-2. PR 이벤트: `assembleDebug` (빠른 검증)
-3. Push 이벤트: `testDebugUnitTest + assembleDebug` (완전 검증)
-4. 산출물 업로드 (APK, 테스트 결과)
+1. Checkout & JDK 17 설정
+2. local.properties 생성 (GEMINI_API_KEY, LAW_API_KEY 포함)
+3. google-services.json 생성
+4. PR 이벤트: `assembleDebug` (빠른 검증)
+5. Push 이벤트: `testDebugUnitTest + assembleDebug` (완전 검증)
+6. 산출물 업로드 (APK, 테스트 결과)
 
 **최적화**:
 - Gradle 병렬 처리 & 캐싱
@@ -109,10 +97,12 @@ jobs:
 
 **책임**: 코드 품질, 보안, 커버리지 검사
 
-**구성**: 3개 병렬 Job
+**구성**: 3개 병렬 Job (각각 독립적으로 환경 설정)
 
 #### 🔍 lint-and-detekt (모든 Push/PR)
 ```
+Checkout, JDK, Gradle, local.properties, google-services.json 설정
+  ↓
 Android Lint 검사
   ↓
 Detekt 정적 분석
@@ -122,6 +112,8 @@ Detekt 정적 분석
 
 #### 🔒 security-scan (Push only)
 ```
+Checkout, JDK, Gradle, local.properties, google-services.json 설정
+  ↓
 OWASP Dependency Check
   ↓
 의존성 보안 취약점 검사
@@ -131,6 +123,8 @@ OWASP Dependency Check
 
 #### 📊 coverage (Push only)
 ```
+Checkout, JDK, Gradle, local.properties, google-services.json 설정
+  ↓
 Jacoco 코드 커버리지
   ↓
 단위 테스트 + 커버리지 수집
