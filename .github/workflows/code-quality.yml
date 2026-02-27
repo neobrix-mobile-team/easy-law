@@ -32,9 +32,8 @@ jobs:
       - name: 📝 local.properties 생성
         run: echo "sdk.dir=$ANDROID_HOME" >> local.properties
 
-      # ✅ 추가
       - name: 🔥 google-services.json 생성
-        run: echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > app/google-services.json
+        run: echo '${{ secrets.GOOGLE_SERVICES_JSON }}' | base64 --decode > app/google-services.json
 
       - name: 🔍 Android Lint + Detekt 검사
         run: |
@@ -90,9 +89,8 @@ jobs:
       - name: 📝 local.properties 생성
         run: echo "sdk.dir=$ANDROID_HOME" >> local.properties
 
-      # ✅ 추가
       - name: 🔥 google-services.json 생성
-        run: echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > app/google-services.json
+        run: echo '${{ secrets.GOOGLE_SERVICES_JSON }}' | base64 --decode > app/google-services.json
 
       - name: 🔒 OWASP Dependency Check 실행
         run: |
@@ -137,9 +135,8 @@ jobs:
       - name: 📝 local.properties 생성
         run: echo "sdk.dir=$ANDROID_HOME" >> local.properties
 
-      # ✅ 추가
       - name: 🔥 google-services.json 생성
-        run: echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > app/google-services.json
+        run: echo '${{ secrets.GOOGLE_SERVICES_JSON }}' | base64 --decode > app/google-services.json
 
       - name: 🧪 단위 테스트 + 커버리지 생성
         run: |
