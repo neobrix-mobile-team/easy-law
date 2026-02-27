@@ -26,6 +26,7 @@ data class PrecItem(
     @SerializedName("법원명") val court: String?,
     @SerializedName("선고일자") val date: String?,
     @SerializedName("판례상세링크") val detailLink: String?,
+    @SerializedName("판결유형") val judgmentType: String?,
 )
 
 // 역직렬화

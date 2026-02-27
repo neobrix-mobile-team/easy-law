@@ -52,6 +52,7 @@ class PrecedentPagingSource(
                         court = it.court ?: "",
                         date = it.date ?: "",
                         detailLink = it.detailLink ?: "",
+                        judgmentType = it.judgmentType ?: "",
                     )
                 }
 
