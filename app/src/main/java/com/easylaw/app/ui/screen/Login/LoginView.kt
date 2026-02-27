@@ -14,8 +14,8 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.filled.Error
-import androidx.compose.material.icons.filled.Login
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -131,7 +131,7 @@ fun LoginView(
                         .height(56.dp),
                 text = stringResource(id = R.string.login_btn),
                 isEnable = loginState.idInput.isNotEmpty() && loginState.pwdInput.isNotEmpty() && !loginState.isIdError && !loginState.isPwdError,
-                icon = Icons.Default.Login,
+                icon = Icons.AutoMirrored.Filled.Login,
                 onClick = {
                     viewModel.login({ goToMainView() })
                 },
@@ -152,7 +152,7 @@ fun LoginView(
                     viewModel.logInGoogle(context, { goToMainView() })
                 },
                 color = Color(0xff78aef5),
-                icon = Icons.Default.Login,
+                icon = Icons.AutoMirrored.Filled.Login,
             )
         }
 

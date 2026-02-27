@@ -18,7 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -109,7 +109,7 @@ fun SelfView(
                                 )
                             }
 
-                            Divider(color = Color.LightGray.copy(alpha = 0.5f))
+                            HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f))
 
                             Column {
                                 Text(
