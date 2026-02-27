@@ -29,6 +29,12 @@ jobs:
       - name: 🔧 Gradle wrapper 권한 설정
         run: chmod +x ./gradlew
 
+      - name: 📝 local.properties 생성
+        run: echo "sdk.dir=$ANDROID_HOME" >> local.properties
+
+      - name: 🔥 google-services.json 생성
+        run: echo '${{ secrets.GOOGLE_SERVICES_JSON }}' | base64 --decode > app/google-services.json
+
       - name: 🔍 Android Lint + Detekt 검사
         run: |
           ./gradlew lint detekt \
@@ -81,6 +87,12 @@ jobs:
       - name: 🔧 Gradle wrapper 권한 설정
         run: chmod +x ./gradlew
 
+      - name: 📝 local.properties 생성
+        run: echo "sdk.dir=$ANDROID_HOME" >> local.properties
+
+      - name: 🔥 google-services.json 생성
+        run: echo '${{ secrets.GOOGLE_SERVICES_JSON }}' | base64 --decode > app/google-services.json
+
       - name: 🔒 OWASP Dependency Check 실행
         run: |
           ./gradlew dependencyCheckAnalyze \
@@ -121,6 +133,12 @@ jobs:
 
       - name: 🔧 Gradle wrapper 권한 설정
         run: chmod +x ./gradlew
+
+      - name: 📝 local.properties 생성
+        run: echo "sdk.dir=$ANDROID_HOME" >> local.properties
+
+      - name: 🔥 google-services.json 생성
+        run: echo '${{ secrets.GOOGLE_SERVICES_JSON }}' | base64 --decode > app/google-services.json
 
       - name: 🧪 단위 테스트 + 커버리지 생성
         run: |

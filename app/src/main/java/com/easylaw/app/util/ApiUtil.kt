@@ -17,6 +17,11 @@ import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Inject
 import javax.inject.Singleton
 
+private const val HTTP_UNAUTHORIZED = 401
+private const val HTTP_FORBIDDEN = 403
+private const val HTTP_SERVER_ERROR_MIN = 500
+private const val HTTP_SERVER_ERROR_MAX = 599
+
 @Module
 @InstallIn(SingletonComponent::class)
 object ApiUtil {
@@ -127,9 +132,9 @@ class ShowErrorInterceptor
         // 에러코드에 따라 추가
         private fun showError(code: Int): String? =
             when (code) {
-                401 -> "인증에 실패했습니다."
-                403 -> "접근 권한이 없습니다."
-                in 500..599 -> "법령 서버 에러"
+                HTTP_UNAUTHORIZED -> "인증에 실패했습니다."
+                HTTP_FORBIDDEN -> "접근 권한이 없습니다."
+                in HTTP_SERVER_ERROR_MIN..HTTP_SERVER_ERROR_MAX -> "법령 서버 에러"
                 else -> null
             }
     }

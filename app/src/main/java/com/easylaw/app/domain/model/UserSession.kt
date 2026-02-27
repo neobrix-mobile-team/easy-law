@@ -40,11 +40,11 @@ class UserSession
         private val _isInitialized = MutableStateFlow(false)
         val isInitialized = _isInitialized.asStateFlow()
 
-        fun finishInitialzed() {
+        fun finishInitialized() {
             _isInitialized.value = true
         }
 
-        fun setuser_role(role: String) {
+        fun setUserRole(role: String) {
             _userInfo.update { it ->
                 it.copy(
                     user_role = role,
@@ -52,7 +52,7 @@ class UserSession
             }
         }
 
-        fun getuser_role(): String = _userInfo.value.user_role
+        fun getUserRole(): String = _userInfo.value.user_role
 
         suspend fun setLoginInfo(userInfo: UserInfo) {
             _userInfo.update { userInfo }

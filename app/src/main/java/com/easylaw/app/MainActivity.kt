@@ -53,6 +53,11 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+private val NAV_BAR_COLOR = Color(0xFFEAEFEF)
+private val SELECTED_ICON_COLOR = Color(0xFFD95F1E)
+private val UNSELECTED_ICON_COLOR = Color(0xFF797573)
+private val DRAWER_BACKGROUND_COLOR = Color.White
+
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     @Inject
@@ -74,7 +79,7 @@ class MainActivity : ComponentActivity() {
             if (savedUser != null) {
                 userSession.setLoginInfo(savedUser)
             } else {
-                userSession.finishInitialzed()
+                userSession.sessionClear()
             }
         }
 
@@ -133,7 +138,7 @@ class MainActivity : ComponentActivity() {
                         bottomBar = {
                             if (currentRoute !in hideBarsRoutes) {
                                 NavigationBar(
-                                    containerColor = Color(0xFFEAEFEF),
+                                    containerColor = NAV_BAR_COLOR,
                                     tonalElevation = 8.dp,
                                 ) {
                                     bottomItems.forEach { item ->
@@ -144,10 +149,10 @@ class MainActivity : ComponentActivity() {
                                             icon = { Icon(imageVector = item.icon, contentDescription = item.title) },
                                             colors =
                                                 NavigationBarItemDefaults.colors(
-                                                    selectedIconColor = Color(0xFFD95F1E),
-                                                    selectedTextColor = Color(0xFFD95F1E),
-                                                    unselectedIconColor = Color(0xFF797573),
-                                                    unselectedTextColor = Color(0xFF797573),
+                                                    selectedIconColor = SELECTED_ICON_COLOR,
+                                                    selectedTextColor = SELECTED_ICON_COLOR,
+                                                    unselectedIconColor = UNSELECTED_ICON_COLOR,
+                                                    unselectedTextColor = UNSELECTED_ICON_COLOR,
                                                 ),
                                             onClick = {
                                                 if (currentRoute != item.route) {
@@ -183,13 +188,15 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+private val DRAWER_DIVIDER_COLOR = Color(0xFFEEEEEE)
+
 @Composable
 fun EasylawSideBar(
     userInfo: UserInfo,
     onLogoutClick: () -> Unit,
 ) {
     ModalDrawerSheet(
-        drawerContainerColor = Color.White,
+        drawerContainerColor = DRAWER_BACKGROUND_COLOR,
         modifier = Modifier.width(280.dp),
     ) {
         Column(
@@ -211,7 +218,7 @@ fun EasylawSideBar(
             )
 
             Spacer(modifier = Modifier.height(24.dp))
-            HorizontalDivider(thickness = 1.dp, color = Color(0xFFEEEEEE))
+            HorizontalDivider(thickness = 1.dp, color = DRAWER_DIVIDER_COLOR)
             Spacer(modifier = Modifier.height(12.dp))
 
             // 메뉴 리스트
