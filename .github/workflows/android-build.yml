@@ -9,7 +9,7 @@ on:
 jobs:
   android-ci:
     runs-on: ubuntu-latest
-    timeout-minutes: 30 # 빌드 안정성을 위해 살짝 늘림
+    timeout-minutes: 20 # 최적화로 시간 단축
 
     steps:
       - name: 📥 Checkout
@@ -21,6 +21,9 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: gradle
+          cache-dependency-path: |
+            **/gradle.properties
+            **/build.gradle
 
       - name: 🔧 Gradle 실행 권한 부여
         run: chmod +x ./gradlew
@@ -58,17 +61,30 @@ jobs:
             echo "⚠️ LAW_API_KEY secret is missing!"
           fi
 
-      # 🧹 캐시 꼬임 방지는 필요할 때만 하는 것이 좋지만, 유지하신다면 명령어를 명확히 합니다.
-      - name: 🧹 Gradle Wrapper 캐시 정리
-        run: ./gradlew clean
+      # 🚀 빌드 단계 - PR: 빠른 빌드만, Push: 테스트 포함
+      - name: 🏗️ Build APK (PR - 빠른 검증)
+        if: github.event_name == 'pull_request'
+        run: |
+          ./gradlew assembleDebug \
+            --parallel \
+            --build-cache \
+            --no-daemon \
+            --configure-on-demand \
+            -Dorg.gradle.workers.max=8 \
+            -Dkotlin.incremental=true \
+            -Dkotlin.caching.enabled=true
 
-      # 🚀 빌드 단계 (주석을 제거하고 한 줄씩 명확히 실행하거나 백슬래시를 정확히 사용)
-      - name: 🚀 Unit Test & Build APK
+      - name: 🧪 Unit Test & Build APK (Push - 완전 검증)
+        if: github.event_name == 'push'
         run: |
           ./gradlew testDebugUnitTest assembleDebug \
             --parallel \
             --build-cache \
-            --no-daemon
+            --no-daemon \
+            --configure-on-demand \
+            -Dorg.gradle.workers.max=8 \
+            -Dkotlin.incremental=true \
+            -Dkotlin.caching.enabled=true
 
       - name: 📤 APK 업로드
         if: success()
