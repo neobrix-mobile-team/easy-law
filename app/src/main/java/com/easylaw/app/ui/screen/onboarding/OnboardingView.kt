@@ -95,7 +95,7 @@ fun OnboardingView(
                 1 -> WelcomeView()
                 2 ->
                     RoleSelectionView(
-                        selectedRole = onboardingViewState.user_role,
+                        selectedRole = onboardingViewState.userRole,
                         onRoleSelected = { viewModel.selectRole(it) },
                     )
                 3 -> FinalView()
@@ -104,7 +104,7 @@ fun OnboardingView(
 
         val isNextEnabled =
             when (onboardingViewState.currentStep) {
-                2 -> onboardingViewState.user_role.isNotEmpty()
+                2 -> onboardingViewState.userRole.isNotEmpty()
                 else -> true
             }
 

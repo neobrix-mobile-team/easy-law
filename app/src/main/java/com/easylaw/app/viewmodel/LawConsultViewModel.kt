@@ -3,7 +3,7 @@ package com.easylaw.app.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.easylaw.app.data.models.precModel
+import com.easylaw.app.data.models.PrecModel
 import com.easylaw.app.data.repo.AIRepo
 import com.easylaw.app.data.repo.LawApiRepo
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,7 +17,7 @@ data class LawConsultViewState(
     val situationInput: String = "",
     val lawTypeInput: String = "",
     val detailInput: String = "",
-    val precList: List<precModel> = emptyList(),
+    val precList: List<PrecModel> = emptyList(),
     val precSuccess: Boolean = false,
 )
 
