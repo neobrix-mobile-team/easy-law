@@ -41,7 +41,7 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           LAW_API_KEY: ${{ secrets.LAW_API_KEY }}
-        run: |
+        run: | 
           # 기본 설정
           touch local.properties
           echo "sdk.dir=$ANDROID_HOME" >> local.properties
