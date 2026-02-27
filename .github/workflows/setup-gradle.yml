@@ -67,16 +67,13 @@ jobs:
           fi
 
       - name: 🔥 google-services.json 생성
-        if: ${{ secrets.GOOGLE_SERVICES_JSON != '' }}
         env:
           G_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
-          echo "$G_SERVICES" | base64 -d > app/google-services.json
-          echo "✅ google-services.json created successfully"
-
-      - name: ⚠️ Google Services 경고
-        if: ${{ secrets.GOOGLE_SERVICES_JSON == '' }}
-        run: |
-          echo "⚠️ GOOGLE_SERVICES_JSON secret is not configured!"
-          echo "This may cause build failures if the app requires Firebase."
+          if [ -n "$G_SERVICES" ]; then
+            echo "$G_SERVICES" | base64 -d > app/google-services.json
+            echo "✅ google-services.json created successfully"
+          else
+            echo "⚠️ GOOGLE_SERVICES_JSON secret is not configured"
+          fi
 
