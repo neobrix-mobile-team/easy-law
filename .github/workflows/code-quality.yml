@@ -29,6 +29,10 @@ jobs:
       - name: 🔧 Gradle wrapper 권한 설정
         run: chmod +x ./gradlew
 
+      # ✅ 추가
+      - name: 📝 local.properties 생성
+        run: echo "sdk.dir=$ANDROID_HOME" >> local.properties
+
       - name: 🔍 Android Lint + Detekt 검사
         run: |
           ./gradlew lint detekt \
@@ -61,7 +65,6 @@ jobs:
     name: 🔒 의존성 보안 취약점 검사
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    # main/develop에만 실행 (PR에서는 스킵하여 시간 절약)
     if: github.event_name == 'push'
 
     steps:
@@ -80,6 +83,10 @@ jobs:
 
       - name: 🔧 Gradle wrapper 권한 설정
         run: chmod +x ./gradlew
+
+      # ✅ 추가
+      - name: 📝 local.properties 생성
+        run: echo "sdk.dir=$ANDROID_HOME" >> local.properties
 
       - name: 🔒 OWASP Dependency Check 실행
         run: |
@@ -102,7 +109,6 @@ jobs:
     name: 📊 코드 커버리지 (Jacoco)
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    # main/develop push에만 실행
     if: github.event_name == 'push'
 
     steps:
@@ -121,6 +127,10 @@ jobs:
 
       - name: 🔧 Gradle wrapper 권한 설정
         run: chmod +x ./gradlew
+
+      # ✅ 추가
+      - name: 📝 local.properties 생성
+        run: echo "sdk.dir=$ANDROID_HOME" >> local.properties
 
       - name: 🧪 단위 테스트 + 커버리지 생성
         run: |
