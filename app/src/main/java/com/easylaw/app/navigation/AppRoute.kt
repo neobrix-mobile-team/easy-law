@@ -20,8 +20,10 @@ import com.easylaw.app.ui.screen.Login.LoginView
 import com.easylaw.app.ui.screen.Login.SignView
 import com.easylaw.app.ui.screen.Self.SelfView
 import com.easylaw.app.ui.screen.community.CommunityView
+import com.easylaw.app.ui.screen.community.CommunityWriteView
 import com.easylaw.app.ui.screen.onboarding.OnboardingView
 import com.easylaw.app.viewmodel.CommunityViewModel
+import com.easylaw.app.viewmodel.CommunityWriteViewModel
 import com.easylaw.app.viewmodel.LoginViewModel
 import com.easylaw.app.viewmodel.OnboardingViewModel
 import com.easylaw.app.viewmodel.SelfViewModel
@@ -40,6 +42,7 @@ object NavRoute {
     const val SIGN_UP = "signUp"
     const val LAW_CONSULT = "lawConsult"
     const val COMMUNITY = "community"
+    const val COMMUNITY_WRITE = "communityWrite"
     const val SELF = "self"
     const val CAR_CRUSH = "carCrush"
 
@@ -147,6 +150,30 @@ fun AppRoute(
             CommunityView(
                 modifier = modifier,
                 viewModel = communityViewModel,
+                communityWrite = {
+                    navController.navigate(NavRoute.COMMUNITY_WRITE) {
+                        // 연타 시 중복 화면 그리기 방지
+                        launchSingleTop = true
+                    }
+                },
+            )
+        }
+        // 커뮤니티 - 글쓰기
+        composable(
+            route = NavRoute.COMMUNITY_WRITE,
+        ) {
+            // 부모의 뷰모델을 가져오고 싶을 떄
+            // NavContorller에서 화면 이동시 해당 화면 정본느 기본적으로 BackStackEntry에 저장된다.
+
+//            val parentViewModel = remember(it) {
+//                navController.getBackStackEntry(NavRoute.COMMUNITY)
+//            }
+//            val communityViewModel: CommunityViewModel = hiltViewModel(parentViewModel)
+
+            val communityWriteViewModel: CommunityWriteViewModel = hiltViewModel()
+            CommunityWriteView(
+                modifier = modifier,
+                viewModel = communityWriteViewModel,
             )
         }
         // 자가진단 화면
