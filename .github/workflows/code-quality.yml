@@ -29,6 +29,18 @@ jobs:
       - name: 🔧 Gradle wrapper 권한 설정
         run: chmod +x ./gradlew
 
+      - name: 📝 local.properties 생성
+        run: |
+          touch local.properties
+          echo "sdk.dir=$ANDROID_HOME" >> local.properties
+
+      - name: 🔥 google-services.json 생성
+        if: ${{ secrets.GOOGLE_SERVICES_JSON != '' }}
+        env:
+          G_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          echo "$G_SERVICES" | base64 -d > app/google-services.json
+
       - name: 🔍 Android Lint + Detekt 검사
         run: |
           ./gradlew lint detekt \
@@ -61,8 +73,6 @@ jobs:
     name: 🔒 의존성 보안 취약점 검사
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    # main/develop에만 실행 (PR에서는 스킵하여 시간 절약)
-    if: github.event_name == 'push'
 
     steps:
       - name: 📥 코드 받아오기
@@ -80,6 +90,18 @@ jobs:
 
       - name: 🔧 Gradle wrapper 권한 설정
         run: chmod +x ./gradlew
+
+      - name: 📝 local.properties 생성
+        run: |
+          touch local.properties
+          echo "sdk.dir=$ANDROID_HOME" >> local.properties
+
+      - name: 🔥 google-services.json 생성
+        if: ${{ secrets.GOOGLE_SERVICES_JSON != '' }}
+        env:
+          G_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          echo "$G_SERVICES" | base64 -d > app/google-services.json
 
       - name: 🔒 OWASP Dependency Check 실행
         run: |
@@ -102,7 +124,6 @@ jobs:
     name: 📊 코드 커버리지 (Jacoco)
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    # main/develop push에만 실행
     if: github.event_name == 'push'
 
     steps:
@@ -121,6 +142,18 @@ jobs:
 
       - name: 🔧 Gradle wrapper 권한 설정
         run: chmod +x ./gradlew
+
+      - name: 📝 local.properties 생성
+        run: |
+          touch local.properties
+          echo "sdk.dir=$ANDROID_HOME" >> local.properties
+
+      - name: 🔥 google-services.json 생성
+        if: ${{ secrets.GOOGLE_SERVICES_JSON != '' }}
+        env:
+          G_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          echo "$G_SERVICES" | base64 -d > app/google-services.json
 
       - name: 🧪 단위 테스트 + 커버리지 생성
         run: |

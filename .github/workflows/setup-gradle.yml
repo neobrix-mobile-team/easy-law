@@ -1,0 +1,82 @@
+name: 🔧 공통 Gradle 환경 설정
+
+on:
+  workflow_call:
+    inputs:
+      setup-api-keys:
+        description: 'GEMINI_API_KEY, LAW_API_KEY 설정 여부'
+        required: false
+        type: boolean
+        default: false
+    secrets:
+      GOOGLE_SERVICES_JSON:
+        required: false
+      GEMINI_API_KEY:
+        required: false
+      LAW_API_KEY:
+        required: false
+
+jobs:
+  setup-environment:
+    runs-on: ubuntu-latest
+    name: ⚙️ 환경 설정
+    steps:
+      - name: 📥 코드 받아오기
+        uses: actions/checkout@v4
+
+      - name: ☕ JDK 17 설정
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+          cache-dependency-path: |
+            **/gradle.properties
+            **/build.gradle
+
+      - name: 🔧 Gradle wrapper 권한 설정
+        run: chmod +x ./gradlew
+
+      - name: 📝 local.properties 생성
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          LAW_API_KEY: ${{ secrets.LAW_API_KEY }}
+        run: | 
+      - name: 📝 local.properties 생성 (기본)
+        run: |
+          # 기본 설정
+          touch local.properties
+          echo "sdk.dir=$ANDROID_HOME" >> local.properties
+
+      - name: 📝 API 키 추가 (선택적)
+        if: ${{ inputs.setup-api-keys == true }}
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          LAW_API_KEY: ${{ secrets.LAW_API_KEY }}
+        run: |
+          if [ -n "$GEMINI_API_KEY" ]; then
+            echo "GEMINI_API_KEY=$GEMINI_API_KEY" >> local.properties
+          else
+            echo "⚠️ GEMINI_API_KEY secret is missing!"
+          fi
+          
+          if [ -n "$LAW_API_KEY" ]; then
+            echo "LAW_API_KEY=$LAW_API_KEY" >> local.properties
+          else
+            echo "⚠️ LAW_API_KEY secret is missing!"
+          fi
+
+      - name: 🔥 google-services.json 생성
+        if: ${{ secrets.GOOGLE_SERVICES_JSON != '' }}
+        env:
+          G_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          echo "$G_SERVICES" | base64 -d > app/google-services.json
+          echo "✅ google-services.json created successfully"
+
+      - name: ⚠️ Google Services 경고
+        if: ${{ secrets.GOOGLE_SERVICES_JSON == '' }}
+        run: |
+          echo "⚠️ GOOGLE_SERVICES_JSON secret is not configured!"
+          echo "This may cause build failures if the app requires Firebase."
+

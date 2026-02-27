@@ -2,6 +2,8 @@ package com.easylaw.app.util
 
 import javax.inject.Inject
 
+private const val MIN_PASSWORD_LENGTH = 8
+
 class KeywordOptimizer
     @Inject
     constructor() {
@@ -34,7 +36,7 @@ class KeywordOptimizer
             }
 
             // 단일 명사 키워드 검사
-            if (trimmedSituation.length <= 8 && singleWordRegex.matches(trimmedSituation)) {
+            if (trimmedSituation.length <= MIN_PASSWORD_LENGTH && singleWordRegex.matches(trimmedSituation)) {
                 return true
             }
 

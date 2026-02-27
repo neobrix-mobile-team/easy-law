@@ -35,8 +35,10 @@ subprojects {
 
 // 2. detekt 설정
 detekt {
-    toolVersion = '1.23.3'
-    config = files('detekt.yml')
+    toolVersion = "1.23.3"
+    config = files("detekt.yml")
+    buildUponDefaultConfig = true  // ← 추가 권장
+
     reports {
         html.enabled = true
         sarif.enabled = true
