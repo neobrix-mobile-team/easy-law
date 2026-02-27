@@ -43,7 +43,7 @@ class OnboardingViewModel
                     else -> "외국인"
                 }
 
-            userSession.setuser_role(
+            userSession.setUserRole(
                 userRole,
             )
         }

@@ -195,8 +195,16 @@ fun RoleSelectionView(
                 onClick = {
                     onRoleSelected(role)
 
-                    @Suppress("DEPRECATION")
-                    val currentLang = context.resources.configuration.locale.language
+                    val currentLang =
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                            // API 24(Nougat) 이상일 때
+                            context.resources.configuration.locales[0]
+                                .language
+                        } else {
+                            // API 24 미만일 때 (Deprecated 방식)
+                            @Suppress("DEPRECATION")
+                            context.resources.configuration.locale.language
+                        }
 
                     if (role == roleENG && currentLang != "en") {
                         setLocale(context, "en")

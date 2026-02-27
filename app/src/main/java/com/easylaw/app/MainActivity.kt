@@ -39,19 +39,22 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.easylaw.app.data.repo.AIRepo
 import com.easylaw.app.domain.model.UserInfo
 import com.easylaw.app.domain.model.UserSession
 import com.easylaw.app.navigation.AppRoute
 import com.easylaw.app.navigation.NavRoute
 import com.easylaw.app.navigation.NavRoute.bottomItems
-import com.easylaw.app.ui.components.CommonIndicator
 import com.easylaw.app.ui.theme.EasyLawTheme
 import com.easylaw.app.util.PreferenceManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+private val NAV_BAR_COLOR = Color(0xFFEAEFEF)
+private val SELECTED_ICON_COLOR = Color(0xFFD95F1E)
+private val UNSELECTED_ICON_COLOR = Color(0xFF797573)
+private val DRAWER_BACKGROUND_COLOR = Color.White
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -60,9 +63,6 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var preferenceManager: PreferenceManager
-
-    @Inject
-    lateinit var aiManager: AIRepo
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -74,7 +74,7 @@ class MainActivity : ComponentActivity() {
             if (savedUser != null) {
                 userSession.setLoginInfo(savedUser)
             } else {
-                userSession.finishInitialzed()
+                userSession.sessionClear()
             }
         }
 
@@ -90,8 +90,6 @@ class MainActivity : ComponentActivity() {
                 val userInfo by userSession.userInfo.collectAsState()
                 // 유저 상태랑 별개로 로딩변수만 따로 감지
                 val isInitialized by userSession.isInitialized.collectAsState()
-
-                val geminiState by aiManager.loadingState.collectAsState()
 
                 val hideBarsRoutes = listOf(NavRoute.ONBOARDING, NavRoute.LOGIN, NavRoute.SIGN_UP)
 
@@ -133,7 +131,7 @@ class MainActivity : ComponentActivity() {
                         bottomBar = {
                             if (currentRoute !in hideBarsRoutes) {
                                 NavigationBar(
-                                    containerColor = Color(0xFFEAEFEF),
+                                    containerColor = NAV_BAR_COLOR,
                                     tonalElevation = 8.dp,
                                 ) {
                                     bottomItems.forEach { item ->
@@ -144,10 +142,10 @@ class MainActivity : ComponentActivity() {
                                             icon = { Icon(imageVector = item.icon, contentDescription = item.title) },
                                             colors =
                                                 NavigationBarItemDefaults.colors(
-                                                    selectedIconColor = Color(0xFFD95F1E),
-                                                    selectedTextColor = Color(0xFFD95F1E),
-                                                    unselectedIconColor = Color(0xFF797573),
-                                                    unselectedTextColor = Color(0xFF797573),
+                                                    selectedIconColor = SELECTED_ICON_COLOR,
+                                                    selectedTextColor = SELECTED_ICON_COLOR,
+                                                    unselectedIconColor = UNSELECTED_ICON_COLOR,
+                                                    unselectedTextColor = UNSELECTED_ICON_COLOR,
                                                 ),
                                             onClick = {
                                                 if (currentRoute != item.route) {
@@ -173,15 +171,12 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                 }
-
-                // AI 로딩 인디케이터
-                if (geminiState.isLoading) {
-                    CommonIndicator(geminiState.message)
-                }
             }
         }
     }
 }
+
+private val DRAWER_DIVIDER_COLOR = Color(0xFFEEEEEE)
 
 @Composable
 fun EasylawSideBar(
@@ -189,7 +184,7 @@ fun EasylawSideBar(
     onLogoutClick: () -> Unit,
 ) {
     ModalDrawerSheet(
-        drawerContainerColor = Color.White,
+        drawerContainerColor = DRAWER_BACKGROUND_COLOR,
         modifier = Modifier.width(280.dp),
     ) {
         Column(
@@ -211,7 +206,7 @@ fun EasylawSideBar(
             )
 
             Spacer(modifier = Modifier.height(24.dp))
-            HorizontalDivider(thickness = 1.dp, color = Color(0xFFEEEEEE))
+            HorizontalDivider(thickness = 1.dp, color = DRAWER_DIVIDER_COLOR)
             Spacer(modifier = Modifier.height(12.dp))
 
             // 메뉴 리스트

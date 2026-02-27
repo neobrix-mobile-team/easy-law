@@ -35,8 +35,7 @@ data class UserRequest(
     val id: String? = null,
     val name: String,
     val email: String,
-    @SerialName("user_role")
-    val userRole: String,
+    val user_role: String,
     @SerialName("fcm_token")
     val fcmToken: String? = null,
 )
@@ -54,6 +53,8 @@ data class SignViewState(
     val isSignSuccess: Boolean = false,
     val isSignError: String = "",
 )
+
+private const val MIN_PASSWORD_LENGTH = 8
 
 @HiltViewModel
 class SignViewModel
@@ -75,7 +76,7 @@ class SignViewModel
         }
 
         fun onPasswordChanged(pwd: String) {
-            val isPwdValid = pwd.isNotEmpty() && pwd.length < 8
+            val isPwdValid = pwd.isNotEmpty() && pwd.length < MIN_PASSWORD_LENGTH
 
             _signViewState.update { it.copy(password = pwd, isPasswordError = isPwdValid) }
         }
@@ -83,7 +84,7 @@ class SignViewModel
         fun onPasswordConfirmChanged(pwd: String) {
             val isPwdVaildConfirm = pwd.isNotEmpty() && _signViewState.value.password != pwd
 
-            _signViewState.update { it ->
+            _signViewState.update {
                 it.copy(
                     passwordConfirm = pwd,
                     isPasswordConfirmError = isPwdVaildConfirm,
@@ -102,7 +103,7 @@ class SignViewModel
                     val email = _signViewState.value.email
                     val password = _signViewState.value.password
                     val name = _signViewState.value.name
-                    val userRole = userSession.getuser_role()
+                    val userRole = userSession.getUserRole()
 
                     Log.d("현재 유저상태", userRole)
 
@@ -120,7 +121,7 @@ class SignViewModel
                                 id = userId,
                                 name = name,
                                 email = email,
-                                userRole = userRole,
+                                user_role = userRole,
                             )
                         supabase.from("users").insert(userRequest)
                         _signViewState.update { it.copy(isSignSuccess = true) }
@@ -129,14 +130,14 @@ class SignViewModel
                     val errorMsg = e.message ?: ""
                     if (errorMsg.contains("already", ignoreCase = true)) {
                         Log.d("sign error", "이미 가입된 이메일입니다.")
-                        _signViewState.update { it ->
+                        _signViewState.update {
                             it.copy(
                                 isSignError = "이미 가입된 이메일입니다.",
                             )
                         }
                     } else {
                         Log.d("sign error", "회원가입 실패: ${e.localizedMessage}")
-                        _signViewState.update { it ->
+                        _signViewState.update {
                             it.copy(
                                 isSignError = e.localizedMessage ?: "",
                             )

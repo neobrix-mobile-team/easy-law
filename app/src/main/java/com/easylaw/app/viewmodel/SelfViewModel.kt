@@ -3,7 +3,7 @@ package com.easylaw.app.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.easylaw.app.data.repo.AIRepo
+import com.easylaw.app.data.repository.AIRepo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
