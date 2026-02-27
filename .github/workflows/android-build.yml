@@ -35,14 +35,8 @@ jobs:
         run: |
           touch local.properties
           echo "sdk.dir=$ANDROID_HOME" >> local.properties
-          
-          if [ -n "$GEMINI_API_KEY" ]; then
-            echo "GEMINI_API_KEY=$GEMINI_API_KEY" >> local.properties
-          fi
-          
-          if [ -n "$LAW_API_KEY" ]; then
-            echo "LAW_API_KEY=$LAW_API_KEY" >> local.properties
-          fi
+          echo "GEMINI_API_KEY=${GEMINI_API_KEY}" >> local.properties
+          echo "LAW_API_KEY=${LAW_API_KEY}" >> local.properties
 
       - name: 🔥 google-services.json 생성
         env:
