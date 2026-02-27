@@ -39,13 +39,11 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.easylaw.app.data.repo.AIRepo
 import com.easylaw.app.domain.model.UserInfo
 import com.easylaw.app.domain.model.UserSession
 import com.easylaw.app.navigation.AppRoute
 import com.easylaw.app.navigation.NavRoute
 import com.easylaw.app.navigation.NavRoute.bottomItems
-import com.easylaw.app.ui.components.CommonIndicator
 import com.easylaw.app.ui.theme.EasyLawTheme
 import com.easylaw.app.util.PreferenceManager
 import dagger.hilt.android.AndroidEntryPoint
@@ -65,9 +63,6 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var preferenceManager: PreferenceManager
-
-    @Inject
-    lateinit var aiManager: AIRepo
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -95,8 +90,6 @@ class MainActivity : ComponentActivity() {
                 val userInfo by userSession.userInfo.collectAsState()
                 // 유저 상태랑 별개로 로딩변수만 따로 감지
                 val isInitialized by userSession.isInitialized.collectAsState()
-
-                val geminiState by aiManager.loadingState.collectAsState()
 
                 val hideBarsRoutes = listOf(NavRoute.ONBOARDING, NavRoute.LOGIN, NavRoute.SIGN_UP)
 
@@ -177,11 +170,6 @@ class MainActivity : ComponentActivity() {
                             startDestination = startRoute,
                         )
                     }
-                }
-
-                // AI 로딩 인디케이터
-                if (geminiState.isLoading) {
-                    CommonIndicator(geminiState.message)
                 }
             }
         }

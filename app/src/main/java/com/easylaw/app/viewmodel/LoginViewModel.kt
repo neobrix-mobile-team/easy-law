@@ -151,7 +151,7 @@ class LoginViewModel
                             val userEmail = user.email ?: ""
                             val userName = user.displayName ?: ""
                             val userId = user?.uid
-                            val userRole = userSession.getuser_role()
+                            val userRole = userSession.getUserRole()
 
                             val fcmToken =
                                 try {

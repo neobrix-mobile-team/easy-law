@@ -103,7 +103,7 @@ class SignViewModel
                     val email = _signViewState.value.email
                     val password = _signViewState.value.password
                     val name = _signViewState.value.name
-                    val userRole = userSession.getuser_role()
+                    val userRole = userSession.getUserRole()
 
                     Log.d("현재 유저상태", userRole)
 
