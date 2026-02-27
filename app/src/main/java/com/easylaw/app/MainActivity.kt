@@ -30,16 +30,17 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+// @Inject 선언은 메서드 안으로 못간다.
+class InitDi @Inject constructor(
+    val userSession: UserSession,
+    val preferenceManager: PreferenceManager,
+    val aiManager: AIRepo,
+)
+
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    @Inject
-    lateinit var userSession: UserSession
 
-    @Inject
-    lateinit var preferenceManager: PreferenceManager
-
-    @Inject
-    lateinit var aiManager: AIRepo
+    @Inject lateinit var initDi: InitDi
 
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,11 +49,11 @@ class MainActivity : ComponentActivity() {
 
         // 앱 시작 시 로컬 저장소에서 유저 정보 불러오기
         lifecycleScope.launch {
-            val savedUser = preferenceManager.userData.firstOrNull()
+            val savedUser = initDi.preferenceManager.userData.firstOrNull()
             if (savedUser != null) {
-                userSession.setLoginInfo(savedUser)
+                initDi.userSession.setLoginInfo(savedUser)
             } else {
-                userSession.finishInitialzed()
+                initDi.userSession.finishInitialzed()
             }
         }
 
@@ -65,11 +66,11 @@ class MainActivity : ComponentActivity() {
                 val currentRoute = navBackStackEntry?.destination?.route
 
                 // 유저 세션 감지
-                val userInfo by userSession.userInfo.collectAsState()
-                val isInitialized by userSession.isInitialized.collectAsState()
+                val userInfo by initDi.userSession.userInfo.collectAsState()
+                val isInitialized by initDi.userSession.isInitialized.collectAsState()
                 val startRoute = if (userInfo.id.isNotEmpty()) navRoute.community else navRoute.onboarding
 
-                val geminiState by aiManager.loadingState.collectAsState()
+                val geminiState by initDi.aiManager.loadingState.collectAsState()
 
                 val hideBarsRoutes = listOf(navRoute.onboarding, navRoute.login, navRoute.signUp)
 
@@ -94,8 +95,8 @@ class MainActivity : ComponentActivity() {
                             },
                             onLogoutClick = {
                                 mainState.scope.launch {
-                                    userSession.sessionClear()
-                                    preferenceManager.sessionClear()
+                                    initDi.userSession.sessionClear()
+                                    initDi.preferenceManager.sessionClear()
                                     mainState.drawerState.close()
 
                                     if (mainState.navController.currentBackStackEntry?.destination?.route != navRoute.onboarding) {
