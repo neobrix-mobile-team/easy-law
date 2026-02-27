@@ -45,7 +45,7 @@ class UserSession
         }
 
         fun setuser_role(role: String) {
-            _userInfo.update { it ->
+            _userInfo.update {
                 it.copy(
                     user_role = role,
                 )

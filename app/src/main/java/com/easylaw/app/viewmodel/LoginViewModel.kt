@@ -49,6 +49,9 @@ data class LoginViewState(
     val isLoginError: String = "",
 )
 
+private const val MIN_PASSWORD_LENGTH = 8
+private const val GOOGLE_CLIENT_ID = "607557323201-jeej7j1udj6iilbn3npbrfeuus71b14g.apps.googleusercontent.com"
+
 @HiltViewModel
 class LoginViewModel
     @Inject
@@ -71,7 +74,7 @@ class LoginViewModel
         }
 
         fun onChangedPwdTextField(pwd: String) {
-            val isPwdValid = pwd.isNotEmpty() && pwd.length < 8
+            val isPwdValid = pwd.isNotEmpty() && pwd.length < MIN_PASSWORD_LENGTH
 
             _loginViewState.update { currentState ->
                 currentState.copy(
@@ -219,7 +222,7 @@ class LoginViewModel
                         GetGoogleIdOption
                             .Builder()
                             .setFilterByAuthorizedAccounts(false)
-                            .setServerClientId("607557323201-jeej7j1udj6iilbn3npbrfeuus71b14g.apps.googleusercontent.com")
+                            .setServerClientId(GOOGLE_CLIENT_ID)
                             .build()
 
                     val request =
