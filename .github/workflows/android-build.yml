@@ -1,4 +1,4 @@
-name: 🔍 Kotlin CI (Wrapper Enforced & Stable)
+name: 🏗️ Android 빌드 & 테스트
 
 on:
   push:
@@ -7,12 +7,22 @@ on:
     branches: [ main, develop ]
 
 jobs:
-  android-ci:
+  setup:
+    uses: ./.github/workflows/setup-gradle.yml
+    with:
+      setup-api-keys: true
+    secrets:
+      GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      LAW_API_KEY: ${{ secrets.LAW_API_KEY }}
+
+  android-build:
+    needs: setup
     runs-on: ubuntu-latest
-    timeout-minutes: 20 # 최적화로 시간 단축
+    timeout-minutes: 20
 
     steps:
-      - name: 📥 Checkout
+      - name: 📥 코드 받아오기
         uses: actions/checkout@v4
 
       - name: ☕ JDK 17 설정
@@ -28,38 +38,6 @@ jobs:
       - name: 🔧 Gradle 실행 권한 부여
         run: chmod +x ./gradlew
 
-      # 🔐 env와 -di 옵션을 사용하여 base64 에러 원천 차단
-      - name: 🔐 Google Services JSON 생성
-        env:
-          G_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON }}
-        run: |
-          if [ -n "$G_SERVICES" ]; then
-            echo "$G_SERVICES" | base64 -di > app/google-services.json
-          else
-            echo "⚠️ GOOGLE_SERVICES_JSON secret is missing!"
-          fi
-
-      - name: 🔐 local.properties 생성
-        env:
-          # GitHub Secrets에 저장한 이름을 그대로 가져옵니다.
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          LAW_API_KEY: ${{ secrets.LAW_API_KEY }}
-        run: |
-          # 파일 생성
-          touch local.properties
-          
-          # API Key가 비어있지 않은지 확인 후 파일에 기록
-          if [ -n "$GEMINI_API_KEY" ]; then
-            echo "GEMINI_API_KEY=$GEMINI_API_KEY" >> local.properties
-          else
-            echo "⚠️ GEMINI_API_KEY secret is missing!"
-          fi
-          
-          if [ -n "$LAW_API_KEY" ]; then
-            echo "LAW_API_KEY=$LAW_API_KEY" >> local.properties
-          else
-            echo "⚠️ LAW_API_KEY secret is missing!"
-          fi
 
       # 🚀 빌드 단계 - PR: 빠른 빌드만, Push: 테스트 포함
       - name: 🏗️ Build APK (PR - 빠른 검증)

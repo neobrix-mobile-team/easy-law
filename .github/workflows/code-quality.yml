@@ -7,8 +7,14 @@ on:
     branches: [ main, develop ]
 
 jobs:
+  setup:
+    uses: ./.github/workflows/setup-gradle.yml
+    secrets:
+      GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+
   lint-and-detekt:
     name: 🔍 Lint & Detekt 검사
+    needs: setup
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -33,7 +39,12 @@ jobs:
         run: echo "sdk.dir=$ANDROID_HOME" >> local.properties
 
       - name: 🔥 google-services.json 생성
-        run: echo '${{ secrets.GOOGLE_SERVICES_JSON }}' | base64 --decode > app/google-services.json
+        env:
+          G_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          if [ -n "$G_SERVICES" ]; then
+            echo "$G_SERVICES" | base64 -d > app/google-services.json
+          fi
 
       - name: 🔍 Android Lint + Detekt 검사
         run: |
@@ -65,6 +76,7 @@ jobs:
 
   security-scan:
     name: 🔒 의존성 보안 취약점 검사
+    needs: setup
     runs-on: ubuntu-latest
     timeout-minutes: 10
     # main/develop에만 실행 (PR에서는 스킵하여 시간 절약)
@@ -91,7 +103,12 @@ jobs:
         run: echo "sdk.dir=$ANDROID_HOME" >> local.properties
 
       - name: 🔥 google-services.json 생성
-        run: echo '${{ secrets.GOOGLE_SERVICES_JSON }}' | base64 --decode > app/google-services.json
+        env:
+          G_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          if [ -n "$G_SERVICES" ]; then
+            echo "$G_SERVICES" | base64 -d > app/google-services.json
+          fi
 
       - name: 🔒 OWASP Dependency Check 실행
         run: |
@@ -112,6 +129,7 @@ jobs:
 
   coverage:
     name: 📊 코드 커버리지 (Jacoco)
+    needs: setup
     runs-on: ubuntu-latest
     timeout-minutes: 20
     # main/develop push에만 실행
@@ -138,7 +156,12 @@ jobs:
         run: echo "sdk.dir=$ANDROID_HOME" >> local.properties
 
       - name: 🔥 google-services.json 생성
-        run: echo '${{ secrets.GOOGLE_SERVICES_JSON }}' | base64 --decode > app/google-services.json
+        env:
+          G_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          if [ -n "$G_SERVICES" ]; then
+            echo "$G_SERVICES" | base64 -d > app/google-services.json
+          fi
 
       - name: 🧪 단위 테스트 + 커버리지 생성
         run: |
