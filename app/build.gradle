@@ -13,6 +13,16 @@ plugins {
     id 'com.google.android.libraries.mapsplatform.secrets-gradle-plugin'
 }
 
+// Load local.properties
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localProperties.load(localPropertiesFile.newDataInputStream())
+}
+
+def geminiApiKey = localProperties.getProperty('GEMINI_API_KEY', '')
+def lawApiKey = localProperties.getProperty('LAW_API_KEY', '')
+
 android {
     namespace 'com.easylaw.app'
     compileSdk 35
@@ -26,6 +36,10 @@ android {
 
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
         vectorDrawables.useSupportLibrary = true
+
+        // API 키를 BuildConfig에 주입
+        buildConfigField "String", "GEMINI_API_KEY", "\"${geminiApiKey}\""
+        buildConfigField "String", "LAW_API_KEY", "\"${lawApiKey}\""
     }
 
     buildTypes {
@@ -170,7 +184,7 @@ dependencies {
     // ============ Testing - Instrumented Tests ============
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
-    androidTestImplementation 'androidx.compose.ui:ui-test-junit4'
+    androidTestImplementation 'androidx.compose.ui:ui-test-junit4:1.6.0'
     androidTestImplementation 'androidx.test:rules:1.5.0'
     androidTestImplementation 'androidx.test:runner:1.5.2'
 

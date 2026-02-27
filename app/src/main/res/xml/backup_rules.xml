@@ -10,10 +10,10 @@
     <exclude domain="code_cache" />
     
     <!-- Include app preferences and databases -->
-    <include domain="shared_prefs" />
+    <include domain="sharedpref" />
     <include domain="database" />
     
     <!-- Exclude files in root directory (except specified) -->
-    <exclude domain="root" path="*" />
+    <exclude domain="root" />
     <include domain="root" path="important_file.txt" />
 </full-backup-content>

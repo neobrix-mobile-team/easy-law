@@ -37,11 +37,6 @@ jobs:
       - name: 🔧 Gradle wrapper 권한 설정
         run: chmod +x ./gradlew
 
-      - name: 📝 local.properties 생성
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          LAW_API_KEY: ${{ secrets.LAW_API_KEY }}
-        run: | 
       - name: 📝 local.properties 생성 (기본)
         run: |
           # 기본 설정
