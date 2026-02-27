@@ -20,7 +20,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.PhotoLibrary
@@ -77,7 +77,7 @@ fun OnboardingView(
                 .padding(24.dp),
     ) {
         LinearProgressIndicator(
-            progress = onboardingViewState.currentStep / 3f,
+            progress = { onboardingViewState.currentStep / 3f },
             modifier =
                 Modifier
                     .fillMaxWidth()
@@ -95,7 +95,7 @@ fun OnboardingView(
                 1 -> WelcomeView()
                 2 ->
                     RoleSelectionView(
-                        selectedRole = onboardingViewState.user_role,
+                        selectedRole = onboardingViewState.userRole,
                         onRoleSelected = { viewModel.selectRole(it) },
                     )
                 3 -> FinalView()
@@ -104,7 +104,7 @@ fun OnboardingView(
 
         val isNextEnabled =
             when (onboardingViewState.currentStep) {
-                2 -> onboardingViewState.user_role.isNotEmpty()
+                2 -> onboardingViewState.userRole.isNotEmpty()
                 else -> true
             }
 
@@ -135,7 +135,7 @@ fun OnboardingView(
                 if (onboardingViewState.currentStep == 3) {
                     Icons.Default.Check
                 } else {
-                    Icons.Default.ArrowForward
+                    Icons.AutoMirrored.Filled.ArrowForward
                 },
         )
     }
@@ -164,6 +164,7 @@ fun WelcomeView() {
 }
 
 @Composable
+@Suppress("DEPRECATION")
 fun RoleSelectionView(
     selectedRole: String,
     onRoleSelected: (String) -> Unit,
@@ -194,6 +195,7 @@ fun RoleSelectionView(
                 onClick = {
                     onRoleSelected(role)
 
+                    @Suppress("DEPRECATION")
                     val currentLang = context.resources.configuration.locale.language
 
                     if (role == roleENG && currentLang != "en") {
@@ -310,6 +312,8 @@ fun setLocale(
     val locale = java.util.Locale(lang)
     java.util.Locale.setDefault(locale)
     val config = context.resources.configuration
+    @Suppress("DEPRECATION")
     config.setLocale(locale)
+    @Suppress("DEPRECATION")
     context.resources.updateConfiguration(config, context.resources.displayMetrics)
 }
