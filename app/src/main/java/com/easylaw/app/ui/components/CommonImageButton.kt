@@ -26,9 +26,9 @@ fun CommonImageButton(
     Box(
         modifier =
             Modifier
-                .size(80.dp)
+                .size(56.dp)
                 .clip(RoundedCornerShape(16.dp))
-                .background(Color(0xFFF2F4F6))
+                .background(Color(0xFF3182F6).copy(alpha = 0.1f))
                 .clickable {
                     onClick()
                 },
@@ -41,7 +41,7 @@ fun CommonImageButton(
             Icon(
                 imageVector = Icons.Default.AddPhotoAlternate,
                 contentDescription = "사진 추가",
-                tint = Color(0xFF8B95A1),
+                tint = Color(0xFF3182F6),
                 modifier = Modifier.size(24.dp), // 아이콘 크기 살짝 키움
             )
 

@@ -12,6 +12,8 @@ data class CommunityWriteViewState(
     val selectedCategory: String = "",
     val communityWriteTitleField: String = "",
     val communityWriteContentField: String = "",
+    val selectedImages: List<String> = emptyList(),
+    val isShowDialog: Boolean = false,
 )
 
 @HiltViewModel
@@ -35,5 +37,38 @@ class CommunityWriteViewModel
 
         fun onContentFieldChanged(content: String) {
             _commnuityWriteViewState.update { it.copy(communityWriteContentField = content) }
+        }
+
+        // 선택한 이미지 문자열로 저장
+        fun onImageAdded(uri: String) {
+            _commnuityWriteViewState.update {
+                it.copy(selectedImages = it.selectedImages + uri)
+            }
+        }
+
+        fun removeSelectedImage(uri: String) {
+            _commnuityWriteViewState.update {
+                it.copy(selectedImages = it.selectedImages - uri)
+            }
+        }
+
+        fun onShowDialog() {
+            _commnuityWriteViewState.update {
+                it.copy(isShowDialog = true)
+            }
+        }
+
+        fun closeShowDialog() {
+            _commnuityWriteViewState.update {
+                it.copy(isShowDialog = false)
+            }
+        }
+
+        fun onImagePreview(uri: String) {
+//            _commnuityWriteViewState.update { it.copy(previewImage = uri) }
+        }
+
+        fun onImagePreviewDismissed() {
+//            _commnuityWriteViewState.update { it.copy(previewImage = null) }
         }
     }
