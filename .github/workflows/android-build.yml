@@ -13,10 +13,10 @@ jobs:
     
     steps:
     - name: 📥 코드 받아오기
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     
     - name: ☕ JDK 17 설정
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v4
       with:
         java-version: '17'
         distribution: 'temurin'
@@ -30,7 +30,7 @@ jobs:
     
     - name: 📤 ktlint 결과 업로드
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ktlint-report
         path: |
@@ -44,10 +44,10 @@ jobs:
     
     steps:
     - name: 📥 코드 받아오기
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     
     - name: ☕ JDK 17 설정
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v4
       with:
         java-version: '17'
         distribution: 'temurin'
@@ -61,7 +61,7 @@ jobs:
     
     - name: 📤 Detekt 결과 업로드
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: detekt-report
         path: |
@@ -75,10 +75,10 @@ jobs:
     
     steps:
     - name: 📥 코드 받아오기
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     
     - name: ☕ JDK 17 설정
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v4
       with:
         java-version: '17'
         distribution: 'temurin'
@@ -95,7 +95,7 @@ jobs:
     
     - name: 📤 생성된 APK 아티팩트 업로드
       if: success()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: debug-apk
         path: app/build/outputs/apk/debug/
@@ -107,10 +107,10 @@ jobs:
     
     steps:
     - name: 📥 코드 받아오기
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     
     - name: ☕ JDK 17 설정
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v4
       with:
         java-version: '17'
         distribution: 'temurin'
@@ -124,7 +124,7 @@ jobs:
     
     - name: 📤 테스트 결과 업로드
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: unit-test-results
         path: |
