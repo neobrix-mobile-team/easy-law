@@ -15,6 +15,9 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
+private const val HTTP_TIMEOUT_SECONDS = 30L
+private const val BASE_URL = "https://www.law.go.kr/"
+
 /**
  * Hilt 의존성 주입 모듈
  *
@@ -35,8 +38,8 @@ object AppModule {
         return OkHttpClient
             .Builder()
             .addInterceptor(loggingInterceptor)
-            .connectTimeout(30, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
+            .connectTimeout(HTTP_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .readTimeout(HTTP_TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .build()
     }
 
@@ -45,7 +48,7 @@ object AppModule {
     fun provideLawApiService(okHttpClient: OkHttpClient): LawApiService =
         Retrofit
             .Builder()
-            .baseUrl("https://www.law.go.kr/")
+            .baseUrl(BASE_URL)
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
