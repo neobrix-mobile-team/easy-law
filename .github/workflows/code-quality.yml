@@ -51,7 +51,7 @@ jobs:
 
       - name: 🔍 Android Lint + Detekt 검사
         run: |
-          ./gradlew lint detekt ktlint \
+          ./gradlew lint detekt ktlintCheck \
             --parallel \
             --build-cache \
             --no-daemon \
