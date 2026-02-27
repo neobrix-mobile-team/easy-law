@@ -35,11 +35,14 @@ jobs:
           echo "sdk.dir=$ANDROID_HOME" >> local.properties
 
       - name: 🔥 google-services.json 생성
-        if: ${{ secrets.GOOGLE_SERVICES_JSON != '' }}
         env:
           G_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
-          echo "$G_SERVICES" | base64 -d > app/google-services.json
+          if [ -n "$G_SERVICES" ]; then
+            echo "$G_SERVICES" | base64 -d > app/google-services.json
+          else
+            echo "⚠️ GOOGLE_SERVICES_JSON secret is not configured"
+          fi
 
       - name: 🔍 Android Lint + Detekt 검사
         run: |
@@ -99,11 +102,14 @@ jobs:
           echo "sdk.dir=$ANDROID_HOME" >> local.properties
 
       - name: 🔥 google-services.json 생성
-        if: ${{ secrets.GOOGLE_SERVICES_JSON != '' }}
         env:
           G_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
-          echo "$G_SERVICES" | base64 -d > app/google-services.json
+          if [ -n "$G_SERVICES" ]; then
+            echo "$G_SERVICES" | base64 -d > app/google-services.json
+          else
+            echo "⚠️ GOOGLE_SERVICES_JSON secret is not configured"
+          fi
 
       - name: 🔒 OWASP Dependency Check 실행
         run: |
@@ -152,11 +158,14 @@ jobs:
           echo "sdk.dir=$ANDROID_HOME" >> local.properties
 
       - name: 🔥 google-services.json 생성
-        if: ${{ secrets.GOOGLE_SERVICES_JSON != '' }}
         env:
           G_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
-          echo "$G_SERVICES" | base64 -d > app/google-services.json
+          if [ -n "$G_SERVICES" ]; then
+            echo "$G_SERVICES" | base64 -d > app/google-services.json
+          else
+            echo "⚠️ GOOGLE_SERVICES_JSON secret is not configured"
+          fi
 
       - name: 🧪 단위 테스트 + 커버리지 생성
         run: |
