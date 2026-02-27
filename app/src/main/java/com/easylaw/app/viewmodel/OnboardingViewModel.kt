@@ -37,14 +37,14 @@ class OnboardingViewModel
         fun selectRole(role: String) {
             _onboardingVState.update { it.copy(user_role = role) }
 
-            val user_role =
+            val userRole =
                 when (role) {
                     "내국인" -> "내국인"
                     else -> "외국인"
                 }
 
             userSession.setuser_role(
-                user_role,
+                userRole,
             )
         }
 

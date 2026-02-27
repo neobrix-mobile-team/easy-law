@@ -2,7 +2,10 @@ package com.easylaw.app.viewmodel
 
 import com.easylaw.app.domain.model.PrecedentDetail
 
-enum class CourtTypeOption(val displayName: String, val orgCode: String?) {
+enum class CourtTypeOption(
+    val displayName: String,
+    val orgCode: String?,
+) {
     ALL("전체 (선택 안함)", null),
     SUPREME("대법원", "400201"),
     LOWER("하위법원", "400202"),

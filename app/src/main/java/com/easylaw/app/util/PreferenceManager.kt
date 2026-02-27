@@ -28,12 +28,12 @@ class PreferenceManager
     constructor(
         private val dataStore: DataStore<Preferences>,
     ) {
-        private val USER_DATA_KEY = stringPreferencesKey("user_data")
+        private val userDataKey = stringPreferencesKey("user_data")
 
         // 기기에 저장된 값 가져오기
         val userData: Flow<UserInfo?> =
             dataStore.data.map { prefs ->
-                val json = prefs[USER_DATA_KEY] ?: return@map null
+                val json = prefs[userDataKey] ?: return@map null
                 try {
                     // 문자열로 저장된 값을 다시 객체화
                     Json.decodeFromString<UserInfo>(json)
@@ -47,7 +47,7 @@ class PreferenceManager
         suspend fun saveUser(userInfo: UserInfo) {
             val json = Json.encodeToString(userInfo)
             dataStore.edit { prefs ->
-                prefs[USER_DATA_KEY] = json
+                prefs[userDataKey] = json
             }
         }
 

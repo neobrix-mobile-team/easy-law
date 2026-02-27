@@ -52,9 +52,7 @@ class UserSession
             }
         }
 
-        fun getuser_role(): String {
-            return _userInfo.value.user_role
-        }
+        fun getuser_role(): String = _userInfo.value.user_role
 
         suspend fun setLoginInfo(userInfo: UserInfo) {
             _userInfo.update { userInfo }
@@ -62,9 +60,7 @@ class UserSession
             preferenceManager.saveUser(userInfo)
         }
 
-        fun getUserState(): UserInfo {
-            return _userInfo.value
-        }
+        fun getUserState(): UserInfo = _userInfo.value
 
         fun sessionClear() {
             _userInfo.value = UserInfo()

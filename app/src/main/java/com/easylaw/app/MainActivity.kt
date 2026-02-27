@@ -1,24 +1,36 @@
 package com.easylaw.app
 
+// import androidx.compose.foundation.layout.*
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
-import com.easylaw.app.data.repo.AIRepo
+import com.easylaw.app.data.repository.AIRepo
 import com.easylaw.app.domain.model.UserSession
 import com.easylaw.app.navigation.AppRoute
-import com.easylaw.app.navigation.navRoute
-import com.easylaw.app.navigation.navRoute.bottomItems
+import com.easylaw.app.navigation.NavRoute
+import com.easylaw.app.navigation.NavRoute.bottomItems
 import com.easylaw.app.ui.components.CommonIndicator
 import com.easylaw.app.ui.components.EasylawSideBar
 import com.easylaw.app.ui.components.LanguageBottombar
@@ -31,15 +43,16 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 // @Inject 선언은 메서드 안으로 못간다.
-class InitDi @Inject constructor(
-    val userSession: UserSession,
-    val preferenceManager: PreferenceManager,
-    val aiManager: AIRepo,
-)
+class InitDi
+    @Inject
+    constructor(
+        val userSession: UserSession,
+        val preferenceManager: PreferenceManager,
+        val aiManager: AIRepo,
+    )
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-
     @Inject lateinit var initDi: InitDi
 
     @OptIn(ExperimentalMaterial3Api::class)
@@ -59,7 +72,6 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             EasyLawTheme {
-
                 val mainState = RememberMainViewState()
 
                 val navBackStackEntry by mainState.navController.currentBackStackEntryAsState()
@@ -68,11 +80,11 @@ class MainActivity : ComponentActivity() {
                 // 유저 세션 감지
                 val userInfo by initDi.userSession.userInfo.collectAsState()
                 val isInitialized by initDi.userSession.isInitialized.collectAsState()
-                val startRoute = if (userInfo.id.isNotEmpty()) navRoute.community else navRoute.onboarding
+                val startRoute = if (userInfo.id.isNotEmpty()) NavRoute.COMMUNITY else NavRoute.ONBOARDING
 
                 val geminiState by initDi.aiManager.loadingState.collectAsState()
 
-                val hideBarsRoutes = listOf(navRoute.onboarding, navRoute.login, navRoute.signUp)
+                val hideBarsRoutes = listOf(NavRoute.ONBOARDING, NavRoute.LOGIN, NavRoute.SIGN_UP)
 
                 // 세션정보를 가져오는 동안 빈 화면 출력
                 if (!isInitialized) {
@@ -99,8 +111,11 @@ class MainActivity : ComponentActivity() {
                                     initDi.preferenceManager.sessionClear()
                                     mainState.drawerState.close()
 
-                                    if (mainState.navController.currentBackStackEntry?.destination?.route != navRoute.onboarding) {
-                                        mainState.navController.navigate(navRoute.onboarding) {
+                                    if (mainState.navController.currentBackStackEntry
+                                            ?.destination
+                                            ?.route != NavRoute.ONBOARDING
+                                    ) {
+                                        mainState.navController.navigate(NavRoute.ONBOARDING) {
                                             popUpTo(mainState.navController.graph.id) {
                                                 inclusive = true
                                             }
@@ -125,16 +140,21 @@ class MainActivity : ComponentActivity() {
                                             selected = isSelected,
                                             label = { Text(text = item.title) },
                                             icon = { Icon(imageVector = item.icon, contentDescription = item.title) },
-                                            colors = NavigationBarItemDefaults.colors(
-                                                selectedIconColor = Color(0xFFD95F1E),
-                                                selectedTextColor = Color(0xFFD95F1E),
-                                                unselectedIconColor = Color(0xFF797573),
-                                                unselectedTextColor = Color(0xFF797573),
-                                            ),
+                                            colors =
+                                                NavigationBarItemDefaults.colors(
+                                                    selectedIconColor = Color(0xFFD95F1E),
+                                                    selectedTextColor = Color(0xFFD95F1E),
+                                                    unselectedIconColor = Color(0xFF797573),
+                                                    unselectedTextColor = Color(0xFF797573),
+                                                ),
                                             onClick = {
                                                 if (currentRoute != item.route) {
                                                     mainState.navController.navigate(item.route) {
-                                                        popUpTo(mainState.navController.graph.findStartDestination().id) {
+                                                        popUpTo(
+                                                            mainState.navController.graph
+                                                                .findStartDestination()
+                                                                .id,
+                                                        ) {
                                                             saveState = true
                                                         }
                                                         launchSingleTop = true
@@ -156,23 +176,24 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                if ( mainState.showLanguageSheet.value) {
+                if (mainState.showLanguageSheet.value) {
                     ModalBottomSheet(
-                        onDismissRequest = {  mainState.showLanguageSheet.value = false },
+                        onDismissRequest = { mainState.showLanguageSheet.value = false },
                         sheetState = mainState.sheetState,
                         containerColor = Color.White,
-                        dragHandle = { BottomSheetDefaults.DragHandle() }
+                        dragHandle = { BottomSheetDefaults.DragHandle() },
                     ) {
                         LanguageBottombar(
                             onLanguageSelected = { language ->
-                                mainState.scope.launch {
-                                    mainState.sheetState.hide()
-                                }.invokeOnCompletion {
-                                    if (!mainState.sheetState.isVisible) {
-                                         mainState.showLanguageSheet.value = false
+                                mainState.scope
+                                    .launch {
+                                        mainState.sheetState.hide()
+                                    }.invokeOnCompletion {
+                                        if (!mainState.sheetState.isVisible) {
+                                            mainState.showLanguageSheet.value = false
+                                        }
                                     }
-                                }
-                            }
+                            },
                         )
                     }
                 }

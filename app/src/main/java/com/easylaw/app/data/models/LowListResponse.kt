@@ -34,8 +34,8 @@ class PrecItemListDeserializer : JsonDeserializer<List<PrecItem>> {
         json: JsonElement,
         typeOfT: Type,
         context: JsonDeserializationContext,
-    ): List<PrecItem> {
-        return when {
+    ): List<PrecItem> =
+        when {
             json.isJsonArray -> {
                 json.asJsonArray.map { context.deserialize(it, PrecItem::class.java) }
             }
@@ -47,5 +47,4 @@ class PrecItemListDeserializer : JsonDeserializer<List<PrecItem>> {
 
             else -> emptyList()
         }
-    }
 }
