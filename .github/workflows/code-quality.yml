@@ -64,8 +64,8 @@ jobs:
         with:
           name: lint-report
           path: |
-            app/build/reports/lint-results*.html
-            app/build/reports/lint-results*.xml
+            app/build/reports/lint-results-*.html
+            app/build/reports/lint-results-*.xml
           retention-days: 7
 
       - name: 📤 Detekt 리포트 업로드
