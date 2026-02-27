@@ -51,7 +51,7 @@ jobs:
 
       - name: 🔍 Android Lint + Detekt 검사
         run: |
-          ./gradlew lint detekt \
+          ./gradlew lint detekt ktlint \
             --parallel \
             --build-cache \
             --no-daemon \
@@ -75,6 +75,15 @@ jobs:
           name: detekt-report
           path: |
             build/reports/detekt/
+          retention-days: 7
+
+      - name: 📤 Ktlint 리포트 업로드
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ktlint-report
+          path: |
+            app/build/reports/ktlint/
           retention-days: 7
 
   security-scan:
