@@ -2,32 +2,53 @@ package com.easylaw.app.ui.screen
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MenuAnchorType
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
+import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -56,7 +77,7 @@ import com.easylaw.app.viewmodel.LegalSearchViewModel
 @Composable
 fun LegalSearchRoute(viewModel: LegalSearchViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val searchResults = viewModel.searchResults.collectAsLazyPagingItems()
+    val searchResults = viewModel.searchResults.collectAsLazyPagingItems<Precedent>()
 
     Box(modifier = Modifier.fillMaxSize()) {
         SituationDiagnosisScreen(
@@ -208,18 +229,17 @@ fun CourtTypeSpinner(
 
     ExposedDropdownMenuBox(
         expanded = expanded,
-        onExpandedChange = { expanded = !expanded },
+        onExpandedChange = { newValue -> expanded = newValue },
     ) {
         OutlinedTextField(
             value = selectedOption.displayName,
             onValueChange = {},
-            readOnly = true, // 사용자가 직접 타이핑할 수 없게 막음
+            readOnly = true,
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             modifier =
                 Modifier
                     .fillMaxWidth()
                     .menuAnchor(MenuAnchorType.PrimaryNotEditable, true),
-            // 메뉴가 텍스트 필드 바로 아래에 뜨도록 고정하는 역할
             shape = RoundedCornerShape(16.dp),
             colors =
                 ExposedDropdownMenuDefaults.outlinedTextFieldColors(
@@ -227,20 +247,22 @@ fun CourtTypeSpinner(
                     unfocusedBorderColor = Color(0xFFE0E0E0),
                 ),
         )
-        ExposedDropdownMenu(
+        ExposedDropdownMenuBox(
             expanded = expanded,
-            onDismissRequest = { expanded = false },
-            modifier = Modifier.background(Color.White),
+            onExpandedChange = {},
+            modifier = Modifier.exposedDropdownSize(),
         ) {
-            // Enum 클래스에 정의된 모든 옵션을 리스트로 뿌려줍니다.
-            CourtTypeOption.entries.forEach { option ->
-                DropdownMenuItem(
-                    text = { Text(text = option.displayName, color = Color.Black) },
-                    onClick = {
-                        onOptionSelected(option)
-                        expanded = false
-                    },
-                )
+            LazyColumn(modifier = Modifier.background(Color.White)) {
+                items(CourtTypeOption.entries.size) { index ->
+                    val option = CourtTypeOption.entries[index]
+                    DropdownMenuItem(
+                        text = { Text(text = option.displayName, color = Color.Black) },
+                        onClick = {
+                            onOptionSelected(option)
+                            expanded = false
+                        },
+                    )
+                }
             }
         }
     }

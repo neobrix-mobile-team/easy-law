@@ -1,0 +1,76 @@
+name: 🏷️ Setup Labels
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, develop]
+    paths:
+      - '.github/workflows/setup-labels.yml'
+
+jobs:
+  setup-labels:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🏷️ 라벨 생성
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const labels = [
+              { name: '🐛 bug', color: 'd73a49', description: '버그 수정' },
+              { name: '✨ feature', color: '2da44e', description: '새로운 기능' },
+              { name: '♻️ refactor', color: '0366d6', description: '코드 리팩토링' },
+              { name: '📚 Documentation', color: '6f42c1', description: '문서 수정' },
+              { name: '🧹 chore', color: 'ffc107', description: '일상적인 유지보수' },
+              { name: '💅 style', color: 'fbca04', description: '코드 스타일 및 포매팅' },
+              { name: '⚡ performance', color: 'ff6600', description: '성능 개선' },
+              { name: '🎨 UI', color: 'e00ff7', description: 'UI/UX 관련' },
+              { name: '⚙️ ViewModel', color: '1f6feb', description: 'ViewModel 관련' },
+              { name: '📦 Domain', color: '1f6feb', description: 'Domain 레이어 관련' },
+              { name: '🗄️ Repository', color: '1f6feb', description: 'Repository 관련' },
+              { name: '🛠️ Utility', color: '1f6feb', description: 'Utility 함수/클래스' },
+              { name: '✅ Test', color: '0075ca', description: '테스트 관련' },
+              { name: '🔧 build', color: 'a2eeef', description: '빌드 설정' },
+              { name: '🔄 CI/CD', color: 'a2eeef', description: 'CI/CD 파이프라인' },
+              { name: '🚀 ready', color: '7cb342', description: '병합 준비 완료' },
+              { name: '⏸️ on-hold', color: 'd4a5a5', description: '진행 보류 중' },
+            ];
+
+            for (const label of labels) {
+              try {
+                await github.rest.issues.createLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name: label.name,
+                  color: label.color,
+                  description: label.description,
+                });
+                console.log(`✅ Created label: ${label.name}`);
+              } catch (error) {
+                if (error.status === 422) {
+                  console.log(`⚠️ Label already exists: ${label.name}`);
+                  // 기존 라벨 업데이트
+                  try {
+                    await github.rest.issues.updateLabel({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      name: label.name,
+                      color: label.color,
+                      description: label.description,
+                    });
+                    console.log(`🔄 Updated label: ${label.name}`);
+                  } catch (updateError) {
+                    console.error(`❌ Failed to update label ${label.name}:`, updateError.message);
+                  }
+                } else {
+                  console.error(`❌ Failed to create label ${label.name}:`, error.message);
+                }
+              }
+            }
+            console.log('\n✨ Label setup completed!');
+
