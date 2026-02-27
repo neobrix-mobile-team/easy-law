@@ -74,7 +74,7 @@ jobs:
         with:
           name: detekt-report
           path: |
-            build/reports/detekt/
+            app/build/reports/detekt/
           retention-days: 7
 
       - name: 📤 Ktlint 리포트 업로드
@@ -139,7 +139,7 @@ jobs:
             -Dorg.gradle.workers.max=8 || true
 
       - name: 📤 보안 검사 결과 업로드
-        if: always()
+        if: always() && hashFiles('build/reports/dependency-check/') != ''
         uses: actions/upload-artifact@v4
         with:
           name: security-scan-report

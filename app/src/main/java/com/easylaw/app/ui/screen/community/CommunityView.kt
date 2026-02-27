@@ -45,6 +45,7 @@ import com.easylaw.app.viewmodel.CommunityViewModel
 fun CommunityView(
     modifier: Modifier,
     viewModel: CommunityViewModel,
+    communityWrite: () -> Unit = {},
 ) {
     val viewState by viewModel.communityState.collectAsState()
 
@@ -84,7 +85,7 @@ fun CommunityView(
         }
 
         FloatingActionButton(
-            onClick = { },
+            onClick = { communityWrite() },
             containerColor = Color(0xFF2196F3),
             contentColor = Color.White,
             shape = CircleShape,
