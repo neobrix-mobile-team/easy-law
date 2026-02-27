@@ -16,9 +16,7 @@
     <!-- Device transfer rules (for device-to-device migration) -->
     <device-transfer>
         <!-- Include app preferences and database files -->
-        <include domain="shared_prefs" />
+        <include domain="sharedpref" />
         <include domain="database" />
-        <include domain="file_in_cache" />
-        <include domain="file_in_code_cache" />
     </device-transfer>
 </data-extraction-rules>

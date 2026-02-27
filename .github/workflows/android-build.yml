@@ -35,21 +35,18 @@ jobs:
         run: |
           touch local.properties
           echo "sdk.dir=$ANDROID_HOME" >> local.properties
-          
-          if [ -n "$GEMINI_API_KEY" ]; then
-            echo "GEMINI_API_KEY=$GEMINI_API_KEY" >> local.properties
-          fi
-          
-          if [ -n "$LAW_API_KEY" ]; then
-            echo "LAW_API_KEY=$LAW_API_KEY" >> local.properties
-          fi
+          echo "GEMINI_API_KEY=${GEMINI_API_KEY}" >> local.properties
+          echo "LAW_API_KEY=${LAW_API_KEY}" >> local.properties
 
       - name: 🔥 google-services.json 생성
-        if: ${{ secrets.GOOGLE_SERVICES_JSON != '' }}
         env:
           G_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
-          echo "$G_SERVICES" | base64 -d > app/google-services.json
+          if [ -n "$G_SERVICES" ]; then
+            echo "$G_SERVICES" | base64 -d > app/google-services.json
+          else
+            echo "⚠️ GOOGLE_SERVICES_JSON secret is not configured"
+          fi
 
 
       # 🚀 빌드 단계 - PR: 빠른 빌드만, Push: 테스트 포함
