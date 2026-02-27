@@ -426,13 +426,60 @@ feat: 구글 로그인 & Firebase Auth 연동 (#5)
 Closes #5
 ```
 
+### 🏷️ 자동 라벨 설정
+
+PR이 생성되면 **GitHub Actions**가 자동으로 적절한 라벨을 추가합니다.
+
+#### 지원되는 라벨
+
+| 라벨 | 설명 | 트리거 |
+|-----|------|--------|
+| 🐛 bug | 버그 수정 | `fix:` 또는 `hotfix` 커밋 |
+| ✨ feature | 새로운 기능 | `feat:` 또는 `feature` 커밋 |
+| ♻️ refactor | 코드 리팩토링 | `refactor:` 커밋 |
+| 📚 Documentation | 문서 수정 | `docs:` 커밋 또는 README/CONTRIBUTING 파일 변경 |
+| 🧹 chore | 일상적인 유지보수 | `chore:` 또는 `maintenance` 커밋 |
+| 💅 style | 코드 스타일 및 포매팅 | `style:` 또는 `format` 커밋 |
+| ⚡ performance | 성능 개선 | `perf:` 또는 `performance` 커밋 |
+| 🎨 UI | UI/UX 관련 | `app/src/main/java/com/easylaw/app/ui/` 경로 변경 |
+| ⚙️ ViewModel | ViewModel 관련 | `app/src/main/java/com/easylaw/app/viewmodel/` 경로 변경 |
+| 📦 Domain | Domain 레이어 | `app/src/main/java/com/easylaw/app/domain/` 경로 변경 |
+| 🗄️ Repository | Repository 관련 | `app/src/main/java/com/easylaw/app/repository/` 경로 변경 |
+| 🛠️ Utility | Utility 함수/클래스 | `app/src/main/java/com/easylaw/app/util/` 경로 변경 |
+| ✅ Test | 테스트 관련 | 테스트 파일 변경 |
+| 🔧 build | 빌드 설정 | `build.gradle` 파일 변경 |
+| 🔄 CI/CD | CI/CD 파이프라인 | `.github/workflows` 경로 변경 |
+
+#### 라벨 자동 설정 워크플로우
+
+1. **초기 라벨 생성**: `setup-labels` 워크플로우가 필요한 모든 라벨을 생성합니다
+   ```bash
+   # 수동 실행 (필요시)
+   # GitHub Actions > Setup Labels > Run workflow
+   ```
+
+2. **자동 라벨 추가**: PR 생성 시 `auto-label` 워크플로우가 다음을 기반으로 자동 분석:
+   - PR 제목의 커밋 타입 (feat:, fix:, etc.)
+   - 변경된 파일 경로
+   - 변경 유형
+
+#### 예시
+
+```bash
+# UI 변경 + 버그 수정 PR
+feat: 로그인 화면 버그 수정 및 UI 개선
+
+→ 자동으로 추가되는 라벨:
+  🐛 bug, ✨ feature, 🎨 UI
+```
+
 ### 브랜치 규칙
 
-- `main` → 배포 버전 (PR 필수, 1명 리뷰)
-- `develop` → 개발 버전 (PR 필수, 1명 리뷰)
-- `feature/*` → 새 기능 (develop으로 PR)
-- `fix/*` → 버그 수정 (develop으로 PR)
-- `docs/*` → 문서 (develop으로 PR)
+- `main` → 배포 버전 (PR 필수, 1명 리뷰, 자동 라벨 적용)
+- `develop` → 개발 버전 (PR 필수, 1명 리뷰, 자동 라벨 적용)
+- `feature/*` → 새 기능 (develop으로 PR, 자동으로 `✨ feature` 라벨 추가)
+- `fix/*` → 버그 수정 (develop으로 PR, 자동으로 `🐛 bug` 라벨 추가)
+- `docs/*` → 문서 (develop으로 PR, 자동으로 `📚 Documentation` 라벨 추가)
 
 ---
 
