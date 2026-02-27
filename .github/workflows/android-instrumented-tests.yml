@@ -34,6 +34,32 @@ jobs:
       - name: 🔧 Gradle wrapper 권한 설정
         run: chmod +x ./gradlew
 
+      - name: 📝 local.properties 생성
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          LAW_API_KEY: ${{ secrets.LAW_API_KEY }}
+        run: |
+          touch local.properties
+          echo "sdk.dir=$ANDROID_HOME" >> local.properties
+          
+          if [ -n "$GEMINI_API_KEY" ]; then
+            echo "GEMINI_API_KEY=$GEMINI_API_KEY" >> local.properties
+          fi
+          
+          if [ -n "$LAW_API_KEY" ]; then
+            echo "LAW_API_KEY=$LAW_API_KEY" >> local.properties
+          fi
+
+      - name: 🔥 google-services.json 생성
+        env:
+          G_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          if [ -n "$G_SERVICES" ]; then
+            echo "$G_SERVICES" | base64 -d > app/google-services.json
+          else
+            echo "⚠️ GOOGLE_SERVICES_JSON secret is not configured"
+          fi
+
       - name: 📱 Android 에뮬레이터 실행 (API Level ${{ matrix.api-level }})
         uses: reactivecircus/android-emulator-runner@v2
         with:

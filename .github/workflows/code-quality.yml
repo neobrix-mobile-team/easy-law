@@ -30,9 +30,20 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: 📝 local.properties 생성
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          LAW_API_KEY: ${{ secrets.LAW_API_KEY }}
         run: |
           touch local.properties
           echo "sdk.dir=$ANDROID_HOME" >> local.properties
+          
+          if [ -n "$GEMINI_API_KEY" ]; then
+            echo "GEMINI_API_KEY=$GEMINI_API_KEY" >> local.properties
+          fi
+          
+          if [ -n "$LAW_API_KEY" ]; then
+            echo "LAW_API_KEY=$LAW_API_KEY" >> local.properties
+          fi
 
       - name: 🔥 google-services.json 생성
         env:
@@ -97,9 +108,20 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: 📝 local.properties 생성
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          LAW_API_KEY: ${{ secrets.LAW_API_KEY }}
         run: |
           touch local.properties
           echo "sdk.dir=$ANDROID_HOME" >> local.properties
+          
+          if [ -n "$GEMINI_API_KEY" ]; then
+            echo "GEMINI_API_KEY=$GEMINI_API_KEY" >> local.properties
+          fi
+          
+          if [ -n "$LAW_API_KEY" ]; then
+            echo "LAW_API_KEY=$LAW_API_KEY" >> local.properties
+          fi
 
       - name: 🔥 google-services.json 생성
         env:
@@ -153,9 +175,20 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: 📝 local.properties 생성
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          LAW_API_KEY: ${{ secrets.LAW_API_KEY }}
         run: |
           touch local.properties
           echo "sdk.dir=$ANDROID_HOME" >> local.properties
+          
+          if [ -n "$GEMINI_API_KEY" ]; then
+            echo "GEMINI_API_KEY=$GEMINI_API_KEY" >> local.properties
+          fi
+          
+          if [ -n "$LAW_API_KEY" ]; then
+            echo "LAW_API_KEY=$LAW_API_KEY" >> local.properties
+          fi
 
       - name: 🔥 google-services.json 생성
         env:
