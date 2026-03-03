@@ -23,6 +23,7 @@ data class LegalSearchUiState(
     val details: String = "",
     val isSituationError: Boolean = false,
     val showResults: Boolean = false,
+    val isLoading: Boolean = false, // 판례 목록 API 로딩
     val isLoadingGemini: Boolean = false,
     val extractedKeyword: String = "",
     val totalSearchCount: Int = 0,
