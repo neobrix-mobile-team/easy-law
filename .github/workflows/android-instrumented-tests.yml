@@ -61,7 +61,7 @@ jobs:
           fi
 
       - name: 📱 Android 에뮬레이터 실행 (API Level ${{ matrix.api-level }})
-        uses: reactivecircus/android-emulator-runner@v3
+        uses: reactivecircus/android-emulator-runner@v4
         with:
           api-level: ${{ matrix.api-level }}
           target: ${{ matrix.target }}
