@@ -1,4 +1,4 @@
-package com.easylaw.app.viewmodel
+package com.easylaw.app.viewModel
 
 import com.easylaw.app.domain.model.PrecedentDetail
 

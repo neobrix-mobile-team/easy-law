@@ -1,4 +1,4 @@
-package com.easylaw.app.viewmodel
+package com.easylaw.app.viewModel
 
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue

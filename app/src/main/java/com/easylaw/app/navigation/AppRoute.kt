@@ -18,16 +18,15 @@ import androidx.navigation.compose.composable
 import com.easylaw.app.ui.screen.LegalSearchRoute
 import com.easylaw.app.ui.screen.Login.LoginView
 import com.easylaw.app.ui.screen.Login.SignView
-import com.easylaw.app.ui.screen.Self.SelfView
 import com.easylaw.app.ui.screen.community.CommunityView
 import com.easylaw.app.ui.screen.community.CommunityWriteView
+import com.easylaw.app.ui.screen.diagnosis.DiagnosisScreen
 import com.easylaw.app.ui.screen.onboarding.OnboardingView
-import com.easylaw.app.viewmodel.CommunityViewModel
-import com.easylaw.app.viewmodel.CommunityWriteViewModel
-import com.easylaw.app.viewmodel.LoginViewModel
-import com.easylaw.app.viewmodel.OnboardingViewModel
-import com.easylaw.app.viewmodel.SelfViewModel
-import com.easylaw.app.viewmodel.SignViewModel
+import com.easylaw.app.viewModel.CommunityViewModel
+import com.easylaw.app.viewModel.CommunityWriteViewModel
+import com.easylaw.app.viewModel.LoginViewModel
+import com.easylaw.app.viewModel.OnboardingViewModel
+import com.easylaw.app.viewModel.SignViewModel
 
 data class BottomNavItem(
     val route: String,
@@ -180,11 +179,7 @@ fun AppRoute(
         composable(
             route = NavRoute.SELF,
         ) {
-            val selfViewModel: SelfViewModel = hiltViewModel()
-            SelfView(
-                modifier = modifier,
-                viewModel = selfViewModel,
-            )
+            DiagnosisScreen()
         }
     }
 }

@@ -45,7 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.easylaw.app.R
 import com.easylaw.app.ui.components.CommonButton
-import com.easylaw.app.viewmodel.OnboardingViewModel
+import com.easylaw.app.viewModel.OnboardingViewModel
 
 /**
  * [OnboardingView]

@@ -33,7 +33,7 @@ import com.easylaw.app.ui.components.CommonButton
 import com.easylaw.app.ui.components.CommonDialog
 import com.easylaw.app.ui.components.CommonIndicator
 import com.easylaw.app.ui.components.CommonTextField
-import com.easylaw.app.viewmodel.SignViewModel
+import com.easylaw.app.viewModel.SignViewModel
 
 /**
  * [SignView]

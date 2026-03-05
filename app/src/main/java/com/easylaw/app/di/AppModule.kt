@@ -4,8 +4,11 @@ import android.util.Log
 import com.easylaw.app.BuildConfig
 import com.easylaw.app.data.datasource.LawApiService
 import com.easylaw.app.data.datasource.PrecedentService
+import com.easylaw.app.data.repository.DiagnosisRepository
+import com.easylaw.app.data.repository.DiagnosisRepositoryImpl
 import com.easylaw.app.data.repository.LawRepository
 import com.easylaw.app.data.repository.LawRepositoryImpl
+import com.google.ai.client.generativeai.GenerativeModel
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonParser
 import dagger.Module
@@ -102,5 +105,12 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideGeminiService(): PrecedentService = PrecedentService()
+    fun provideDiagnosisRepository(
+        apiService: LawApiService,
+        generativeModel: GenerativeModel,
+    ): DiagnosisRepository = DiagnosisRepositoryImpl(apiService, generativeModel)
+
+    @Provides
+    @Singleton
+    fun provideGeminiService(generativeModel: GenerativeModel): PrecedentService = PrecedentService(generativeModel)
 }

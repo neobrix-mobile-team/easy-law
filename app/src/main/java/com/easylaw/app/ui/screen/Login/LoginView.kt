@@ -34,7 +34,7 @@ import com.easylaw.app.ui.components.CommonButton
 import com.easylaw.app.ui.components.CommonDialog
 import com.easylaw.app.ui.components.CommonIndicator
 import com.easylaw.app.ui.components.CommonTextField
-import com.easylaw.app.viewmodel.LoginViewModel
+import com.easylaw.app.viewModel.LoginViewModel
 
 /**
  * [LoginView]
