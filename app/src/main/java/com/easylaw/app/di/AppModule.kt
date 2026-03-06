@@ -16,6 +16,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import okhttp3.ConnectionPool
+import okhttp3.ConnectionSpec
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Protocol
@@ -69,8 +70,8 @@ object AppModule {
                     original
                         .newBuilder()
                         .header("User-Agent", "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36")
-                        .header("Accept", "application/xml,application/json,*/*")
-                        .header("Connection", "keep-alive")
+                        .header("Accept", "application/json")
+                        .header("Connection", "close")
                         .method(original.method, original.body)
                         .build()
                 chain.proceed(request)
@@ -80,10 +81,12 @@ object AppModule {
             .Builder()
             .addInterceptor(headerInterceptor)
             .addInterceptor(loggingInterceptor)
-            .connectTimeout(HTTP_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-            .readTimeout(HTTP_TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .retryOnConnectionFailure(true)
+            .connectionSpecs(listOf(ConnectionSpec.COMPATIBLE_TLS, ConnectionSpec.CLEARTEXT))
+            .connectTimeout(HTTP_TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .connectionPool(ConnectionPool(0, 1, TimeUnit.NANOSECONDS))
+            .readTimeout(HTTP_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .writeTimeout(HTTP_TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .protocols(listOf(Protocol.HTTP_1_1))
             .build()
     }

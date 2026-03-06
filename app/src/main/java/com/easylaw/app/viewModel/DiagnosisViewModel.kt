@@ -33,7 +33,7 @@ class DiagnosisViewModel
         private val _uiState = MutableStateFlow(DiagnosisUiState())
         val uiState: StateFlow<DiagnosisUiState> = _uiState.asStateFlow()
 
-        private val conversationContext = StringBuilder()
+        private val conversationHistory = mutableListOf<String>()
 
         var userScenarioInput by mutableStateOf("")
             private set
@@ -42,11 +42,23 @@ class DiagnosisViewModel
             userScenarioInput = newValue
         }
 
+        private fun getOptimizedContext(): String {
+            val firstScenario = conversationHistory.firstOrNull() ?: ""
+            // 최신 질문과 답변 세트(최대 2개)만 잘라서 가져옵니다.
+            val recentConversations =
+                if (conversationHistory.size > 1) {
+                    conversationHistory.takeLast(2).joinToString(" ")
+                } else {
+                    ""
+                }
+            return if (recentConversations.isNotEmpty()) "$firstScenario $recentConversations" else firstScenario
+        }
+
         fun onStartDiagnosis() {
             if (userScenarioInput.isBlank()) return
 
-            conversationContext.clear()
-            conversationContext.append("사용자: $userScenarioInput\n")
+            conversationHistory.clear()
+            conversationHistory.add("최초상황: $userScenarioInput")
 
             val initialMessages = listOf(Diagnosis.User(userScenarioInput))
             _uiState.value =
@@ -57,7 +69,7 @@ class DiagnosisViewModel
                     questionCount = 0,
                 )
 
-            generateFollowUpQuestions(conversationContext.toString())
+            generateFollowUpQuestions(getOptimizedContext())
         }
 
         private fun generateFollowUpQuestions(scenario: String) {
@@ -75,7 +87,7 @@ class DiagnosisViewModel
                     if (followUpAction.isEnough) {
                         executeDiagnosisPipeline()
                     } else {
-                        conversationContext.append("시스템: ${followUpAction.question}\n")
+                        conversationHistory.add("시스템질문: ${followUpAction.question}")
 
                         val currentMessages = _uiState.value.messages.toMutableList()
                         currentMessages.add(Diagnosis.BotWithOptions(followUpAction.question, followUpAction.options))
@@ -100,24 +112,24 @@ class DiagnosisViewModel
 
             val currentMessages = _uiState.value.messages.toMutableList()
             currentMessages.add(Diagnosis.User(text))
-            conversationContext.append("사용자(답변): $text\n")
+            conversationHistory.add("추가답변: $text")
 
             _uiState.value =
                 _uiState.value.copy(
                     messages = currentMessages,
                     currentPhase = DiagnosisPhase.PROCESSING,
                 )
-            generateFollowUpQuestions(conversationContext.toString())
+            generateFollowUpQuestions(getOptimizedContext())
         }
 
         private fun executeDiagnosisPipeline() {
             viewModelScope.launch {
                 try {
                     addLoading()
-
-                    val lawNames = repository.extractTargetLaws(conversationContext.toString())
+                    val contextForAnalysis = getOptimizedContext()
+                    val lawNames = repository.extractTargetLaws(contextForAnalysis)
                     val lawDetails = repository.fetchDiagnosisDetails(lawNames)
-                    val finalGuide = repository.generateFinalGuide(conversationContext.toString(), lawDetails)
+                    val finalGuide = repository.generateFinalGuide(contextForAnalysis, lawDetails)
 
                     removeLoadingOnly()
 
@@ -147,7 +159,6 @@ class DiagnosisViewModel
                 )
         }
 
-        // [수정] 사용자가 "분석요청" 버튼을 누르면 에러 메시지를 지우고 멈췄던 로직을 다시 실행합니다.
         fun retryAction(type: RetryActionType) {
             val currentMessages = _uiState.value.messages.toMutableList()
             currentMessages.removeAll { it is Diagnosis.ErrorRetry }
@@ -158,7 +169,7 @@ class DiagnosisViewModel
                 )
 
             when (type) {
-                RetryActionType.FOLLOW_UP_QUESTIONS -> generateFollowUpQuestions(conversationContext.toString())
+                RetryActionType.FOLLOW_UP_QUESTIONS -> generateFollowUpQuestions(getOptimizedContext())
                 RetryActionType.FINAL_GUIDE -> executeDiagnosisPipeline()
             }
         }

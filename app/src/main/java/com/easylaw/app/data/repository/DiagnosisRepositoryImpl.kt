@@ -4,6 +4,8 @@ import android.util.Log
 import com.easylaw.app.data.datasource.LawApiService
 import com.google.ai.client.generativeai.GenerativeModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -28,7 +30,11 @@ class DiagnosisRepositoryImpl
                     법률적 판단(예: 체당금 신청 가능 여부, 형사처벌 대상 여부, 계약 위반 여부 등)을 내리기 위해 **필수적인 추가 정보가 더 필요하다면** 아래 JSON 형식으로 질문을 1개만 생성하세요.
                     {"status": "NEED_INFO", "question": "상시 근로자 수가 5인 이상인가요?", "options": ["5인 이상", "5인 미만", "모름"]}
                     
-                    단, 지금까지의 대화 내역을 보고 이미 핵심 정보가 충분히 수집되었거나, 더 이상 의미 있는 질문이 없다면 반드시 아래 JSON으로만 응답하세요:
+                    엄격한 금지 규칙]
+                    1. 지금까지의 대화 내역을 반드시 분석하여, 사용자가 이미 대답한 정보나 이전에 시스템이 했던 질문은 절대로 다시 묻지 마세요.
+                    2. 똑같은 질문을 반복할 바에는 차라리 질문을 멈추고 "ENOUGH" 상태로 응답하세요.
+                    
+                    단, 핵심 정보가 충분히 수집되었거나, 의미 있는 질문이 없다면 아래 JSON으로만 응답하세요:
                     {"status": "ENOUGH"}
                     
                     지금까지의 대화 내역:
@@ -88,48 +94,57 @@ class DiagnosisRepositoryImpl
                 val currentDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy년 M월"))
                 detailsBuilder.append("기준 시점: $currentDate (현행법령 기준)\n\n")
 
-                for (lawName in lawNames) {
-                    try {
-                        val listResponse = apiService.getStatuteList(keyword = lawName)
-                        val mst =
-                            listResponse.lawSearch
-                                ?.law
-                                ?.firstOrNull { it.currentHistoryCode == "현행" }
-                                ?.lawSeq
-                        val lawId =
-                            listResponse.lawSearch
-                                ?.law
-                                ?.firstOrNull { it.currentHistoryCode == "현행" }
-                                ?.lawId
+                val deferredLaws =
+                    lawNames.map { lawName ->
+                        async {
+                            val localBuilder = StringBuilder()
+                            try {
+                                val listResponse = apiService.getStatuteList(keyword = lawName)
+                                val mst =
+                                    listResponse.lawSearch
+                                        ?.law
+                                        ?.firstOrNull { it.currentHistoryCode == "현행" }
+                                        ?.lawSeq
+                                val lawId =
+                                    listResponse.lawSearch
+                                        ?.law
+                                        ?.firstOrNull { it.currentHistoryCode == "현행" }
+                                        ?.lawId
 
-                        if (mst != null) {
-                            val detailResponse = apiService.getStatuteDetail(mst = mst, lawId = lawId)
-                            val actualLawName = detailResponse.lawInfo?.basicInfo?.lawName ?: lawName
-                            detailsBuilder.append("[$actualLawName 현행본문]\n")
+                                if (mst != null) {
+                                    val detailResponse = apiService.getStatuteDetail(mst = mst, lawId = lawId)
+                                    val actualLawName = detailResponse.lawInfo?.basicInfo?.lawName ?: lawName
+                                    localBuilder.append("[$actualLawName 현행본문]\n")
 
-                            detailResponse.lawInfo?.articles?.articleList?.take(5)?.forEach { article ->
-                                detailsBuilder.append("${article.articleContent}\n")
-                                val paragraphs = article.paragraphs
-                                if (paragraphs is JsonArray) {
-                                    paragraphs.forEach { paragraph ->
-                                        val content = paragraph.jsonObject["항내용"]?.jsonPrimitive?.content
-                                        if (content != null) detailsBuilder.append("  $content\n")
+                                    detailResponse.lawInfo?.articles?.articleList?.take(3)?.forEach { article ->
+                                        localBuilder.append("${article.articleContent} ")
+                                        val paragraphs = article.paragraphs
+                                        if (paragraphs is JsonArray) {
+                                            paragraphs.forEach { paragraph ->
+                                                val content = paragraph.jsonObject["항내용"]?.jsonPrimitive?.content
+                                                if (content != null) localBuilder.append("  $content ")
+                                            }
+                                        } else if (paragraphs is JsonObject) {
+                                            val content = paragraphs["항내용"]?.jsonPrimitive?.content
+                                            if (content != null) localBuilder.append("  $content ")
+                                        }
                                     }
-                                } else if (paragraphs is JsonObject) {
-                                    val content = paragraphs["항내용"]?.jsonPrimitive?.content
-                                    if (content != null) detailsBuilder.append("  $content\n")
+                                    localBuilder.append("\n\n")
+                                } else {
+                                    localBuilder.append("[$lawName] 일치하는 현행 법령을 찾을 수 없습니다.\n\n")
                                 }
+                            } catch (e: Exception) {
+                                localBuilder.append("[$lawName] 현행 법령 정보를 가져오는 데 실패했습니다.\n")
                             }
-                            detailsBuilder.append("\n\n")
-                        } else {
-                            detailsBuilder.append("[$lawName] 일치하는 현행 법령을 찾을 수 없습니다.\n\n")
                         }
-                    } catch (e: Exception) {
-                        detailsBuilder.append("[$lawName] 현행 법령 정보를 가져오는 데 실패했습니다.\n")
                     }
-                }
+
+                val lawResults = deferredLaws.awaitAll()
+                lawResults.forEach { detailsBuilder.append(it) }
+
                 detailsBuilder.append("\n주의: 위 내용은 현행법 기준입니다.")
-                return@withContext detailsBuilder.toString()
+                val rawText = detailsBuilder.toString()
+                return@withContext rawText.replace(Regex("\\s+"), " ").trim()
             }
 
         override suspend fun generateFinalGuide(
@@ -144,9 +159,26 @@ class DiagnosisRepositoryImpl
                     
                     [필수 규칙]
                     1. 결론 먼저: 현재 사용자가 처한 상황을 한 줄로 진단할 것. (예: "현재 상황은 임금체불에 해당합니다.")
-                    2. 3단계 행동 지침: 사용자가 해결을 위해 당장 해야 할 일을 우선순위대로 딱 3가지만 번호표(1., 2., 3.)를 달아 제시할 것. (각 지침은 1~2문장으로 아주 짧게)
-                    3. 친절한 한마디: 어렵고 힘든 사용자를 향한 따뜻한 격려 한 줄과 핵심 주의사항 하나 전달.
+                    2. 3단계 행동 지침: 사용자가 해결을 위해 당장 해야 할 일을 우선순위대로 딱 3가지만 기호를 달아 제시할 것. 
+                        - 각 지침은 1~2문장으로 아주 짧게
+                        - 필수적으로 해야할 일이 3가지 이상일 경우 추가적으로 제시
+                        - 강조 표기(매우 중요): 사용자가 반드시 기억해야 할 핵심 단어, 제출해야 할 서류명, 경고 사항 등은 반드시 앞뒤로 `**` 기호를 붙여 강조할 것. (예: "가장 먼저 **고용노동부 진정서**를 제출해야 합니다.") 
+                    3. 친절한 언행: 어렵고 힘든 사용자를 향한 따뜻하게 위로하고 격려하는 말투 사용.
                     4. 금기사항: 어려운 법률 용어는 무조건 쉬운 말로 풀어서 쓰고, 전체 글이 스마트폰 한 화면에 들어오도록 최대한 간결하게 할 것. 장황한 법리 해석 절대 금지.
+                    
+                    [예시]=============================
+                    
+                    현재 상황은 임금체불에 해당합니다.
+                    
+                    [이렇게 해보세요]
+                    ● 증거 확보 : 밀린 급여 내역, 실제로 일했다는 증거를 최대한 모으기
+                    ● 지급 요구 : 사장님께 밀린 급여를 달라고 내용증명 우편이나 문자등으로 공식적으로 요청(요청내용, 보낸증거 수집)
+                    ● 노동청 진정 : 위 증거들을 가지고 가까운 노동청에 '임금체불 진정'신청 
+                    
+                    현재 상태에서 회사를 구만두면 채불임금을 받는 과정이 더 복잡해질 수 있으니 신중하게 결정하세요.  
+                    
+                    ===================================
+                    
                     
                     사용자 상황: $scenario
                     관련 법령: $lawDetails
