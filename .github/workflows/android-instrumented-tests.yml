@@ -68,6 +68,13 @@ jobs:
           arch: x86_64
           disable-animations: true
           force-avd-creation: false
+          emulator-options: >-
+            -no-window
+            -gpu swiftshader_indirect
+            -no-snapshot
+            -noaudio
+            -no-boot-anim
+            -camera-back none
           ram-size: 2048M
           disk-size: 4096M
           script: |
