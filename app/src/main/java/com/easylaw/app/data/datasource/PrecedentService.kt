@@ -1,19 +1,14 @@
 package com.easylaw.app.data.datasource
 
 import android.util.Log
-import com.easylaw.app.BuildConfig
 import com.google.ai.client.generativeai.GenerativeModel
 import javax.inject.Inject
 
 class PrecedentService
     @Inject
-    constructor() {
-        private val generativeModel =
-            GenerativeModel(
-                modelName = "gemini-2.5-flash-lite-preview-09-2025",
-                apiKey = BuildConfig.GEMINI_API_KEY,
-            )
-
+    constructor(
+        private val generativeModel: GenerativeModel,
+    ) {
         // 판례 검색 키워드 추출
         suspend fun extractKeyword(
             situation: String,

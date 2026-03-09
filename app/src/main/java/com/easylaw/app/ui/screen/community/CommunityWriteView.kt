@@ -31,7 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.easylaw.app.ui.components.CommonTextField
-import com.easylaw.app.viewmodel.CommunityWriteViewModel
+import com.easylaw.app.viewModel.CommunityWriteViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
