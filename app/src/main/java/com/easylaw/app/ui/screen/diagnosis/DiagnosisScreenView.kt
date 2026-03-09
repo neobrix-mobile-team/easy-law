@@ -13,6 +13,7 @@ import android.speech.SpeechRecognizer
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,6 +24,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -46,7 +48,6 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -88,25 +89,29 @@ fun DiagnosisScreen(viewModel: DiagnosisViewModel = hiltViewModel()) {
 //    var currentAnswerText by remember { mutableStateOf("") }
 
     LaunchedEffect(uiState.messages.size) {
-        val lastMessage = uiState.messages.lastOrNull()
-        if (lastMessage != null && lastMessage !is Diagnosis.Loading) {
-            delay(100)
-            listState.animateScrollToItem(
-                index = uiState.messages.lastIndex,
-            )
+        val lastIndex = uiState.messages.lastIndex
+        if (lastIndex >= 0) {
+            val lastMessage = uiState.messages[lastIndex]
+            if (lastMessage !is Diagnosis.Loading) {
+                delay(600)
+                listState.animateScrollToItem(
+                    index = lastIndex,
+                    scrollOffset = 0,
+                )
+            }
         }
     }
 
-    Scaffold(
-        topBar = { EasyLawTopBar() },
-        modifier = Modifier.fillMaxSize(),
-    ) { innerPadding ->
-        Column(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-        ) {
+    Box(
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(Color(0xFFF9FAFB))
+                .imePadding(),
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            EasyLawTopBar()
+
             if (!uiState.isShowingResults) {
                 DiagnosisFormContent(
                     userScenario = viewModel.userScenarioInput,
@@ -245,8 +250,8 @@ fun DiagnosisResultContent(
         Column(modifier = Modifier.fillMaxSize()) {
             LazyColumn(
                 state = listState,
-                modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 120.dp),
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 400.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 items(uiState.messages) { message ->
@@ -438,7 +443,8 @@ fun rememberSpeechRecognizerHandler(onFinalResult: (String) -> Unit): SttControl
                 override fun onEvent(
                     eventType: Int,
                     params: Bundle?,
-                ) {}
+                ) {
+                }
             }
         }
 

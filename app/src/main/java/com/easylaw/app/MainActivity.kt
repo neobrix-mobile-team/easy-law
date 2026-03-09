@@ -128,6 +128,7 @@ class MainActivity : ComponentActivity() {
                     },
                 ) {
                     Scaffold(
+                        contentWindowInsets = androidx.compose.material3.ScaffoldDefaults.contentWindowInsets,
                         bottomBar = {
                             if (currentRoute !in hideBarsRoutes) {
                                 NavigationBar(

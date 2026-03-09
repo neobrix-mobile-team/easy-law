@@ -43,15 +43,18 @@ class DiagnosisViewModel
         }
 
         private fun getOptimizedContext(): String {
-            val firstScenario = conversationHistory.firstOrNull() ?: ""
-            // 최신 질문과 답변 세트(최대 2개)만 잘라서 가져옵니다.
-            val recentConversations =
-                if (conversationHistory.size > 1) {
-                    conversationHistory.takeLast(2).joinToString(" ")
-                } else {
-                    ""
-                }
-            return if (recentConversations.isNotEmpty()) "$firstScenario $recentConversations" else firstScenario
+//            val firstScenario = conversationHistory.firstOrNull() ?: ""
+//            // 최신 질문과 답변 세트(최대 2개)만 잘라서 가져옵니다.
+//            val recentConversations =
+//                if (conversationHistory.size > 1) {
+//                    conversationHistory.takeLast(2).joinToString(" ")
+//                } else {
+//                    ""
+//                }
+//            return if (recentConversations.isNotEmpty()) "$firstScenario $recentConversations" else firstScenario
+
+            if (conversationHistory.isEmpty()) return ""
+            return conversationHistory.joinToString("\n")
         }
 
         fun onStartDiagnosis() {
