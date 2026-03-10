@@ -38,40 +38,70 @@ private const val NAVER_BASE_URL = "https://openapi.naver.com/"
 @Retention(AnnotationRetention.BINARY)
 annotation class NaverNetwork
 
+private val prettyGson = GsonBuilder().setPrettyPrinting().create()
+
 /**
  * Hilt 의존성 주입 모듈
  *
  * 앱 전역에서 사용할 의존성을 정의합니다.
  * 향후 Repository, Service 등을 여기에 추가합니다.
  */
+private fun buildLoggingInterceptor(tag: String): HttpLoggingInterceptor =
+    HttpLoggingInterceptor { message ->
+        if (!BuildConfig.DEBUG) return@HttpLoggingInterceptor
+
+        when {
+            // ── 요청 첫 줄: "GET https://..." ──────────────────────────
+            message.startsWith("-->") -> {
+                Log.d(tag, "┌─────────────────────────────────────── [$tag] ───")
+                Log.d(tag, "│ ▶ ${message.removePrefix("--> ")}")
+            }
+
+            // ── 요청 끝 마커 ────────────────────────────────────────────
+            message.startsWith("--> END") -> {
+                Log.d(tag, "├───────────────────────────────────────────────────")
+            }
+
+            // ── 응답 첫 줄: "<-- 200 OK (243ms)" ───────────────────────
+            message.startsWith("<--") -> {
+                // 429 같은 에러 응답은 눈에 띄도록 Log.w로 출력
+                val code = message.substringAfter("<-- ").take(3).toIntOrNull() ?: 0
+                val logFn: (String, String) -> Unit = if (code in 400..599) Log::w else Log::d
+                logFn(tag, "│ ◀ ${message.removePrefix("<-- ")}")
+            }
+
+            // ── 응답 끝 마커 ────────────────────────────────────────────
+            message.startsWith("<-- END") -> {
+                Log.d(tag, "└───────────────────────────────────────────────────")
+            }
+
+            // ── JSON Body (요청/응답 공통) ───────────────────────────────
+            message.startsWith("{") || message.startsWith("[") -> {
+                try {
+                    val pretty = prettyGson.toJson(JsonParser.parseString(message))
+                    pretty.lines().forEach { Log.d(tag, "│   $it") }
+                } catch (e: Exception) {
+                    Log.d(tag, "│   $message")
+                }
+            }
+
+            // ── 헤더 / 기타 한 줄 메시지 ────────────────────────────────
+            message.isNotBlank() -> Log.d(tag, "│   $message")
+        }
+    }.apply {
+        level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE
+    }
+
+// ══════════════════════════════════════════════════════════════
+//  Hilt Module
+// ══════════════════════════════════════════════════════════════
+
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
     @Provides
     @Singleton
     fun provideOkHttpClient(): OkHttpClient {
-        val prettyGson = GsonBuilder().setPrettyPrinting().create()
-        val loggingInterceptor =
-            HttpLoggingInterceptor { message ->
-                // 수정: JSON 형식이 아닐 경우 발생하는 Parsing Error를 방지하기 위해 조건문 강화
-                if (message.startsWith("{") || message.startsWith("[")) {
-                    try {
-                        val jsonElement = JsonParser.parseString(message)
-                        val prettyJson = prettyGson.toJson(jsonElement)
-                        Log.d("RESTAPI", "╔═══════════════════ JSON BODY ═══════════════════")
-                        prettyJson.lines().forEach { Log.d("RESTAPI", "║ $it") }
-                        Log.d("RESTAPI", "╚══════════════════════════════════════════════════")
-                    } catch (e: Exception) {
-                        Log.d("RESTAPI", message)
-                    }
-                } else {
-                    // JSON이 아닌 일반 텍스트(HTML 등)는 그대로 출력하여 에러 원인 파악 유도
-                    Log.d("RESTAPI", message)
-                }
-            }.apply {
-                level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE
-            }
-
         val headerInterceptor =
             Interceptor { chain ->
                 val original = chain.request()
@@ -89,7 +119,7 @@ object AppModule {
         return OkHttpClient
             .Builder()
             .addInterceptor(headerInterceptor)
-            .addInterceptor(loggingInterceptor)
+            .addInterceptor(buildLoggingInterceptor("HTTP_LAW"))
             .retryOnConnectionFailure(true)
             .connectionSpecs(listOf(ConnectionSpec.COMPATIBLE_TLS, ConnectionSpec.CLEARTEXT))
             .connectTimeout(HTTP_TIMEOUT_SECONDS, TimeUnit.SECONDS)
@@ -100,42 +130,11 @@ object AppModule {
             .build()
     }
 
-    @Provides
-    @Singleton
-    fun provideLawApiService(okHttpClient: OkHttpClient): LawApiService =
-        Retrofit
-            .Builder()
-            .baseUrl(BASE_URL)
-            .client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create(GsonBuilder().setLenient().create()))
-            .build()
-            .create(LawApiService::class.java)
-
-    @Provides
-    @Singleton
-    fun provideLawRepository(apiService: LawApiService): LawRepository = LawRepositoryImpl(apiService)
-
-    @Provides
-    @Singleton
-    fun provideDiagnosisRepository(
-        apiService: LawApiService,
-        generativeModel: GenerativeModel,
-    ): DiagnosisRepository = DiagnosisRepositoryImpl(apiService, generativeModel)
-
-    @Provides
-    @Singleton
-    fun provideGeminiService(generativeModel: GenerativeModel): PrecedentService = PrecedentService(generativeModel)
-
+    // ── 네이버 검색 API OkHttpClient ─────────────────────────────
     @Provides
     @Singleton
     @NaverNetwork
     fun provideNaverOkHttpClient(): OkHttpClient {
-        val loggingInterceptor =
-            HttpLoggingInterceptor().apply {
-                level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE
-            }
-
-        // 네이버 API 필수 헤더 (local.properties -> BuildConfig 연동)
         val headerInterceptor =
             Interceptor { chain ->
                 val request =
@@ -151,11 +150,23 @@ object AppModule {
         return OkHttpClient
             .Builder()
             .addInterceptor(headerInterceptor)
-            .addInterceptor(loggingInterceptor)
+            .addInterceptor(buildLoggingInterceptor("HTTP_NAVER"))
             .connectTimeout(15L, TimeUnit.SECONDS)
             .readTimeout(15L, TimeUnit.SECONDS)
             .build()
     }
+
+    // ── Retrofit / Repository 바인딩 ─────────────────────────────
+    @Provides
+    @Singleton
+    fun provideLawApiService(okHttpClient: OkHttpClient): LawApiService =
+        Retrofit
+            .Builder()
+            .baseUrl(BASE_URL)
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create(GsonBuilder().setLenient().create()))
+            .build()
+            .create(LawApiService::class.java)
 
     @Provides
     @Singleton
@@ -169,6 +180,21 @@ object AppModule {
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(NaverSearchApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideLawRepository(apiService: LawApiService): LawRepository = LawRepositoryImpl(apiService)
+
+    @Provides
+    @Singleton
+    fun provideDiagnosisRepository(
+        apiService: LawApiService,
+        generativeModel: GenerativeModel,
+    ): DiagnosisRepository = DiagnosisRepositoryImpl(apiService, generativeModel)
+
+    @Provides
+    @Singleton
+    fun provideGeminiService(generativeModel: GenerativeModel): PrecedentService = PrecedentService(generativeModel)
 
     @Provides
     @Singleton
