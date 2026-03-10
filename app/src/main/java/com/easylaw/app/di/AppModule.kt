@@ -3,11 +3,14 @@ package com.easylaw.app.di
 import android.util.Log
 import com.easylaw.app.BuildConfig
 import com.easylaw.app.data.datasource.LawApiService
+import com.easylaw.app.data.datasource.NaverSearchApi
 import com.easylaw.app.data.datasource.PrecedentService
 import com.easylaw.app.data.repository.DiagnosisRepository
 import com.easylaw.app.data.repository.DiagnosisRepositoryImpl
 import com.easylaw.app.data.repository.LawRepository
 import com.easylaw.app.data.repository.LawRepositoryImpl
+import com.easylaw.app.data.repository.MapRepository
+import com.easylaw.app.data.repository.MapRepositoryImpl
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonParser
@@ -24,10 +27,16 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
+import javax.inject.Qualifier
 import javax.inject.Singleton
 
 private const val HTTP_TIMEOUT_SECONDS = 60L
 private const val BASE_URL = "https://www.law.go.kr/"
+private const val NAVER_BASE_URL = "https://openapi.naver.com/"
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class NaverNetwork
 
 /**
  * Hilt 의존성 주입 모듈
@@ -116,4 +125,52 @@ object AppModule {
     @Provides
     @Singleton
     fun provideGeminiService(generativeModel: GenerativeModel): PrecedentService = PrecedentService(generativeModel)
+
+    @Provides
+    @Singleton
+    @NaverNetwork
+    fun provideNaverOkHttpClient(): OkHttpClient {
+        val loggingInterceptor =
+            HttpLoggingInterceptor().apply {
+                level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE
+            }
+
+        // 네이버 API 필수 헤더 (local.properties -> BuildConfig 연동)
+        val headerInterceptor =
+            Interceptor { chain ->
+                val request =
+                    chain
+                        .request()
+                        .newBuilder()
+                        .addHeader("X-Naver-Client-Id", BuildConfig.NAVER_SEARCH_ID)
+                        .addHeader("X-Naver-Client-Secret", BuildConfig.NAVER_SEARCH_KEY)
+                        .build()
+                chain.proceed(request)
+            }
+
+        return OkHttpClient
+            .Builder()
+            .addInterceptor(headerInterceptor)
+            .addInterceptor(loggingInterceptor)
+            .connectTimeout(15L, TimeUnit.SECONDS)
+            .readTimeout(15L, TimeUnit.SECONDS)
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideNaverSearchApi(
+        @NaverNetwork okHttpClient: OkHttpClient,
+    ): NaverSearchApi =
+        Retrofit
+            .Builder()
+            .baseUrl(NAVER_BASE_URL)
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(NaverSearchApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideMapRepository(apiService: NaverSearchApi): MapRepository = MapRepositoryImpl(apiService)
 }

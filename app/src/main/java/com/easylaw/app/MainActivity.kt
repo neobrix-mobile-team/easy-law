@@ -91,7 +91,7 @@ class MainActivity : ComponentActivity() {
                 // 유저 상태랑 별개로 로딩변수만 따로 감지
                 val isInitialized by userSession.isInitialized.collectAsState()
 
-                val hideBarsRoutes = listOf(NavRoute.ONBOARDING, NavRoute.LOGIN, NavRoute.SIGN_UP)
+                val hideBarsRoutes = listOf(NavRoute.ONBOARDING, NavRoute.LOGIN, NavRoute.SIGN_UP, NavRoute.MAP)
 
                 val startRoute = if (userInfo.id.isNotEmpty()) NavRoute.COMMUNITY else NavRoute.ONBOARDING
 

@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Gavel
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -21,6 +22,7 @@ import com.easylaw.app.ui.screen.Login.SignView
 import com.easylaw.app.ui.screen.community.CommunityView
 import com.easylaw.app.ui.screen.community.CommunityWriteView
 import com.easylaw.app.ui.screen.diagnosis.DiagnosisScreen
+import com.easylaw.app.ui.screen.map.MapScreen
 import com.easylaw.app.ui.screen.onboarding.OnboardingView
 import com.easylaw.app.viewModel.CommunityViewModel
 import com.easylaw.app.viewModel.CommunityWriteViewModel
@@ -44,6 +46,7 @@ object NavRoute {
     const val COMMUNITY_WRITE = "communityWrite"
     const val SELF = "self"
     const val CAR_CRUSH = "carCrush"
+    const val MAP = "map"
 
     val bottomItems =
         listOf(
@@ -67,6 +70,11 @@ object NavRoute {
 //            title = "영상 분석",
 //            icon = Icons.Default.Videocam
 //        )
+            BottomNavItem(
+                route = MAP,
+                title = "지도",
+                icon = Icons.Default.Map,
+            ),
         )
 }
 
@@ -180,6 +188,12 @@ fun AppRoute(
             route = NavRoute.SELF,
         ) {
             DiagnosisScreen()
+        }
+
+        composable(
+            route = NavRoute.MAP,
+        ) {
+            MapScreen()
         }
     }
 }
