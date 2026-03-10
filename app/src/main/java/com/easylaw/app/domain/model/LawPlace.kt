@@ -8,4 +8,5 @@ data class LawPlace(
     val telephone: String,
     val lat: Double,
     val lng: Double,
+    val distanceKm: Double = 0.0,
 )

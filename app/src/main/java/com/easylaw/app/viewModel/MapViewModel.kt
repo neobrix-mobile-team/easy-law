@@ -11,6 +11,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+data class LatLngPoint(
+    val lat: Double,
+    val lng: Double,
+)
+
 @HiltViewModel
 class MapViewModel
     @Inject
@@ -26,19 +31,30 @@ class MapViewModel
         private val _isLoading = MutableStateFlow(false)
         val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+        // 현재 사용자의 실제 GPS 위치 (길찾기 출발지로 사용)
+        private val _currentLocation = MutableStateFlow<LatLngPoint?>(null)
+        val currentLocation: StateFlow<LatLngPoint?> = _currentLocation.asStateFlow()
+
+        fun updateCurrentLocation(
+            lat: Double,
+            lng: Double,
+        ) {
+            _currentLocation.value = LatLngPoint(lat, lng)
+        }
+
         fun searchPlacesNearBy(
             lat: Double,
             lng: Double,
+            regionName: String? = null,
         ) {
             viewModelScope.launch {
                 _isLoading.value = true
                 mapRepository
-                    .searchLawPlaces(lat, lng)
+                    .searchLawPlaces(lat, lng, regionName)
                     .onSuccess { places ->
                         _lawPlaces.value = places
-                        _selectedPlace.value = null // 새로운 검색 시 선택 초기화
+                        _selectedPlace.value = null
                     }.onFailure {
-                        // 에러 처리 로직 (Snack bar 등)
                         _lawPlaces.value = emptyList()
                     }
                 _isLoading.value = false

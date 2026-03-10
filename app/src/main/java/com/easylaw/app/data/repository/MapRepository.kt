@@ -6,5 +6,6 @@ interface MapRepository {
     suspend fun searchLawPlaces(
         lat: Double,
         lng: Double,
+        regionName: String? = null,
     ): Result<List<LawPlace>>
 }

@@ -3,11 +3,13 @@ package com.easylaw.app.ui.screen.map
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.location.Geocoder
 import android.location.Location
 import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,6 +27,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButton
@@ -68,6 +71,20 @@ import com.naver.maps.map.compose.rememberCameraPositionState
 import com.naver.maps.map.compose.rememberFusedLocationSource
 import com.naver.maps.map.overlay.OverlayImage
 import kotlinx.coroutines.launch
+import java.util.Locale
+
+private fun getRegionName(
+    geocoder: Geocoder,
+    lat: Double,
+    lng: Double,
+): String? =
+    try {
+        @Suppress("DEPRECATION")
+        val addresses = geocoder.getFromLocation(lat, lng, 1)
+        addresses?.firstOrNull()?.subLocality ?: addresses?.firstOrNull()?.locality
+    } catch (e: Exception) {
+        null
+    }
 
 @SuppressLint("MissingPermission") // Accompanist가 이미 권한을 체크하므로 IDE 경고를 무시합니다.
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class, ExperimentalNaverMapApi::class)
@@ -79,6 +96,7 @@ fun MapScreen(
     val coroutineScope = rememberCoroutineScope()
 
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
+    val geocoder = remember { Geocoder(context, Locale.KOREAN) }
 
     val locationPermissionsState =
         rememberMultiplePermissionsState(
@@ -92,10 +110,10 @@ fun MapScreen(
     val lawPlaces by viewModel.lawPlaces.collectAsState()
     val selectedPlace by viewModel.selectedPlace.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val currentLocation by viewModel.currentLocation.collectAsState()
 
     val cameraPositionState = rememberCameraPositionState()
     var isMapMoved by remember { mutableStateOf(false) }
-
     var isInitialSearchDone by remember { mutableStateOf(false) }
     val hasPermission = locationPermissionsState.permissions.any { it.status.isGranted }
 
@@ -105,15 +123,18 @@ fun MapScreen(
         }
     }
 
-    // [수정 2] 권한이 승인되면 즉시 위치를 잡고, 그 위치로 카메라 이동 및 초기 주변 검색 실시
     LaunchedEffect(hasPermission) {
         if (hasPermission) {
             fusedLocationClient.lastLocation.addOnSuccessListener { myLocation: Location? ->
                 if (myLocation != null && !isInitialSearchDone) {
-                    // 카메라 내 위치로 초기 이동
-                    cameraPositionState.move(CameraUpdate.scrollTo(LatLng(myLocation.latitude, myLocation.longitude)))
-                    // 내 위치 주변 법률 시설 즉시 검색
-                    viewModel.searchPlacesNearBy(myLocation.latitude, myLocation.longitude)
+                    val lat = myLocation.latitude
+                    val lng = myLocation.longitude
+
+                    viewModel.updateCurrentLocation(lat, lng)
+                    cameraPositionState.move(CameraUpdate.scrollTo(LatLng(lat, lng)))
+
+                    val regionName = getRegionName(geocoder, lat, lng)
+                    viewModel.searchPlacesNearBy(lat, lng, regionName)
                     isInitialSearchDone = true
                 }
             }
@@ -139,16 +160,16 @@ fun MapScreen(
                 lawPlaces.forEach { place ->
                     val iconRes =
                         when {
-                            place.title.contains("경찰") || place.category.contains("경찰") -> R.drawable.ic_police // 경찰 마커
-                            place.title.contains("법원") || place.category.contains("법원") -> R.drawable.ic_court // 법원 마커
-                            place.title.contains("검찰") || place.category.contains("검찰") -> R.drawable.ic_prosecutor // 검찰 마커
-                            else -> R.drawable.ic_law_default // 기본 법률사무소/기타 마커
+                            place.title.contains("경찰") || place.category.contains("경찰") -> R.drawable.ic_police
+                            place.title.contains("법원") || place.category.contains("법원") -> R.drawable.ic_court
+                            place.title.contains("검찰") || place.category.contains("검찰") -> R.drawable.ic_prosecutor
+                            else -> R.drawable.ic_law_default
                         }
 
                     Marker(
                         state = MarkerState(position = LatLng(place.lat, place.lng)),
                         captionText = place.title,
-                        icon = OverlayImage.fromResource(iconRes), // 커스텀 아이콘 적용
+                        icon = OverlayImage.fromResource(iconRes),
                         onClick = {
                             viewModel.selectPlace(place)
                             true
@@ -157,17 +178,54 @@ fun MapScreen(
                 }
             }
 
-            Box(modifier = Modifier.fillMaxSize().systemBarsPadding()) {
+            if (isLoading) {
+                Box(
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.3f)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Card(
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(horizontal = 32.dp, vertical = 20.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                            Text(
+                                text = "주변 법률기관 검색 중...",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color.DarkGray,
+                            )
+                        }
+                    }
+                }
+            }
+
+            Box(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .systemBarsPadding(),
+            ) {
                 AnimatedVisibility(
                     visible = isMapMoved && !isLoading,
                     enter = fadeIn(),
                     exit = fadeOut(),
-                    modifier = Modifier.align(Alignment.TopCenter).padding(top = 16.dp),
+                    modifier =
+                        Modifier
+                            .align(Alignment.TopCenter)
+                            .padding(top = 16.dp),
                 ) {
                     ExtendedFloatingActionButton(
                         onClick = {
                             val currentTarget = cameraPositionState.position.target
-                            viewModel.searchPlacesNearBy(currentTarget.latitude, currentTarget.longitude)
+                            val regionName = getRegionName(geocoder, currentTarget.latitude, currentTarget.longitude)
+                            viewModel.searchPlacesNearBy(currentTarget.latitude, currentTarget.longitude, regionName)
                             isMapMoved = false
                         },
                         icon = { Icon(Icons.Default.Search, contentDescription = "검색") },
@@ -181,13 +239,17 @@ fun MapScreen(
                     onClick = {
                         fusedLocationClient.lastLocation.addOnSuccessListener { loc: Location? ->
                             if (loc != null) {
+                                viewModel.updateCurrentLocation(loc.latitude, loc.longitude)
                                 coroutineScope.launch {
                                     cameraPositionState.animate(CameraUpdate.scrollTo(LatLng(loc.latitude, loc.longitude)))
                                 }
                             }
                         }
                     },
-                    modifier = Modifier.align(Alignment.BottomEnd).padding(bottom = if (selectedPlace != null) 200.dp else 32.dp, end = 16.dp),
+                    modifier =
+                        Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(bottom = if (selectedPlace != null) 200.dp else 32.dp, end = 16.dp),
                     containerColor = Color.White,
                 ) {
                     Icon(Icons.Default.MyLocation, contentDescription = "내 위치", tint = Color.Black)
@@ -195,21 +257,32 @@ fun MapScreen(
 
                 AnimatedVisibility(
                     visible = selectedPlace != null,
-                    modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 16.dp),
+                    modifier =
+                        Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(bottom = 16.dp),
                 ) {
                     selectedPlace?.let { place ->
-                        PlaceDetailCard(place = place, onNavigateClick = {
-                            val url = "nmap://route/public?dlat=${place.lat}&dlng=${place.lng}&dname=${place.title}&appname=com.easylaw.app"
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                            intent.addCategory(Intent.CATEGORY_BROWSABLE)
+                        PlaceDetailCard(
+                            place = place,
+                            onNavigateClick = {
+                                val urlBuilder = StringBuilder("nmap://route/public?")
+                                currentLocation?.let { loc ->
+                                    urlBuilder.append("slat=${loc.lat}&slng=${loc.lng}&sname=현재위치&")
+                                }
+                                urlBuilder.append("dlat=${place.lat}&dlng=${place.lng}&dname=${Uri.encode(place.title)}&appname=com.easylaw.app")
 
-                            try {
-                                context.startActivity(intent) // 네이버 지도가 설치되어 있으면 실행
-                            } catch (e: Exception) {
-                                // 미설치 시 플레이스토어로 이동
-                                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=com.nhn.android.nmap")))
-                            }
-                        })
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(urlBuilder.toString()))
+                                intent.addCategory(Intent.CATEGORY_BROWSABLE)
+
+                                try {
+                                    context.startActivity(intent) // 네이버 지도가 설치되어 있으면 실행
+                                } catch (e: Exception) {
+                                    // 미설치 시 플레이스토어로 이동
+                                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=com.nhn.android.nmap")))
+                                }
+                            },
+                        )
                     }
                 }
             }
@@ -258,7 +331,7 @@ fun PlaceDetailCard(
                     color = MaterialTheme.colorScheme.primaryContainer,
                 ) {
                     Text(
-                        text = place.category.substringAfterLast(">").trim(), // "공공기관 > 법원" -> "법원"
+                        text = place.category.substringAfterLast(">").trim(),
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -266,7 +339,14 @@ fun PlaceDetailCard(
                 }
             }
 
-            Text(text = place.address, fontSize = 14.sp, color = Color.Gray)
+            val distanceText =
+                if (place.distanceKm < 1.0) {
+                    "${(place.distanceKm * 1000).toInt()}m"
+                } else {
+                    "${"%.1f".format(place.distanceKm)}km"
+                }
+            Text(text = "📍 $distanceText", fontSize = 13.sp, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Medium)
+            Text(text = place.roadAddress.ifBlank { place.address }, fontSize = 14.sp, color = Color.Gray)
             Text(text = "📞 ${place.telephone}", fontSize = 14.sp, color = Color.DarkGray)
 
             Spacer(modifier = Modifier.height(8.dp))
