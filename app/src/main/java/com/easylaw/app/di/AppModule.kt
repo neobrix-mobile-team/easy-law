@@ -31,7 +31,7 @@ import javax.inject.Qualifier
 import javax.inject.Singleton
 
 private const val HTTP_TIMEOUT_SECONDS = 60L
-private const val BASE_URL = "https://www.law.go.kr/"
+private const val LAW_BASE_URL = "https://www.law.go.kr/"
 private const val NAVER_BASE_URL = "https://openapi.naver.com/"
 
 @Qualifier
@@ -49,43 +49,31 @@ private val prettyGson = GsonBuilder().setPrettyPrinting().create()
 private fun buildLoggingInterceptor(tag: String): HttpLoggingInterceptor =
     HttpLoggingInterceptor { message ->
         if (!BuildConfig.DEBUG) return@HttpLoggingInterceptor
-
         when {
-            // ── 요청 첫 줄: "GET https://..." ──────────────────────────
             message.startsWith("-->") -> {
-                Log.d(tag, "┌─────────────────────────────────────── [$tag] ───")
+                Log.d(tag, "┌──────────────────────────── [$tag] ───")
                 Log.d(tag, "│ ▶ ${message.removePrefix("--> ")}")
             }
 
-            // ── 요청 끝 마커 ────────────────────────────────────────────
-            message.startsWith("--> END") -> {
-                Log.d(tag, "├───────────────────────────────────────────────────")
-            }
-
-            // ── 응답 첫 줄: "<-- 200 OK (243ms)" ───────────────────────
+            message.startsWith("--> END") -> Log.d(tag, "├─────────────────────────────────────────────")
             message.startsWith("<--") -> {
-                // 429 같은 에러 응답은 눈에 띄도록 Log.w로 출력
                 val code = message.substringAfter("<-- ").take(3).toIntOrNull() ?: 0
                 val logFn: (String, String) -> Unit = if (code in 400..599) Log::w else Log::d
                 logFn(tag, "│ ◀ ${message.removePrefix("<-- ")}")
             }
 
-            // ── 응답 끝 마커 ────────────────────────────────────────────
-            message.startsWith("<-- END") -> {
-                Log.d(tag, "└───────────────────────────────────────────────────")
-            }
-
-            // ── JSON Body (요청/응답 공통) ───────────────────────────────
+            message.startsWith("<-- END") -> Log.d(tag, "└─────────────────────────────────────────────")
             message.startsWith("{") || message.startsWith("[") -> {
                 try {
-                    val pretty = prettyGson.toJson(JsonParser.parseString(message))
-                    pretty.lines().forEach { Log.d(tag, "│   $it") }
+                    prettyGson
+                        .toJson(JsonParser.parseString(message))
+                        .lines()
+                        .forEach { Log.d(tag, "│   $it") }
                 } catch (e: Exception) {
                     Log.d(tag, "│   $message")
                 }
             }
 
-            // ── 헤더 / 기타 한 줄 메시지 ────────────────────────────────
             message.isNotBlank() -> Log.d(tag, "│   $message")
         }
     }.apply {
@@ -101,68 +89,61 @@ private fun buildLoggingInterceptor(tag: String): HttpLoggingInterceptor =
 object AppModule {
     @Provides
     @Singleton
-    fun provideOkHttpClient(): OkHttpClient {
-        val headerInterceptor =
-            Interceptor { chain ->
-                val original = chain.request()
-                val request =
-                    original
-                        .newBuilder()
-                        .header("User-Agent", "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36")
-                        .header("Accept", "application/json")
-                        .header("Connection", "close")
-                        .method(original.method, original.body)
-                        .build()
-                chain.proceed(request)
-            }
-
-        return OkHttpClient
+    fun provideLawOkHttpClient(): OkHttpClient =
+        OkHttpClient
             .Builder()
-            .addInterceptor(headerInterceptor)
-            .addInterceptor(buildLoggingInterceptor("HTTP_LAW"))
+            .addInterceptor(
+                Interceptor { chain ->
+                    val req =
+                        chain
+                            .request()
+                            .newBuilder()
+                            .header("User-Agent", "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36")
+                            .header("Accept", "application/json")
+                            .header("Connection", "close")
+                            .build()
+                    chain.proceed(req)
+                },
+            ).addInterceptor(buildLoggingInterceptor("HTTP_LAW"))
             .retryOnConnectionFailure(true)
             .connectionSpecs(listOf(ConnectionSpec.COMPATIBLE_TLS, ConnectionSpec.CLEARTEXT))
             .connectTimeout(HTTP_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-            .connectionPool(ConnectionPool(0, 1, TimeUnit.NANOSECONDS))
             .readTimeout(HTTP_TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .writeTimeout(HTTP_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .connectionPool(ConnectionPool(0, 1, TimeUnit.NANOSECONDS))
             .protocols(listOf(Protocol.HTTP_1_1))
             .build()
-    }
 
     // ── 네이버 검색 API OkHttpClient ─────────────────────────────
     @Provides
     @Singleton
     @NaverNetwork
-    fun provideNaverOkHttpClient(): OkHttpClient {
-        val headerInterceptor =
-            Interceptor { chain ->
-                val request =
-                    chain
-                        .request()
-                        .newBuilder()
-                        .addHeader("X-Naver-Client-Id", BuildConfig.NAVER_SEARCH_ID)
-                        .addHeader("X-Naver-Client-Secret", BuildConfig.NAVER_SEARCH_KEY)
-                        .build()
-                chain.proceed(request)
-            }
-
-        return OkHttpClient
+    fun provideNaverOkHttpClient(): OkHttpClient =
+        OkHttpClient
             .Builder()
-            .addInterceptor(headerInterceptor)
-            .addInterceptor(buildLoggingInterceptor("HTTP_NAVER"))
+            .addInterceptor(
+                Interceptor { chain ->
+                    val req =
+                        chain
+                            .request()
+                            .newBuilder()
+                            .addHeader("X-Naver-Client-Id", BuildConfig.NAVER_SEARCH_ID)
+                            .addHeader("X-Naver-Client-Secret", BuildConfig.NAVER_SEARCH_KEY)
+                            .build()
+                    chain.proceed(req)
+                },
+            ).addInterceptor(buildLoggingInterceptor("HTTP_NAVER"))
             .connectTimeout(15L, TimeUnit.SECONDS)
             .readTimeout(15L, TimeUnit.SECONDS)
             .build()
-    }
 
-    // ── Retrofit / Repository 바인딩 ─────────────────────────────
+    // ── Retrofit 인스턴스 ────────────────────────────────────────
     @Provides
     @Singleton
     fun provideLawApiService(okHttpClient: OkHttpClient): LawApiService =
         Retrofit
             .Builder()
-            .baseUrl(BASE_URL)
+            .baseUrl(LAW_BASE_URL)
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create(GsonBuilder().setLenient().create()))
             .build()
@@ -194,9 +175,9 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideGeminiService(generativeModel: GenerativeModel): PrecedentService = PrecedentService(generativeModel)
+    fun provideMapRepository(apiService: NaverSearchApi): MapRepository = MapRepositoryImpl(apiService)
 
     @Provides
     @Singleton
-    fun provideMapRepository(apiService: NaverSearchApi): MapRepository = MapRepositoryImpl(apiService)
+    fun provideGeminiService(generativeModel: GenerativeModel): PrecedentService = PrecedentService(generativeModel)
 }
