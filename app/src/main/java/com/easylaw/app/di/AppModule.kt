@@ -2,8 +2,8 @@ package com.easylaw.app.di
 
 import android.util.Log
 import com.easylaw.app.BuildConfig
+import com.easylaw.app.data.datasource.KakaoLocalApi
 import com.easylaw.app.data.datasource.LawApiService
-import com.easylaw.app.data.datasource.NaverSearchApi
 import com.easylaw.app.data.datasource.PrecedentService
 import com.easylaw.app.data.repository.DiagnosisRepository
 import com.easylaw.app.data.repository.DiagnosisRepositoryImpl
@@ -32,11 +32,11 @@ import javax.inject.Singleton
 
 private const val HTTP_TIMEOUT_SECONDS = 60L
 private const val LAW_BASE_URL = "https://www.law.go.kr/"
-private const val NAVER_BASE_URL = "https://openapi.naver.com/"
+private const val KAKAO_BASE_URL = "https://dapi.kakao.com/"
 
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
-annotation class NaverNetwork
+annotation class KakaoNetwork
 
 private val prettyGson = GsonBuilder().setPrettyPrinting().create()
 
@@ -114,11 +114,11 @@ object AppModule {
             .protocols(listOf(Protocol.HTTP_1_1))
             .build()
 
-    // ── 네이버 검색 API OkHttpClient ─────────────────────────────
+    // ── 카카오 로컬 API OkHttpClient ─────────────────────────────
     @Provides
     @Singleton
-    @NaverNetwork
-    fun provideNaverOkHttpClient(): OkHttpClient =
+    @KakaoNetwork
+    fun provideKakaoOkHttpClient(): OkHttpClient =
         OkHttpClient
             .Builder()
             .addInterceptor(
@@ -127,12 +127,11 @@ object AppModule {
                         chain
                             .request()
                             .newBuilder()
-                            .addHeader("X-Naver-Client-Id", BuildConfig.NAVER_SEARCH_ID)
-                            .addHeader("X-Naver-Client-Secret", BuildConfig.NAVER_SEARCH_KEY)
+                            .addHeader("Authorization", "KakaoAK ${BuildConfig.KAKAO_REST_API_KEY}")
                             .build()
                     chain.proceed(req)
                 },
-            ).addInterceptor(buildLoggingInterceptor("HTTP_NAVER"))
+            ).addInterceptor(buildLoggingInterceptor("HTTP_KAKAO"))
             .connectTimeout(15L, TimeUnit.SECONDS)
             .readTimeout(15L, TimeUnit.SECONDS)
             .build()
@@ -151,19 +150,6 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideNaverSearchApi(
-        @NaverNetwork okHttpClient: OkHttpClient,
-    ): NaverSearchApi =
-        Retrofit
-            .Builder()
-            .baseUrl(NAVER_BASE_URL)
-            .client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-            .create(NaverSearchApi::class.java)
-
-    @Provides
-    @Singleton
     fun provideLawRepository(apiService: LawApiService): LawRepository = LawRepositoryImpl(apiService)
 
     @Provides
@@ -175,7 +161,20 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideMapRepository(apiService: NaverSearchApi): MapRepository = MapRepositoryImpl(apiService)
+    fun provideKakaoLocalApi(
+        @KakaoNetwork okHttpClient: OkHttpClient,
+    ): KakaoLocalApi =
+        Retrofit
+            .Builder()
+            .baseUrl(KAKAO_BASE_URL)
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(KakaoLocalApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideMapRepository(apiService: KakaoLocalApi): MapRepository = MapRepositoryImpl(apiService)
 
     @Provides
     @Singleton

@@ -24,8 +24,10 @@ def geminiApiKey = localProperties.getProperty('GEMINI_API_KEY', '')
 def lawApiKey = localProperties.getProperty('LAW_API_KEY', '')
 def naverMapId = localProperties.getProperty('NAVER_MAP_ID', '')
 def naverMapKey = localProperties.getProperty('NAVER_MAP_KEY', '')
-def naverSearchId = localProperties.getProperty('NAVER_SEARCH_ID', '')
-def naverSearchKey = localProperties.getProperty('NAVER_SEARCH_KEY', '')
+//def naverSearchId = localProperties.getProperty('NAVER_SEARCH_ID', '')
+//def naverSearchKey = localProperties.getProperty('NAVER_SEARCH_KEY', '')
+def kakaoRestApiKey = localProperties.getProperty('KAKAO_REST_API_KEY', '')
+
 
 android {
     namespace 'com.easylaw.app'
@@ -46,8 +48,9 @@ android {
         buildConfigField "String", "LAW_API_KEY", "\"${lawApiKey}\""
         buildConfigField "String", "NAVER_MAP_KEY", "\"${naverMapKey}\""
         buildConfigField "String", "NAVER_MAP_ID", "\"${naverMapId}\""
-        buildConfigField "String", "NAVER_SEARCH_KEY", "\"${naverSearchKey}\""
-        buildConfigField "String", "NAVER_SEARCH_ID", "\"${naverSearchId}\""
+//        buildConfigField "String", "NAVER_SEARCH_KEY", "\"${naverSearchKey}\""
+//        buildConfigField "String", "NAVER_SEARCH_ID", "\"${naverSearchId}\""
+        buildConfigField("String", "KAKAO_REST_API_KEY", "\"${kakaoRestApiKey}\"")
         manifestPlaceholders = [NAVER_MAP_ID: naverMapId]
     }
 
