@@ -7,6 +7,7 @@ import com.easylaw.app.data.datasource.PrecedentService
 import com.easylaw.app.data.repository.LawRepository
 import com.easylaw.app.domain.model.Precedent
 import com.easylaw.app.util.KeywordOptimizer
+import com.easylaw.app.util.PreferenceManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,6 +32,7 @@ class LegalSearchViewModel
         private val repository: LawRepository,
         private val precedentService: PrecedentService,
         private val keywordOptimizer: KeywordOptimizer,
+        private val preferenceManager: PreferenceManager,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(LegalSearchUiState())
         val uiState: StateFlow<LegalSearchUiState> = _uiState.asStateFlow()
@@ -151,8 +153,9 @@ class LegalSearchViewModel
 
                 viewModelScope.launch {
                     try {
-                        // Gemini를 활용하여 긴 문장을 핵심 키워드로 압축 (API 통신 실패 방지)
+                        Log.d("LegalSearch_LOG", "[키워드 추출] Gemini 요청 시작")
                         val keyword = precedentService.extractKeyword(currentState.situation, currentState.details)
+                        Log.d("LegalSearch_LOG", "[키워드 추출] 완료: $keyword")
 
                         // 상태 업데이트 및 Paging 트리거 발동
                         _uiState.update {
@@ -170,7 +173,7 @@ class LegalSearchViewModel
 //                        )
                         fetchPrecedentsList(keyword, currentState.selectedCourt.orgCode)
                     } catch (e: Exception) {
-                        Log.e("searchLegalAdvice failed", "키워드 추출 실패: $e")
+                        Log.e("LegalSearch_LOG", "[키워드 추출] 실패: ${e.javaClass.simpleName} - ${e.message}")
                         _uiState.update { it.copy(isLoadingGemini = false) }
                     }
                 }
@@ -259,8 +262,21 @@ class LegalSearchViewModel
                 _uiState.update { it.copy(isSummaryLoading = true) }
 
                 viewModelScope.launch {
-                    val summary = precedentService.summarizePrecedent(originalText)
-                    _uiState.update { it.copy(summaryText = summary, isSummaryLoading = false) }
+                    try {
+                        Log.d("LegalSearch_LOG", "[판례 요약] 요청 시작")
+                        val summary = precedentService.summarizePrecedent(originalText)
+                        Log.d("LegalSearch_LOG", "[판례 요약] 완료")
+                        _uiState.update { it.copy(summaryText = summary, isSummaryLoading = false) }
+                    } catch (e: Exception) {
+                        // ✅ Fix: try-catch 없이 예외 발생 시 isSummaryLoading이 true로 고착되어 무한 로딩 발생
+                        Log.e("LegalSearch_LOG", "[판례 요약] 실패: ${e.javaClass.simpleName} - ${e.message}")
+                        _uiState.update {
+                            it.copy(
+                                summaryText = "요약 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+                                isSummaryLoading = false,
+                            )
+                        }
+                    }
                 }
             }
         }

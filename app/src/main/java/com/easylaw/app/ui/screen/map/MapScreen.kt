@@ -12,6 +12,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,6 +23,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MyLocation
@@ -32,6 +34,8 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -51,12 +55,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.easylaw.app.R
 import com.easylaw.app.domain.model.LawPlace
+import com.easylaw.app.viewModel.MapFilter
 import com.easylaw.app.viewModel.MapViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -84,6 +90,24 @@ private fun markerSizeDpByZoom(zoom: Double): Float =
         zoom >= 10.0 -> 28f
         else -> 20f
     }
+
+@Composable
+fun localizedCategory(category: String): String {
+    val raw = category.substringAfterLast(">").trim()
+    return when {
+        raw.contains("법원") -> stringResource(R.string.facility_court)
+        raw.contains("검찰") -> stringResource(R.string.facility_prosecutor)
+        raw.contains("경찰") -> stringResource(R.string.facility_police)
+        raw.contains("법률구조") -> stringResource(R.string.facility_legal_aid)
+        raw.contains("공증") -> stringResource(R.string.facility_notary)
+        raw.contains("등기") -> stringResource(R.string.facility_registry)
+        raw.contains("법무사") -> stringResource(R.string.facility_judicial_scrivener)
+        raw.contains("변호사") -> stringResource(R.string.facility_lawyer)
+        raw.contains("법무법인") -> stringResource(R.string.facility_law_firm)
+        raw.contains("변리사") -> stringResource(R.string.facility_patent_attorney)
+        else -> raw
+    }
+}
 
 private fun iconResForPlace(place: LawPlace): Int =
     when {
@@ -129,10 +153,11 @@ fun MapScreen(viewModel: MapViewModel = hiltViewModel()) {
                 ),
         )
 
-    val lawPlaces by viewModel.lawPlaces.collectAsState()
+    val filteredPlaces by viewModel.filteredPlaces.collectAsState()
     val selectedPlace by viewModel.selectedPlace.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val currentLocation by viewModel.currentLocation.collectAsState()
+    val selectedFilter by viewModel.selectedFilter.collectAsState()
 
     val cameraPositionState = rememberCameraPositionState()
     var isMapMoved by remember { mutableStateOf(false) }
@@ -143,7 +168,7 @@ fun MapScreen(viewModel: MapViewModel = hiltViewModel()) {
     val currentZoom by remember { derivedStateOf { cameraPositionState.position.zoom.toDouble() } }
 
     // ── 줌·장소 변경 시 클러스터 재계산 ─────────────────────
-    val clusters by remember { derivedStateOf { clusterPlaces(lawPlaces, currentZoom) } }
+    val clusters by remember { derivedStateOf { clusterPlaces(filteredPlaces, currentZoom) } }
 
     // ── 줌에 따른 마커 기본 크기 ─────────────────────────────
     val baseMarkerSizeDp by remember { derivedStateOf { markerSizeDpByZoom(currentZoom) } }
@@ -273,7 +298,7 @@ fun MapScreen(viewModel: MapViewModel = hiltViewModel()) {
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
                             CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-                            Text("주변 법률기관 검색 중...", style = MaterialTheme.typography.bodyMedium, color = Color.DarkGray)
+                            Text(stringResource(R.string.map_searching), style = MaterialTheme.typography.bodyMedium, color = Color.DarkGray)
                         }
                     }
                 }
@@ -286,26 +311,67 @@ fun MapScreen(viewModel: MapViewModel = hiltViewModel()) {
                         .fillMaxSize()
                         .systemBarsPadding(),
             ) {
-                AnimatedVisibility(
-                    visible = isMapMoved && !isLoading,
-                    enter = fadeIn(),
-                    exit = fadeOut(),
+                // ── 상단 필터 바 + "이 지역에서 검색" 버튼 ──────────
+                Column(
                     modifier =
                         Modifier
                             .align(Alignment.TopCenter)
-                            .padding(top = 16.dp),
+                            .fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    ExtendedFloatingActionButton(
-                        onClick = {
-                            val t = cameraPositionState.position.target
-                            viewModel.searchPlacesNearBy(t.latitude, t.longitude, getRegionName(geocoder, t.latitude, t.longitude))
-                            isMapMoved = false
-                        },
-                        icon = { Icon(Icons.Default.Search, contentDescription = "검색") },
-                        text = { Text("이 지역에서 검색") },
-                        containerColor = Color.White,
-                        contentColor = MaterialTheme.colorScheme.primary,
-                    )
+                    // 필터 칩 바
+                    Row(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(top = 12.dp)
+                                .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Spacer(modifier = Modifier.padding(start = 4.dp))
+                        MapFilter.entries.forEach { filter ->
+                            val isSelected = selectedFilter == filter
+                            FilterChip(
+                                selected = isSelected,
+                                onClick = { viewModel.selectFilter(filter) },
+                                label = { Text(stringResource(filter.labelResId), fontSize = 13.sp) },
+                                shape = RoundedCornerShape(20.dp),
+                                colors =
+                                    FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                        selectedLabelColor = Color.White,
+                                        containerColor = Color.White,
+                                    ),
+                                elevation =
+                                    FilterChipDefaults.filterChipElevation(
+                                        elevation = 4.dp,
+                                        pressedElevation = 2.dp,
+                                    ),
+                                border = null,
+                            )
+                        }
+                        Spacer(modifier = Modifier.padding(end = 4.dp))
+                    }
+
+                    // "이 지역에서 검색" 버튼
+                    AnimatedVisibility(
+                        visible = isMapMoved && !isLoading,
+                        enter = fadeIn(),
+                        exit = fadeOut(),
+                        modifier = Modifier.padding(top = 8.dp),
+                    ) {
+                        ExtendedFloatingActionButton(
+                            onClick = {
+                                val t = cameraPositionState.position.target
+                                viewModel.searchPlacesNearBy(t.latitude, t.longitude, getRegionName(geocoder, t.latitude, t.longitude))
+                                isMapMoved = false
+                            },
+                            icon = { Icon(Icons.Default.Search, contentDescription = stringResource(R.string.map_search_desc)) },
+                            text = { Text(stringResource(R.string.map_search_this_area)) },
+                            containerColor = Color.White,
+                            contentColor = MaterialTheme.colorScheme.primary,
+                        )
+                    }
                 }
 
                 FloatingActionButton(
@@ -325,7 +391,7 @@ fun MapScreen(viewModel: MapViewModel = hiltViewModel()) {
                             .padding(bottom = if (selectedPlace != null) 200.dp else 32.dp, end = 16.dp),
                     containerColor = Color.White,
                 ) {
-                    Icon(Icons.Default.MyLocation, contentDescription = "내 위치", tint = Color.Black)
+                    Icon(Icons.Default.MyLocation, contentDescription = stringResource(R.string.map_my_location_desc), tint = Color.Black)
                 }
 
                 AnimatedVisibility(
@@ -367,10 +433,10 @@ fun MapScreen(viewModel: MapViewModel = hiltViewModel()) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
             ) {
-                Text("서비스를 이용하려면 위치 권한이 필요합니다.")
+                Text(stringResource(R.string.map_permission_required))
                 Spacer(modifier = Modifier.height(8.dp))
                 Button(onClick = { locationPermissionsState.launchMultiplePermissionRequest() }) {
-                    Text("권한 요청하기")
+                    Text(stringResource(R.string.map_request_permission))
                 }
             }
         }
@@ -464,7 +530,7 @@ fun PlaceDetailCard(
                 Text(place.title, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.Black)
                 Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.primaryContainer) {
                     Text(
-                        text = place.category.substringAfterLast(">").trim(),
+                        text = localizedCategory(place.category),
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -485,7 +551,7 @@ fun PlaceDetailCard(
             Spacer(modifier = Modifier.height(8.dp))
 
             Button(onClick = onNavigateClick, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(8.dp)) {
-                Text("이곳으로 길 찾기", fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.map_navigate), fontWeight = FontWeight.Bold)
             }
         }
     }

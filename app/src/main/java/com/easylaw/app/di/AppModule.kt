@@ -11,6 +11,7 @@ import com.easylaw.app.data.repository.LawRepository
 import com.easylaw.app.data.repository.LawRepositoryImpl
 import com.easylaw.app.data.repository.MapRepository
 import com.easylaw.app.data.repository.MapRepositoryImpl
+import com.easylaw.app.util.PreferenceManager
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonParser
@@ -157,7 +158,8 @@ object AppModule {
     fun provideDiagnosisRepository(
         apiService: LawApiService,
         generativeModel: GenerativeModel,
-    ): DiagnosisRepository = DiagnosisRepositoryImpl(apiService, generativeModel)
+        preferenceManager: PreferenceManager,
+    ): DiagnosisRepository = DiagnosisRepositoryImpl(apiService, generativeModel, preferenceManager)
 
     @Provides
     @Singleton
@@ -178,5 +180,8 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideGeminiService(generativeModel: GenerativeModel): PrecedentService = PrecedentService(generativeModel)
+    fun provideGeminiService(
+        generativeModel: GenerativeModel,
+        preferenceManager: PreferenceManager,
+    ): PrecedentService = PrecedentService(generativeModel, preferenceManager)
 }

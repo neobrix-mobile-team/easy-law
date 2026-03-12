@@ -1,6 +1,7 @@
 package com.easylaw.app.data.datasource
 
 import android.util.Log
+import com.easylaw.app.util.PreferenceManager
 import com.google.ai.client.generativeai.GenerativeModel
 import javax.inject.Inject
 
@@ -8,7 +9,50 @@ class PrecedentService
     @Inject
     constructor(
         private val generativeModel: GenerativeModel,
+        private val preferenceManager: PreferenceManager,
     ) {
+        // 에러 원인을 사람이 읽을 수 있는 문자열로 변환
+        private fun resolveErrorCause(e: Exception): String =
+            when {
+                e is kotlinx.coroutines.TimeoutCancellationException -> "응답 시간 초과"
+                e.message?.contains("429") == true || e.message?.contains("quota") == true -> "사용량 한도 초과"
+                e.message?.contains("401") == true || e.message?.contains("403") == true -> "API 인증 실패"
+                e.message?.contains("Unable to resolve host") == true ||
+                    e.message?.contains("timeout") == true -> "네트워크 오류"
+                else -> "알 수 없는 오류"
+            }
+
+        // ✅ extractKeyword는 한국 법령 API 검색용이므로 언어와 무관하게 항상 한국어 키워드만 추출
+        // ✅ summarizePrecedent만 다국어 지원 (사용자에게 노출되는 결과물이므로)
+        private suspend fun summaryLanguageInstruction(): String =
+            when (preferenceManager.getLanguage()) {
+                "ko" ->
+                    """
+
+                    [출력 언어와 구조]
+                    전체 응답은 한국어로만 작성해야 합니다.
+                    다음 섹션 헤더를 정확히 사용합니다:
+                    사례 요약 / [사례 배경] / [주요 이슈] / [판결] / [실무적 시사점]
+                    """.trimIndent()
+                "en" ->
+                    """
+
+                    [OUTPUT LANGUAGE & STRUCTURE]
+                    Your ENTIRE response MUST be written in English only. DO NOT use any Korean characters.
+                    Use the following section headers exactly:
+                    Case Summary / [Case Background] / [Key Issue] / [Ruling] / [Practical Implications]
+                    """.trimIndent()
+                "ja" ->
+                    """
+
+                    [出力言語と構造]
+                    回答全体を必ず日本語のみで記述してください。韓国語を一切使用しないでください。
+                    以下のセクション見出しをそのまま使用してください:
+                    判決の要点 / [事件の背景] / [主要な争点] / [判決結果] / [実務上の意味]
+                    """.trimIndent()
+                else -> ""
+            }
+
         // 판례 검색 키워드 추출
         suspend fun extractKeyword(
             situation: String,
@@ -24,6 +68,7 @@ class PrecedentService
                 2. 법률 표준어: 일상어는 배제하고, 실제 대법원 판결문에서 가장 빈번하게 사용되는 '표준 법률 단어'로 치환하세요.
                 3. 띄어쓰기: 키워드를 2개 추출할 경우, 반드시 띄어쓰기 한 번으로만 구분하세요. (예: 임금 퇴직금)
                 4. 절대 금지: 어떠한 경우에도 인사말, 부연 설명, 기호(따옴표, 마침표 등)를 출력하지 마세요. 오직 추출된 키워드 텍스트만 출력해야 합니다.
+                5. 반드시 한국어로만 키워드를 출력하세요. (API가 한국어 키워드만 지원합니다)
                 
                 [변환 예시]
                 - "임금이 석달째 밀렸어요" -> 임금
@@ -38,16 +83,15 @@ class PrecedentService
                 상세내용: $details
                 """.trimIndent()
             return try {
-                Log.d("GeminiService_LOG", "키워드 추출 요청 시작")
+                Log.d("PrecedentService_LOG", "[키워드 추출] Gemini 요청 시작")
                 val response = generativeModel.generateContent(prompt)
-
                 val keyword = response.text?.replace(Regex("[^가-힣a-zA-Z0-9 ]"), "")?.trim() ?: situation
-                Log.d("GeminiService_LOG", "gemini 키워드 추출 성공: [$keyword]")
-
+                Log.d("PrecedentService_LOG", "[키워드 추출] 성공: [$keyword]")
                 keyword
             } catch (e: Exception) {
-                Log.e("GeminiService_LOG", "API 호출 실패: ${e.message}", e)
-                situation
+                val cause = resolveErrorCause(e)
+                Log.e("PrecedentService_LOG", "[키워드 추출] 실패 ($cause): ${e.message}")
+                situation // 실패 시 원문 그대로 검색어로 사용
             }
         }
 
@@ -96,17 +140,19 @@ class PrecedentService
                 
                 [분석할 판례 원문]
                 $originalText
+                ${summaryLanguageInstruction()}
                 """.trimIndent()
 
             return try {
-                Log.d("GeminiService_LOG", "본문 추출 요청 시작")
+                Log.d("PrecedentService_LOG", "[판례 요약] Gemini 요청 시작 - 원문 길이: ${originalText.length}자")
                 val response = generativeModel.generateContent(prompt)
-//            response.text?.trim() ?: "요약에 실패했습니다."
-                Log.d("GeminiService_LOG", "response 호출: ${response.text}")
-                response.text?.trim() ?: originalText
+                val result = response.text?.trim() ?: originalText
+                Log.d("PrecedentService_LOG", "[판례 요약] 성공 - 요약 길이: ${result.length}자")
+                result
             } catch (e: Exception) {
-                Log.e("GeminiService_LOG", "gemini API 호출 실패: ${e.message}", e)
-                "AI 요약 중 에러가 발생했습니다. 잠시 후 다시 시도해주세요."
+                val cause = resolveErrorCause(e)
+                Log.e("PrecedentService_LOG", "[판례 요약] 실패 ($cause): ${e.message}")
+                "AI 요약 중 에러가 발생했습니다. ($cause)\n잠시 후 다시 시도해주세요."
             }
         }
     }

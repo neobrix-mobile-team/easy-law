@@ -2,6 +2,7 @@ package com.easylaw.app.data.repository
 
 import android.util.Log
 import com.easylaw.app.data.datasource.LawApiService
+import com.easylaw.app.util.PreferenceManager
 import com.google.ai.client.generativeai.GenerativeModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -21,7 +22,39 @@ class DiagnosisRepositoryImpl
     constructor(
         private val apiService: LawApiService,
         private val generativeModel: GenerativeModel,
+        private val preferenceManager: PreferenceManager,
     ) : DiagnosisRepository {
+        //        private suspend fun languagePrefix(): String = when (preferenceManager.getLanguage()) {
+//            "en" -> "[SYSTEM: You are a legal AI assistant. You MUST respond ONLY in English. Do NOT use Korean under any circumstances.]\n\n"
+//            "ja" -> "[システム: あなたは法律AIアシスタントです。必ず日本語のみで回答してください。いかなる場合もKorean語を使用しないでください。]\n\n"
+//            else -> ""
+//        }
+
+        private suspend fun languageSuffix(): String =
+            when (preferenceManager.getLanguage()) {
+                "en" ->
+                    """
+                    
+                    [CRITICAL REMINDER]
+                    - Your ENTIRE response MUST be written in English only.
+                    - All "question" and "options" values in JSON must be in English.
+                    - JSON keys must remain as-is.
+                    - DO NOT use any Korean characters.
+                    """.trimIndent()
+
+                "ja" ->
+                    """
+                    
+                    [最終確認]
+                    - 回答全体を必ず日本語のみで記述してください。
+                    - JSONの "question" と "options" の値も日本語で記述してください。
+                    - JSONのキーはそのままにしてください。
+                    - 韓国語を一切使用しないでください。
+                    """.trimIndent()
+
+                else -> ""
+            }
+
         override suspend fun getAdditionalQuestions(scenario: String): FollowUpAction =
             withContext(Dispatchers.IO) {
                 val prompt =
@@ -41,34 +74,45 @@ class DiagnosisRepositoryImpl
                     $scenario
                     
                     반드시 마크다운이나 다른 텍스트 없이 순수 JSON 형식만 출력하세요.
+                    ${languageSuffix()}
                     """.trimIndent()
 
-                val response = generativeModel.generateContent(prompt)
-                val responseText =
-                    response.text
-                        ?.replace("```json", "")
-                        ?.replace("```", "")
-                        ?.trim() ?: ""
-
+                Log.d("Diagnosis_LOG", "[1단계] getAdditionalQuestions 시작")
                 return@withContext try {
-                    val jsonObject = JSONObject(responseText)
-                    val status = jsonObject.optString("status")
+                    val response = generativeModel.generateContent(prompt)
+                    val responseText =
+                        response.text
+                            ?.replace("```json", "")
+                            ?.replace("```", "")
+                            ?.trim() ?: ""
+                    Log.d("Diagnosis_LOG", "[1단계] Gemini 응답: $responseText")
 
-                    if (status == "ENOUGH") {
-                        FollowUpAction(isEnough = true)
-                    } else {
-                        val question = jsonObject.optString("question", "추가 정보가 필요합니다.")
-                        val optionsArray = jsonObject.optJSONArray("options")
-                        val options = mutableListOf<String>()
-                        if (optionsArray != null) {
-                            for (i in 0 until optionsArray.length()) {
-                                options.add(optionsArray.getString(i))
+                    try {
+                        val jsonObject = JSONObject(responseText)
+                        val status = jsonObject.optString("status")
+
+                        if (status == "ENOUGH") {
+                            Log.d("Diagnosis_LOG", "[1단계] 상태: ENOUGH → 최종 분석으로 진행")
+                            FollowUpAction(isEnough = true)
+                        } else {
+                            val question = jsonObject.optString("question", "추가 정보가 필요합니다.")
+                            val optionsArray = jsonObject.optJSONArray("options")
+                            val options = mutableListOf<String>()
+                            if (optionsArray != null) {
+                                for (i in 0 until optionsArray.length()) {
+                                    options.add(optionsArray.getString(i))
+                                }
                             }
+                            Log.d("Diagnosis_LOG", "[1단계] 추가 질문 생성: $question")
+                            FollowUpAction(isEnough = false, question = question, options = options)
                         }
-                        FollowUpAction(isEnough = false, question = question, options = options)
+                    } catch (e: Exception) {
+                        Log.e("Diagnosis_LOG", "[1단계] JSON 파싱 실패 → ENOUGH 처리: ${e.message}")
+                        FollowUpAction(isEnough = true)
                     }
                 } catch (e: Exception) {
-                    FollowUpAction(isEnough = true)
+                    Log.e("Diagnosis_LOG", "[1단계] Gemini API 호출 실패: ${e.javaClass.simpleName} - ${e.message}")
+                    throw e // ViewModel의 catch로 전파하여 재시도 버튼 노출
                 }
             }
 
@@ -81,15 +125,25 @@ class DiagnosisRepositoryImpl
                     대화 내용: $context
                     """.trimIndent()
 
-                val response = generativeModel.generateContent(prompt)
-                return@withContext response.text
-                    ?.split(",")
-                    ?.map { it.trim() }
-                    ?.filter { it.isNotEmpty() } ?: emptyList()
+                Log.d("Diagnosis_LOG", "[2단계] extractTargetLaws 시작")
+                return@withContext try {
+                    val response = generativeModel.generateContent(prompt)
+                    val laws =
+                        response.text
+                            ?.split(",")
+                            ?.map { it.trim() }
+                            ?.filter { it.isNotEmpty() } ?: emptyList()
+                    Log.d("Diagnosis_LOG", "[2단계] 추출된 법령: $laws")
+                    laws
+                } catch (e: Exception) {
+                    Log.e("Diagnosis_LOG", "[2단계] 법령 추출 실패: ${e.javaClass.simpleName} - ${e.message}")
+                    throw e
+                }
             }
 
         override suspend fun fetchDiagnosisDetails(lawNames: List<String>): String =
             withContext(Dispatchers.IO) {
+                Log.d("Diagnosis_LOG", "[3단계] fetchDiagnosisDetails 시작 - 법령 수: ${lawNames.size}")
                 val detailsBuilder = StringBuilder()
                 val currentDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy년 M월"))
                 detailsBuilder.append("기준 시점: $currentDate (현행법령 기준)\n\n")
@@ -99,6 +153,7 @@ class DiagnosisRepositoryImpl
                         async {
                             val localBuilder = StringBuilder()
                             try {
+                                Log.d("Diagnosis_LOG", "[3단계] 법령 API 호출: $lawName")
                                 val listResponse = apiService.getStatuteList(keyword = lawName)
                                 val mst =
                                     listResponse.lawSearch
@@ -130,12 +185,16 @@ class DiagnosisRepositoryImpl
                                         }
                                     }
                                     localBuilder.append("\n\n")
+                                    Log.d("Diagnosis_LOG", "[3단계] 법령 조회 성공: $actualLawName")
                                 } else {
                                     localBuilder.append("[$lawName] 일치하는 현행 법령을 찾을 수 없습니다.\n\n")
+                                    Log.w("Diagnosis_LOG", "[3단계] 현행 법령 없음: $lawName")
                                 }
                             } catch (e: Exception) {
                                 localBuilder.append("[$lawName] 현행 법령 정보를 가져오는 데 실패했습니다.\n")
+                                Log.e("Diagnosis_LOG", "[3단계] 법령 API 실패 [$lawName]: ${e.javaClass.simpleName} - ${e.message}")
                             }
+                            localBuilder.toString()
                         }
                     }
 
@@ -144,6 +203,7 @@ class DiagnosisRepositoryImpl
 
                 detailsBuilder.append("\n주의: 위 내용은 현행법 기준입니다.")
                 val rawText = detailsBuilder.toString()
+                Log.d("Diagnosis_LOG", "[3단계] 법령 수집 완료 - 총 길이: ${rawText.length}자")
                 return@withContext rawText.replace(Regex("\\s+"), " ").trim()
             }
 
@@ -182,10 +242,18 @@ class DiagnosisRepositoryImpl
                     
                     사용자 상황: $scenario
                     관련 법령: $lawDetails
+                    ${languageSuffix()}
                     """.trimIndent()
 
-                val response = generativeModel.generateContent(prompt)
-                Log.d("gemini_response", "$response")
-                return@withContext response.text ?: "가이드를 생성하는 데 문제가 발생했습니다."
+                Log.d("Diagnosis_LOG", "[4단계] generateFinalGuide 시작")
+                return@withContext try {
+                    val response = generativeModel.generateContent(prompt)
+                    val result = response.text ?: "가이드를 생성하는 데 문제가 발생했습니다."
+                    Log.d("Diagnosis_LOG", "[4단계] 최종 가이드 생성 완료 - 길이: ${result.length}자")
+                    result
+                } catch (e: Exception) {
+                    Log.e("Diagnosis_LOG", "[4단계] 최종 가이드 생성 실패: ${e.javaClass.simpleName} - ${e.message}")
+                    throw e
+                }
             }
     }

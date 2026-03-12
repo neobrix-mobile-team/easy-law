@@ -1,5 +1,6 @@
 package com.easylaw.app.navigation
 
+import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -16,6 +17,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.easylaw.app.R
 import com.easylaw.app.ui.screen.LegalSearchRoute
 import com.easylaw.app.ui.screen.Login.LoginView
 import com.easylaw.app.ui.screen.Login.SignView
@@ -32,7 +34,7 @@ import com.easylaw.app.viewModel.SignViewModel
 
 data class BottomNavItem(
     val route: String,
-    val title: String,
+    @StringRes val titleResId: Int,
     val icon: ImageVector,
 )
 
@@ -52,17 +54,17 @@ object NavRoute {
         listOf(
             BottomNavItem(
                 route = COMMUNITY,
-                title = "커뮤니티",
+                titleResId = R.string.sidebar_menu_community,
                 icon = Icons.Default.Share,
             ),
             BottomNavItem(
                 route = LAW_CONSULT,
-                title = "판례검색",
+                titleResId = R.string.sidebar_menu_precedent,
                 icon = Icons.Default.Gavel,
             ),
             BottomNavItem(
                 route = SELF,
-                title = "자가진단",
+                titleResId = R.string.sidebar_menu_self_diagnosis,
                 icon = Icons.Default.Check,
             ),
 //        BottomNavItem(
@@ -72,7 +74,7 @@ object NavRoute {
 //        )
             BottomNavItem(
                 route = MAP,
-                title = "지도",
+                titleResId = R.string.sidebar_menu_nearby,
                 icon = Icons.Default.Map,
             ),
         )

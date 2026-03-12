@@ -29,6 +29,8 @@ class MapRepositoryImpl
                 "변호사",
                 "법무사",
                 "등기소",
+                "변리사",
+                "특허법인",
             )
 
         override suspend fun searchLawPlaces(

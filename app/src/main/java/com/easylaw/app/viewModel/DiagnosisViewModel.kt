@@ -78,16 +78,19 @@ class DiagnosisViewModel
         private fun generateFollowUpQuestions(scenario: String) {
             viewModelScope.launch {
                 if (_uiState.value.questionCount >= 3) {
+                    Log.d("Diagnosis_LOG", "[VM] 질문 3회 도달 → 최종 분석 실행")
                     executeDiagnosisPipeline()
                     return@launch
                 }
 
                 try {
                     addLoading()
+                    Log.d("Diagnosis_LOG", "[VM] 추가 질문 요청 중...")
                     val followUpAction = repository.getAdditionalQuestions(scenario)
                     removeLoadingOnly()
 
                     if (followUpAction.isEnough) {
+                        Log.d("Diagnosis_LOG", "[VM] 정보 충분 → 최종 분석 실행")
                         executeDiagnosisPipeline()
                     } else {
                         conversationHistory.add("시스템질문: ${followUpAction.question}")
@@ -104,8 +107,9 @@ class DiagnosisViewModel
                     }
                 } catch (e: Exception) {
                     removeLoadingOnly()
-                    Log.e("ERROR", "generateFollowUpQuestions error $e", e)
-                    showRetryError(RetryActionType.FOLLOW_UP_QUESTIONS)
+                    val errorMsg = resolveErrorMessage(e)
+                    Log.e("Diagnosis_LOG", "[VM] 추가 질문 실패: ${e.javaClass.simpleName} - ${e.message}")
+                    showRetryError(RetryActionType.FOLLOW_UP_QUESTIONS, errorMsg)
                 }
             }
         }
@@ -130,8 +134,12 @@ class DiagnosisViewModel
                 try {
                     addLoading()
                     val contextForAnalysis = getOptimizedContext()
+
+                    Log.d("Diagnosis_LOG", "[VM] 법령명 추출 시작")
                     val lawNames = repository.extractTargetLaws(contextForAnalysis)
+                    Log.d("Diagnosis_LOG", "[VM] 법령 상세 조회 시작: $lawNames")
                     val lawDetails = repository.fetchDiagnosisDetails(lawNames)
+                    Log.d("Diagnosis_LOG", "[VM] 최종 가이드 생성 시작")
                     val finalGuide = repository.generateFinalGuide(contextForAnalysis, lawDetails)
 
                     removeLoadingOnly()
@@ -144,17 +152,38 @@ class DiagnosisViewModel
                             messages = currentMessages,
                             currentPhase = DiagnosisPhase.IDLE,
                         )
+                    Log.d("Diagnosis_LOG", "[VM] 전체 파이프라인 완료")
                 } catch (e: Exception) {
                     removeLoadingOnly()
-                    showRetryError(RetryActionType.FINAL_GUIDE)
+                    val errorMsg = resolveErrorMessage(e)
+                    Log.e("Diagnosis_LOG", "[VM] 파이프라인 실패: ${e.javaClass.simpleName} - ${e.message}")
+                    showRetryError(RetryActionType.FINAL_GUIDE, errorMsg)
                 }
             }
         }
 
-        // 처음 사용된 구문 설명: 통신 에러가 발생했을 때 기존 메시지 리스트 하단에 "재시도" 버튼 UI 상태를 추가하는 함수입니다.
-        private fun showRetryError(type: RetryActionType) {
+        // 에러 원인에 따라 사용자에게 보여줄 메시지를 결정
+        private fun resolveErrorMessage(e: Exception): String =
+            when {
+                e is kotlinx.coroutines.TimeoutCancellationException ->
+                    "AI 응답 시간이 초과되었습니다.\n잠시 후 다시 시도해주세요."
+                e.message?.contains("429") == true || e.message?.contains("quota") == true ->
+                    "AI 사용량 한도를 초과했습니다.\n잠시 후 다시 시도해주세요."
+                e.message?.contains("401") == true || e.message?.contains("403") == true ->
+                    "API 인증에 실패했습니다.\n앱을 재시작해주세요."
+                e.message?.contains("Unable to resolve host") == true ||
+                    e.message?.contains("timeout") == true ->
+                    "네트워크 연결을 확인해주세요."
+                else ->
+                    "분석이 일시 중단되었습니다.\n잠시 후 다시 요청해주세요."
+            }
+
+        private fun showRetryError(
+            type: RetryActionType,
+            message: String = "분석이 일시 중단되었습니다.\n잠시 후 다시 요청해주세요.",
+        ) {
             val currentMessages = _uiState.value.messages.toMutableList()
-            currentMessages.add(Diagnosis.ErrorRetry("분석이 일시 중단되었습니다.\n잠시 후 다시 요청해주세요.", type))
+            currentMessages.add(Diagnosis.ErrorRetry(message, type))
             _uiState.value =
                 _uiState.value.copy(
                     messages = currentMessages,

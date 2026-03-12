@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.easylaw.app.domain.model.UserInfo
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -29,6 +30,7 @@ class PreferenceManager
         private val dataStore: DataStore<Preferences>,
     ) {
         private val userDataKey = stringPreferencesKey("user_data")
+        private val languageKey = stringPreferencesKey("app_language")
 
         // 기기에 저장된 값 가져오기
         val userData: Flow<UserInfo?> =
@@ -53,6 +55,19 @@ class PreferenceManager
 
         // 로그아웃
         suspend fun sessionClear() {
-            dataStore.edit { it.clear() }
+            dataStore.edit { it.remove(userDataKey) }
         }
+
+        suspend fun saveLanguage(languageCode: String) {
+            dataStore.edit { prefs ->
+                prefs[languageKey] = languageCode
+            }
+        }
+
+        suspend fun getLanguage(): String = dataStore.data.first()[languageKey] ?: "ko"
+
+        val languageFlow: Flow<String> =
+            dataStore.data.map { prefs ->
+                prefs[languageKey] ?: "ko"
+            }
     }
