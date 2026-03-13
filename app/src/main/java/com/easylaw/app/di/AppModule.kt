@@ -32,6 +32,9 @@ import javax.inject.Qualifier
 import javax.inject.Singleton
 
 private const val HTTP_TIMEOUT_SECONDS = 60L
+private const val HTTP_TIMEOUT_KAKAO_SECONDS = 15L
+private const val CONNECTION_POOL_MAX_IDLE = 0
+private const val CONNECTION_POOL_KEEP_ALIVE = 1L
 private const val LAW_BASE_URL = "https://www.law.go.kr/"
 private const val KAKAO_BASE_URL = "https://dapi.kakao.com/"
 
@@ -111,7 +114,7 @@ object AppModule {
             .connectTimeout(HTTP_TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .readTimeout(HTTP_TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .writeTimeout(HTTP_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-            .connectionPool(ConnectionPool(0, 1, TimeUnit.NANOSECONDS))
+            .connectionPool(ConnectionPool(CONNECTION_POOL_MAX_IDLE, CONNECTION_POOL_KEEP_ALIVE, TimeUnit.NANOSECONDS))
             .protocols(listOf(Protocol.HTTP_1_1))
             .build()
 
@@ -133,8 +136,8 @@ object AppModule {
                     chain.proceed(req)
                 },
             ).addInterceptor(buildLoggingInterceptor("HTTP_KAKAO"))
-            .connectTimeout(15L, TimeUnit.SECONDS)
-            .readTimeout(15L, TimeUnit.SECONDS)
+            .connectTimeout(HTTP_TIMEOUT_KAKAO_SECONDS, TimeUnit.SECONDS)
+            .readTimeout(HTTP_TIMEOUT_KAKAO_SECONDS, TimeUnit.SECONDS)
             .build()
 
     // ── Retrofit 인스턴스 ────────────────────────────────────────
