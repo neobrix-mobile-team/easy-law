@@ -35,6 +35,8 @@ private const val HTTP_TIMEOUT_SECONDS = 60L
 private const val HTTP_TIMEOUT_KAKAO_SECONDS = 15L
 private const val CONNECTION_POOL_MAX_IDLE = 0
 private const val CONNECTION_POOL_KEEP_ALIVE = 1L
+private const val HTTP_ERROR_CODE_MIN = 400
+private const val HTTP_ERROR_CODE_MAX = 599
 private const val LAW_BASE_URL = "https://www.law.go.kr/"
 private const val KAKAO_BASE_URL = "https://dapi.kakao.com/"
 
@@ -62,7 +64,7 @@ private fun buildLoggingInterceptor(tag: String): HttpLoggingInterceptor =
             message.startsWith("--> END") -> Log.d(tag, "├─────────────────────────────────────────────")
             message.startsWith("<--") -> {
                 val code = message.substringAfter("<-- ").take(3).toIntOrNull() ?: 0
-                val logFn: (String, String) -> Unit = if (code in 400..599) Log::w else Log::d
+                val logFn: (String, String) -> Unit = if (code in HTTP_ERROR_CODE_MIN..HTTP_ERROR_CODE_MAX) Log::w else Log::d
                 logFn(tag, "│ ◀ ${message.removePrefix("<-- ")}")
             }
 
