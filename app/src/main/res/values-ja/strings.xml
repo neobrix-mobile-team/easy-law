@@ -125,6 +125,7 @@
     <string name="diagnosis_error">エラーが発生しました</string>
 
     <!-- 음성인식 상태 -->
+    <string name="stt_empty"> </string>
     <string name="stt_connecting">接続中…</string>
     <string name="stt_listening">聞いています…話してください。</string>
     <string name="stt_processing">テキストに変換中…</string>
