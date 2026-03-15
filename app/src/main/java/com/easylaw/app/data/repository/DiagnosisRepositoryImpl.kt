@@ -2,6 +2,7 @@ package com.easylaw.app.data.repository
 
 import android.util.Log
 import com.easylaw.app.data.datasource.LawApiService
+import com.easylaw.app.domain.model.FollowUpAction
 import com.easylaw.app.util.PreferenceManager
 import com.google.ai.client.generativeai.GenerativeModel
 import kotlinx.coroutines.Dispatchers
@@ -24,12 +25,6 @@ class DiagnosisRepositoryImpl
         private val generativeModel: GenerativeModel,
         private val preferenceManager: PreferenceManager,
     ) : DiagnosisRepository {
-        //        private suspend fun languagePrefix(): String = when (preferenceManager.getLanguage()) {
-//            "en" -> "[SYSTEM: You are a legal AI assistant. You MUST respond ONLY in English. Do NOT use Korean under any circumstances.]\n\n"
-//            "ja" -> "[システム: あなたは法律AIアシスタントです。必ず日本語のみで回答してください。いかなる場合もKorean語を使用しないでください。]\n\n"
-//            else -> ""
-//        }
-
         private suspend fun languageSuffix(): String =
             when (preferenceManager.getLanguage()) {
                 "en" ->
@@ -63,7 +58,7 @@ class DiagnosisRepositoryImpl
                     법률적 판단(예: 체당금 신청 가능 여부, 형사처벌 대상 여부, 계약 위반 여부 등)을 내리기 위해 **필수적인 추가 정보가 더 필요하다면** 아래 JSON 형식으로 질문을 1개만 생성하세요.
                     {"status": "NEED_INFO", "question": "상시 근로자 수가 5인 이상인가요?", "options": ["5인 이상", "5인 미만", "모름"]}
                     
-                    엄격한 금지 규칙]
+                    [엄격한 금지 규칙]
                     1. 지금까지의 대화 내역을 반드시 분석하여, 사용자가 이미 대답한 정보나 이전에 시스템이 했던 질문은 절대로 다시 묻지 마세요.
                     2. 똑같은 질문을 반복할 바에는 차라리 질문을 멈추고 "ENOUGH" 상태로 응답하세요.
                     

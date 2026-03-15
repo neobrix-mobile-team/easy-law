@@ -6,10 +6,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.easylaw.app.data.repository.DiagnosisRepository
 import com.easylaw.app.domain.model.Diagnosis
 import com.easylaw.app.domain.model.DiagnosisPhase
 import com.easylaw.app.domain.model.RetryActionType
+import com.easylaw.app.domain.usecase.GenerateDiagnosisGuideUseCase
+import com.easylaw.app.domain.usecase.GetFollowUpQuestionUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -28,7 +29,8 @@ data class DiagnosisUiState(
 class DiagnosisViewModel
     @Inject
     constructor(
-        private val repository: DiagnosisRepository,
+        private val getFollowUpQuestionUseCase: GetFollowUpQuestionUseCase,
+        private val generateDiagnosisGuideUseCase: GenerateDiagnosisGuideUseCase,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(DiagnosisUiState())
         val uiState: StateFlow<DiagnosisUiState> = _uiState.asStateFlow()
@@ -77,16 +79,16 @@ class DiagnosisViewModel
 
         private fun generateFollowUpQuestions(scenario: String) {
             viewModelScope.launch {
-                if (_uiState.value.questionCount >= 3) {
-                    Log.d("Diagnosis_LOG", "[VM] 질문 3회 도달 → 최종 분석 실행")
-                    executeDiagnosisPipeline()
-                    return@launch
-                }
-
                 try {
                     addLoading()
                     Log.d("Diagnosis_LOG", "[VM] 추가 질문 요청 중...")
-                    val followUpAction = repository.getAdditionalQuestions(scenario)
+
+                    // UseCase가 질문 횟수 제한 비즈니스 로직을 내부에서 처리
+                    val followUpAction =
+                        getFollowUpQuestionUseCase(
+                            scenario = scenario,
+                            questionCount = _uiState.value.questionCount,
+                        )
                     removeLoadingOnly()
 
                     if (followUpAction.isEnough) {
@@ -135,13 +137,9 @@ class DiagnosisViewModel
                     addLoading()
                     val contextForAnalysis = getOptimizedContext()
 
-                    Log.d("Diagnosis_LOG", "[VM] 법령명 추출 시작")
-                    val lawNames = repository.extractTargetLaws(contextForAnalysis)
-                    Log.d("Diagnosis_LOG", "[VM] 법령 상세 조회 시작: $lawNames")
-                    val lawDetails = repository.fetchDiagnosisDetails(lawNames)
                     Log.d("Diagnosis_LOG", "[VM] 최종 가이드 생성 시작")
-                    val finalGuide = repository.generateFinalGuide(contextForAnalysis, lawDetails)
-
+                    // UseCase가 법령추출 → 조회 → 가이드생성 파이프라인을 캡슐화
+                    val finalGuide = generateDiagnosisGuideUseCase(contextForAnalysis)
                     removeLoadingOnly()
 
                     val currentMessages = _uiState.value.messages.toMutableList()
@@ -167,13 +165,17 @@ class DiagnosisViewModel
             when {
                 e is kotlinx.coroutines.TimeoutCancellationException ->
                     "AI 응답 시간이 초과되었습니다.\n잠시 후 다시 시도해주세요."
+
                 e.message?.contains("429") == true || e.message?.contains("quota") == true ->
                     "AI 사용량 한도를 초과했습니다.\n잠시 후 다시 시도해주세요."
+
                 e.message?.contains("401") == true || e.message?.contains("403") == true ->
                     "API 인증에 실패했습니다.\n앱을 재시작해주세요."
+
                 e.message?.contains("Unable to resolve host") == true ||
                     e.message?.contains("timeout") == true ->
                     "네트워크 연결을 확인해주세요."
+
                 else ->
                     "분석이 일시 중단되었습니다.\n잠시 후 다시 요청해주세요."
             }

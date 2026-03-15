@@ -16,7 +16,6 @@ class MapRepositoryImpl
     constructor(
         private val kakaoLocalApi: KakaoLocalApi,
     ) : MapRepository {
-        // 법률 관련 검색 키워드 목록
         private val legalKeywords =
             listOf(
                 "법원",
@@ -40,10 +39,8 @@ class MapRepositoryImpl
         ): Result<List<LawPlace>> =
             withContext(Dispatchers.IO) {
                 runCatching {
-                    // 1차: 반경 1km로 검색
                     val primaryResult = fetchAllPlaces(lat, lng, RADIUS_METERS_PRIMARY)
 
-                    // 결과가 너무 적으면 반경 2km로 확장 재검색
                     val finalPlaces =
                         if (primaryResult.size < MIN_RESULTS_THRESHOLD) {
                             Log.d("MapRepository", "결과 ${primaryResult.size}개 → 반경 ${RADIUS_METERS_FALLBACK}m로 확장 재검색")

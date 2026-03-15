@@ -11,6 +11,7 @@ import com.easylaw.app.data.repository.LawRepository
 import com.easylaw.app.data.repository.LawRepositoryImpl
 import com.easylaw.app.data.repository.MapRepository
 import com.easylaw.app.data.repository.MapRepositoryImpl
+import com.easylaw.app.data.repository.PrecedentAiRepository
 import com.easylaw.app.util.PreferenceManager
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.gson.GsonBuilder
@@ -156,18 +157,6 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideLawRepository(apiService: LawApiService): LawRepository = LawRepositoryImpl(apiService)
-
-    @Provides
-    @Singleton
-    fun provideDiagnosisRepository(
-        apiService: LawApiService,
-        generativeModel: GenerativeModel,
-        preferenceManager: PreferenceManager,
-    ): DiagnosisRepository = DiagnosisRepositoryImpl(apiService, generativeModel, preferenceManager)
-
-    @Provides
-    @Singleton
     fun provideKakaoLocalApi(
         @KakaoNetwork okHttpClient: OkHttpClient,
     ): KakaoLocalApi =
@@ -181,12 +170,24 @@ object AppModule {
 
     @Provides
     @Singleton
+    fun provideLawRepository(apiService: LawApiService): LawRepository = LawRepositoryImpl(apiService)
+
+    @Provides
+    @Singleton
+    fun provideDiagnosisRepository(
+        apiService: LawApiService,
+        generativeModel: GenerativeModel,
+        preferenceManager: PreferenceManager,
+    ): DiagnosisRepository = DiagnosisRepositoryImpl(apiService, generativeModel, preferenceManager)
+
+    @Provides
+    @Singleton
     fun provideMapRepository(apiService: KakaoLocalApi): MapRepository = MapRepositoryImpl(apiService)
 
     @Provides
     @Singleton
-    fun provideGeminiService(
+    fun providePrecedentAiRepository(
         generativeModel: GenerativeModel,
         preferenceManager: PreferenceManager,
-    ): PrecedentService = PrecedentService(generativeModel, preferenceManager)
+    ): PrecedentAiRepository = PrecedentService(generativeModel, preferenceManager)
 }

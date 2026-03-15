@@ -37,8 +37,8 @@ class LawRepositoryImpl
             org: String?,
             page: Int,
             display: Int,
-        ): Pair<Int, List<Precedent>> =
-            try {
+        ): Result<PrecedentResult> =
+            runCatching {
                 Log.d("LawRepositoryImpl", "API 호출 시작 - 검색어: $query, 페이지: $page, 요청개수: $display")
 
                 val response =
@@ -67,27 +67,20 @@ class LawRepositoryImpl
                         )
                     }
 
-                Pair(totalCount, mappedItems)
-            } catch (e: SocketException) {
-                Log.e("LawRepositoryImpl", "서버 연결 끊김(Connection reset) - 페이지 $page: ${e.message}")
-                Pair(0, emptyList())
-            } catch (e: IOException) {
-                Log.e("LawRepositoryImpl", "네트워크/타임아웃 에러 - 페이지 $page: ${e.message}", e)
-                Pair(0, emptyList())
-            } catch (e: HttpException) {
-                Log.e("LawRepositoryImpl", "API 서버 에러 - 상태 코드: ${e.code()}", e)
-                Pair(0, emptyList())
-            } catch (e: Exception) {
-                Log.e("LawRepositoryImpl", "기타 예외 발생 - 페이지 $page: ${e.message}", e)
-                Pair(0, emptyList())
+                PrecedentResult(totalCount = totalCount, items = mappedItems)
+            }.onFailure { e ->
+                when (e) {
+                    is SocketException -> Log.e("LawRepositoryImpl", "서버 연결 끊김 - 페이지 $page: ${e.message}")
+                    is IOException -> Log.e("LawRepositoryImpl", "네트워크/타임아웃 에러 - 페이지 $page: ${e.message}", e)
+                    is HttpException -> Log.e("LawRepositoryImpl", "API 서버 에러 - 상태 코드: ${e.code()}", e)
+                    else -> Log.e("LawRepositoryImpl", "기타 예외 발생 - 페이지 $page: ${e.message}", e)
+                }
             }
 
-        override suspend fun getPrecedentDetail(caseId: String): PrecedentDetail? {
-            return try {
+        override suspend fun getPrecedentDetail(caseId: String): Result<PrecedentDetail> =
+            runCatching {
                 val response = apiService.getPrecedentDetail(caseId = caseId)
-                val item = response.precService ?: return null
-
-                val rawText = listOfNotNull(item.issue, item.summary, item.content).joinToString("\n\n")
+                val item = response.precService ?: error("판례 상세 정보가 없습니다. (caseId=$caseId)")
 
                 PrecedentDetail(
                     caseId = item.caseId ?: caseId,
@@ -96,9 +89,7 @@ class LawRepositoryImpl
                     summary = item.summary?.replace("<br/>", "\n")?.trim() ?: "",
                     content = item.content?.replace("<br/>", "\n")?.trim() ?: "",
                 )
-            } catch (e: Exception) {
-                Log.d("getPrecedentDetail Exception -> ", e.message ?: "")
-                null
+            }.onFailure { e ->
+                Log.e("LawRepositoryImpl", "getPrecedentDetail 실패 (caseId=$caseId): ${e.message}")
             }
-        }
     }

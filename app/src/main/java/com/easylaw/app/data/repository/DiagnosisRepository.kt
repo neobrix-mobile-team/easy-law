@@ -1,10 +1,6 @@
 package com.easylaw.app.data.repository
 
-data class FollowUpAction(
-    val isEnough: Boolean,
-    val question: String = "",
-    val options: List<String> = emptyList(),
-)
+import com.easylaw.app.domain.model.FollowUpAction
 
 interface DiagnosisRepository {
     // 사용자 문제 분석 후 추가질문 생성

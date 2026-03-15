@@ -1,6 +1,7 @@
 package com.easylaw.app.data.datasource
 
 import android.util.Log
+import com.easylaw.app.data.repository.PrecedentAiRepository
 import com.easylaw.app.util.PreferenceManager
 import com.google.ai.client.generativeai.GenerativeModel
 import javax.inject.Inject
@@ -10,8 +11,7 @@ class PrecedentService
     constructor(
         private val generativeModel: GenerativeModel,
         private val preferenceManager: PreferenceManager,
-    ) {
-        // 에러 원인을 사람이 읽을 수 있는 문자열로 변환
+    ) : PrecedentAiRepository {
         private fun resolveErrorCause(e: Exception): String =
             when {
                 e is kotlinx.coroutines.TimeoutCancellationException -> "응답 시간 초과"
@@ -19,6 +19,7 @@ class PrecedentService
                 e.message?.contains("401") == true || e.message?.contains("403") == true -> "API 인증 실패"
                 e.message?.contains("Unable to resolve host") == true ||
                     e.message?.contains("timeout") == true -> "네트워크 오류"
+
                 else -> "알 수 없는 오류"
             }
 
@@ -34,6 +35,7 @@ class PrecedentService
                     다음 섹션 헤더를 정확히 사용합니다:
                     사례 요약 / [사례 배경] / [주요 이슈] / [판결] / [실무적 시사점]
                     """.trimIndent()
+
                 "en" ->
                     """
 
@@ -42,6 +44,7 @@ class PrecedentService
                     Use the following section headers exactly:
                     Case Summary / [Case Background] / [Key Issue] / [Ruling] / [Practical Implications]
                     """.trimIndent()
+
                 "ja" ->
                     """
 
@@ -50,11 +53,11 @@ class PrecedentService
                     以下のセクション見出しをそのまま使用してください:
                     判決の要点 / [事件の背景] / [主要な争点] / [判決結果] / [実務上の意味]
                     """.trimIndent()
+
                 else -> ""
             }
 
-        // 판례 검색 키워드 추출
-        suspend fun extractKeyword(
+        override suspend fun extractKeyword(
             situation: String,
             details: String,
         ): String {
@@ -95,11 +98,10 @@ class PrecedentService
             }
         }
 
-        // 판례 본문 요약
-        suspend fun summarizePrecedent(originalText: String): String {
+        override suspend fun summarizePrecedent(originalText: String): String {
             val prompt =
                 """
-                [역활 설정]
+                [역할 설정]
                 당신은 복잡한 대법원 판결문을 법률 지식이 없는 일반인을 위해 '모바일 최적화' 형태로 요약하는 전문 법률 커뮤니케이터입니다.
 
                 [요약 원칙 및 구조]
@@ -143,16 +145,11 @@ class PrecedentService
                 ${summaryLanguageInstruction()}
                 """.trimIndent()
 
-            return try {
-                Log.d("PrecedentService_LOG", "[판례 요약] Gemini 요청 시작 - 원문 길이: ${originalText.length}자")
-                val response = generativeModel.generateContent(prompt)
-                val result = response.text?.trim() ?: originalText
-                Log.d("PrecedentService_LOG", "[판례 요약] 성공 - 요약 길이: ${result.length}자")
-                result
-            } catch (e: Exception) {
-                val cause = resolveErrorCause(e)
-                Log.e("PrecedentService_LOG", "[판례 요약] 실패 ($cause): ${e.message}")
-                "AI 요약 중 에러가 발생했습니다. ($cause)\n잠시 후 다시 시도해주세요."
-            }
+            // summarizePrecedent는 실패 시 throw → UseCase/ViewModel에서 사용자에게 에러 표시
+            Log.d("PrecedentService_LOG", "[판례 요약] Gemini 요청 시작 - 원문 길이: ${originalText.length}자")
+            val response = generativeModel.generateContent(prompt)
+            val result = response.text?.trim() ?: throw IllegalStateException("AI 응답이 비어있습니다.")
+            Log.d("PrecedentService_LOG", "[판례 요약] 성공 - 요약 길이: ${result.length}자")
+            return result
         }
     }
