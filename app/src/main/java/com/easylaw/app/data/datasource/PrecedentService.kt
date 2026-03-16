@@ -12,6 +12,12 @@ class PrecedentService
         private val generativeModel: GenerativeModel,
         private val preferenceManager: PreferenceManager,
     ) : PrecedentAiRepository {
+        companion object {
+            private const val MAX_KEYWORD_LENGTH = 10
+            private const val MIN_KEYWORD_LENGTH = 1
+            private const val MAX_KEYWORD_COUNT = 2
+        }
+
         @Volatile
         private var cachedSummaryLanguageInstruction: String? = null
 
@@ -127,7 +133,7 @@ class PrecedentService
                     .map { it.replace(Regex("[^가-힣a-zA-Z0-9]"), "").trim() }
                     .filter { it.isNotBlank() }
 
-            if (byComma.isNotEmpty() && byComma.all { it.length in 1..10 }) {
+            if (byComma.isNotEmpty() && byComma.all { it.length in MIN_KEYWORD_LENGTH..MAX_KEYWORD_LENGTH }) {
                 return byComma
             }
 
@@ -136,7 +142,7 @@ class PrecedentService
                 cleaned
                     .split(" ")
                     .map { it.replace(Regex("[^가-힣a-zA-Z0-9]"), "").trim() }
-                    .filter { it.isNotBlank() && it.length <= 10 }
+                    .filter { it.isNotBlank() && it.length <= MAX_KEYWORD_LENGTH }
 
             if (bySpace.isNotEmpty()) {
                 return bySpace.take(2) // 최대 2개만
