@@ -38,4 +38,5 @@ data class LegalSearchUiState(
     val isDetailLoading: Boolean = false, // 상세 API 로딩
     val summaryText: String = "", // 요약본
     val isSummaryLoading: Boolean = false, // 요약 로딩
+    val streamingSummaryText: String = "",
 )

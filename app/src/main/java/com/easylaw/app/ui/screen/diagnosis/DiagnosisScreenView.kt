@@ -10,10 +10,14 @@ import android.provider.Settings
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -87,7 +91,10 @@ import com.easylaw.app.viewModel.DiagnosisViewModel
 import kotlinx.coroutines.delay
 
 @Composable
-fun DiagnosisScreen(viewModel: DiagnosisViewModel = hiltViewModel()) {
+fun DiagnosisScreen(
+    modifier: Modifier = Modifier,
+    viewModel: DiagnosisViewModel = hiltViewModel(),
+) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
 //    var currentAnswerText by remember { mutableStateOf("") }
@@ -108,9 +115,10 @@ fun DiagnosisScreen(viewModel: DiagnosisViewModel = hiltViewModel()) {
 
     Box(
         modifier =
-            Modifier
+            modifier
                 .fillMaxSize()
                 .background(Color(0xFFF9FAFB))
+                .safeDrawingPadding()
                 .imePadding(),
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -118,26 +126,19 @@ fun DiagnosisScreen(viewModel: DiagnosisViewModel = hiltViewModel()) {
 
             if (!uiState.isShowingResults) {
                 DiagnosisFormContent(
+                    modifier = Modifier.weight(1f),
                     userScenario = viewModel.userScenarioInput,
                     onUserScenarioChange = viewModel::onUserScenarioInputChange,
                     onStartDiagnosis = viewModel::onStartDiagnosis,
                 )
             } else {
                 DiagnosisResultContent(
+                    modifier = Modifier.weight(1f),
                     listState = listState,
                     uiState = uiState,
-//                    currentAnswerText = currentAnswerText,
-//                    onAnswerChange = { currentAnswerText = it },
-//                    onAnswerSend = {
-//                        viewModel.handleUserAnswerToQuestions(currentAnswerText)
-//                        currentAnswerText = ""
-//                    },
-                    onOptionSelected = { selectedOption ->
-                        viewModel.handleUserAnswerToQuestions(selectedOption)
-                    },
-                    onRetry = { retryType ->
-                        viewModel.retryAction(retryType)
-                    },
+                    onOptionSelected = { viewModel.handleUserAnswerToQuestions(it) },
+                    onRetry = { viewModel.retryAction(it) },
+                    onReset = viewModel::resetDiagnosis, // 추가
                 )
             }
         }
@@ -147,6 +148,7 @@ fun DiagnosisScreen(viewModel: DiagnosisViewModel = hiltViewModel()) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DiagnosisFormContent(
+    modifier: Modifier = Modifier,
     userScenario: String,
     onUserScenarioChange: (String) -> Unit,
     onStartDiagnosis: () -> Unit,
@@ -164,7 +166,6 @@ fun DiagnosisFormContent(
             modifier =
                 Modifier
                     .fillMaxSize()
-                    .safeDrawingPadding()
                     .padding(24.dp),
         ) {
             Text(
@@ -236,55 +237,110 @@ fun DiagnosisFormContent(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DiagnosisResultContent(
+    modifier: Modifier = Modifier,
     listState: LazyListState,
     uiState: DiagnosisUiState,
-//    currentAnswerText: String,
-//    onAnswerChange: (String) -> Unit,
-//    onAnswerSend: () -> Unit,
     onOptionSelected: (String) -> Unit,
     onRetry: (RetryActionType) -> Unit,
+    onReset: () -> Unit,
 ) {
-//    val sttController = rememberSpeechRecognizerHandler(
-//        onFinalResult = { recognizedText ->
-//            val newText = if (currentAnswerText.isBlank()) recognizedText else "$currentAnswerText $recognizedText"
-//            onAnswerChange(newText.trim())
-//        }
-//    )
+    val isGuideFinished =
+        uiState.currentPhase == DiagnosisPhase.IDLE &&
+            uiState.streamingText.isEmpty() &&
+            uiState.messages.lastOrNull() is Diagnosis.Bot &&
+            uiState.messages.size > 1
 
-    Box(
-        modifier =
-            Modifier
-                .fillMaxSize()
-                .safeDrawingPadding(),
-    ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            LazyColumn(
-                state = listState,
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 400.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                items(uiState.messages) { message ->
-                    when (message) {
-                        is Diagnosis.User -> UserBubble(message.text)
-                        is Diagnosis.Bot -> BotBubble(message.text)
-                        is Diagnosis.BotWithOptions ->
-                            BotWithOptionsBubble(
-                                text = message.text,
-                                options = message.options,
-                                onOptionSelected = onOptionSelected,
-                                isEnabled = uiState.currentPhase == DiagnosisPhase.AWAITING_ANSWERS && message == uiState.messages.last(),
-                            )
+    Log.d("BUTTON_DEBUG", "=== isGuideFinished: $isGuideFinished ===")
+    Log.d("BUTTON_DEBUG", "phase: ${uiState.currentPhase}")
+    Log.d("BUTTON_DEBUG", "streamingText empty: ${uiState.streamingText.isEmpty()}")
+    Log.d("BUTTON_DEBUG", "lastMsg: ${uiState.messages.lastOrNull()?.javaClass?.simpleName}")
+    Log.d("BUTTON_DEBUG", "msgSize: ${uiState.messages.size}")
 
-                        is Diagnosis.ErrorRetry ->
-                            ErrorRetryBubble(
-                                text = message.text,
-                                onRetry = { onRetry(message.retryActionType) },
-                            )
+    if (isGuideFinished) {
+        Log.d("BUTTON_DEBUG", ">>> 버튼 렌더링됨")
+    }
 
-                        is Diagnosis.Loading -> LoadingBubble()
-                    }
+    Box(modifier = modifier.fillMaxSize()) {
+        LazyColumn(
+            state = listState,
+            modifier = Modifier.fillMaxSize(),
+            contentPadding =
+                PaddingValues(
+                    start = 16.dp,
+                    top = 16.dp,
+                    end = 16.dp,
+                    // 버튼이 떠있을 때 마지막 아이템이 버튼에 가리지 않도록 여백 확보
+                    bottom = if (isGuideFinished) 80.dp else 16.dp,
+                ),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            items(uiState.messages) { message ->
+                when (message) {
+                    is Diagnosis.User -> UserBubble(message.text)
+                    is Diagnosis.Bot -> BotBubble(message.text)
+                    is Diagnosis.BotWithOptions ->
+                        BotWithOptionsBubble(
+                            text = message.text,
+                            options = message.options,
+                            onOptionSelected = onOptionSelected,
+                            isEnabled =
+                                uiState.currentPhase == DiagnosisPhase.AWAITING_ANSWERS &&
+                                    message == uiState.messages.last(),
+                        )
+
+                    is Diagnosis.ErrorRetry ->
+                        ErrorRetryBubble(
+                            text = message.text,
+                            onRetry = { onRetry(message.retryActionType) },
+                        )
+
+                    is Diagnosis.Loading -> LoadingBubble()
                 }
+            }
+        }
+
+//        if (isGuideFinished) {
+//            Button(
+//                onClick = onReset,
+//                modifier = Modifier
+//                    .align(Alignment.BottomCenter)  // ← 핵심
+//                    .fillMaxWidth()
+//                    .padding(horizontal = 16.dp, vertical = 12.dp)
+//                    .height(52.dp),
+//                shape = RoundedCornerShape(16.dp),
+//                colors = ButtonDefaults.buttonColors(
+//                    containerColor = MaterialTheme.colorScheme.primary,
+//                ),
+//            ) {
+//                Text(
+//                    text = "처음으로 돌아가기",
+//                    style = MaterialTheme.typography.labelLarge,
+//                )
+//            }
+//        }
+
+        AnimatedVisibility(
+            visible = isGuideFinished,
+            enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+            modifier = Modifier.align(Alignment.BottomCenter),
+        ) {
+            Button(
+                onClick = onReset,
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                        .height(52.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors =
+                    ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                    ),
+            ) {
+                Text(
+                    text = "처음으로 돌아가기",
+                    style = MaterialTheme.typography.labelLarge,
+                )
             }
         }
     }
@@ -716,39 +772,3 @@ fun LoadingBubble() {
 //        DiagnosisFormContent(userScenario = "", onUserScenarioChange = {}, onStartDiagnosis = {})
 //    }
 // }
-
-@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
-@Composable
-fun DiagnosisResultContentPreview() {
-    val dummyMessages =
-        listOf(
-            Diagnosis.Bot("안녕하세요! 어떤 법률적 도움이 필요하신가요?"),
-            Diagnosis.User("임금 체불 때문에 문의 드립니다."),
-            Diagnosis.BotWithOptions(
-                text = "미지급된 임금이 총 얼마 정도인가요?",
-                options = listOf("100만원 미만", "100~500만원", "500만원 이상"),
-            ),
-            Diagnosis.ErrorRetry("에러 발생", RetryActionType.FOLLOW_UP_QUESTIONS),
-        )
-
-    val dummyUiState =
-        DiagnosisUiState(
-            messages = dummyMessages,
-            currentPhase = DiagnosisPhase.AWAITING_ANSWERS,
-            isShowingResults = true,
-        )
-
-    MaterialTheme {
-        Surface(color = Color.White) {
-            DiagnosisResultContent(
-                listState = rememberLazyListState(),
-                uiState = dummyUiState,
-//                currentAnswerText = "직접 입력 중인 텍스트",
-//                onAnswerChange = {},
-//                onAnswerSend = {},
-                onOptionSelected = {},
-                onRetry = {},
-            )
-        }
-    }
-}

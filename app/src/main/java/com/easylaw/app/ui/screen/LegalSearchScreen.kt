@@ -133,7 +133,6 @@ fun SituationDiagnosisScreen(
         Column(
             modifier =
                 Modifier
-                    .weight(1f)
                     .verticalScroll(rememberScrollState()),
         ) {
             Text(text = stringResource(R.string.legal_search_title), fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.Black)

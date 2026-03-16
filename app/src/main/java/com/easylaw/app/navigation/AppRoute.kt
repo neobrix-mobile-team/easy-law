@@ -189,7 +189,7 @@ fun AppRoute(
         composable(
             route = NavRoute.SELF,
         ) {
-            DiagnosisScreen()
+            DiagnosisScreen(modifier = modifier)
         }
 
         composable(

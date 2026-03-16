@@ -11,5 +11,8 @@ class SummarizePrecedentUseCase
         /**
          * @throws Exception AI 호출 실패 시 — ViewModel의 catch로 전파
          */
-        suspend operator fun invoke(originalText: String): String = aiRepository.summarizePrecedent(originalText)
+        suspend operator fun invoke(
+            originalText: String,
+            onChunk: (String) -> Unit,
+        ): String = aiRepository.summarizePrecedent(originalText, onChunk)
     }

@@ -13,9 +13,12 @@ class GenerateDiagnosisGuideUseCase
          * @return 사용자에게 보여줄 최종 법률 가이드 텍스트
          * @throws Exception Repository 호출 실패 시 — ViewModel의 catch로 전파
          */
-        suspend operator fun invoke(context: String): String {
+        suspend operator fun invoke(
+            context: String,
+            onChunk: (String) -> Unit,
+        ): String {
             val lawNames = repository.extractTargetLaws(context)
             val lawDetails = repository.fetchDiagnosisDetails(lawNames)
-            return repository.generateFinalGuide(context, lawDetails)
+            return repository.generateFinalGuide(context, lawDetails, onChunk)
         }
     }

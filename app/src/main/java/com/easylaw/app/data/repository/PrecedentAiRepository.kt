@@ -8,11 +8,14 @@ interface PrecedentAiRepository {
     suspend fun extractKeyword(
         situation: String,
         details: String,
-    ): String
+    ): List<String>
 
     /**
      * 판례 원문을 일반인이 이해하기 쉬운 형태로 요약합니다.
      * @throws Exception AI 호출 실패 시 — 호출부에서 처리
      */
-    suspend fun summarizePrecedent(originalText: String): String
+    suspend fun summarizePrecedent(
+        originalText: String,
+        onChunk: (String) -> Unit,
+    ): String
 }

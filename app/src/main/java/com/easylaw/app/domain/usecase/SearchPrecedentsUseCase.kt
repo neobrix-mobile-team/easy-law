@@ -22,6 +22,7 @@ class SearchPrecedentsUseCase
 
         data class KeywordResolution(
             val keyword: String,
+            val keywords: List<String>,
             val wasOptimizedByAi: Boolean,
         )
 
@@ -34,10 +35,11 @@ class SearchPrecedentsUseCase
             details: String,
         ): KeywordResolution =
             if (keywordOptimizer.shouldBypassGemini(situation, details)) {
-                KeywordResolution(keyword = situation.trim(), wasOptimizedByAi = false)
+                val trimmed = situation.trim()
+                KeywordResolution(keyword = trimmed, keywords = listOf(trimmed), wasOptimizedByAi = false)
             } else {
-                val keyword = aiRepository.extractKeyword(situation, details)
-                KeywordResolution(keyword = keyword, wasOptimizedByAi = true)
+                val keywords = aiRepository.extractKeyword(situation, details)
+                KeywordResolution(keyword = keywords.joinToString(" "), keywords = keywords, wasOptimizedByAi = true)
             }
 
         /**

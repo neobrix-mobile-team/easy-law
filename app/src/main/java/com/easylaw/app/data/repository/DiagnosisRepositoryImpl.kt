@@ -25,29 +25,37 @@ class DiagnosisRepositoryImpl
         private val generativeModel: GenerativeModel,
         private val preferenceManager: PreferenceManager,
     ) : DiagnosisRepository {
+        @Volatile
+        private var cachedLanguageSuffix: String? = null
+
         private suspend fun languageSuffix(): String =
-            when (preferenceManager.getLanguage()) {
-                "en" ->
-                    """
-                    
-                    [CRITICAL REMINDER]
-                    - Your ENTIRE response MUST be written in English only.
-                    - All "question" and "options" values in JSON must be in English.
-                    - JSON keys must remain as-is.
-                    - DO NOT use any Korean characters.
-                    """.trimIndent()
+            cachedLanguageSuffix ?: withContext(Dispatchers.IO) {
+                val suffix =
+                    when (preferenceManager.getLanguage()) {
+                        "en" ->
+                            """
+                            
+                            [CRITICAL REMINDER]
+                            - Your ENTIRE response MUST be written in English only.
+                            - All "question" and "options" values in JSON must be in English.
+                            - JSON keys must remain as-is.
+                            - DO NOT use any Korean characters.
+                            """.trimIndent()
 
-                "ja" ->
-                    """
-                    
-                    [最終確認]
-                    - 回答全体を必ず日本語のみで記述してください。
-                    - JSONの "question" と "options" の値も日本語で記述してください。
-                    - JSONのキーはそのままにしてください。
-                    - 韓国語を一切使用しないでください。
-                    """.trimIndent()
+                        "ja" ->
+                            """
+                            
+                            [最終確認]
+                            - 回答全体を必ず日本語のみで記述してください。
+                            - JSONの "question" と "options" の値も日本語で記述してください。
+                            - JSONのキーはそのままにしてください。
+                            - 韓国語を一切使用しないでください。
+                            """.trimIndent()
 
-                else -> ""
+                        else -> ""
+                    }
+                cachedLanguageSuffix = suffix
+                suffix
             }
 
         override suspend fun getAdditionalQuestions(scenario: String): FollowUpAction =
@@ -205,46 +213,39 @@ class DiagnosisRepositoryImpl
         override suspend fun generateFinalGuide(
             scenario: String,
             lawDetails: String,
+            onChunk: (String) -> Unit,
         ): String =
             withContext(Dispatchers.IO) {
+                val langSuffix = languageSuffix()
                 val prompt =
                     """
                     너는 취약계층을 돕는 친절한 법률 전문가야. 
-                    사용자의 상황과 제공된 [관련 법령 및 조항]을 바탕으로 아래 [필수 규칙]을 엄격하게 지켜 답변을 작성해.
+                    사용자의 상황과 [관련 법령]을 바탕으로 아래 [필수 규칙]을 엄격하게 지켜 답변을 작성해.
                     
                     [필수 규칙]
-                    1. 결론 먼저: 현재 사용자가 처한 상황을 한 줄로 진단할 것. (예: "현재 상황은 임금체불에 해당합니다.")
-                    2. 3단계 행동 지침: 사용자가 해결을 위해 당장 해야 할 일을 우선순위대로 딱 3가지만 기호를 달아 제시할 것. 
-                        - 각 지침은 1~2문장으로 아주 짧게
-                        - 필수적으로 해야할 일이 3가지 이상일 경우 추가적으로 제시
-                        - 강조 표기(매우 중요): 사용자가 반드시 기억해야 할 핵심 단어, 제출해야 할 서류명, 경고 사항 등은 반드시 앞뒤로 `**` 기호를 붙여 강조할 것. (예: "가장 먼저 **고용노동부 진정서**를 제출해야 합니다.") 
-                    3. 친절한 언행: 어렵고 힘든 사용자를 향한 따뜻하게 위로하고 격려하는 말투 사용.
-                    4. 금기사항: 어려운 법률 용어는 무조건 쉬운 말로 풀어서 쓰고, 전체 글이 스마트폰 한 화면에 들어오도록 최대한 간결하게 할 것. 장황한 법리 해석 절대 금지.
-                    
-                    [예시]=============================
-                    
-                    현재 상황은 임금체불에 해당합니다.
-                    
-                    [이렇게 해보세요]
-                    ● 증거 확보 : 밀린 급여 내역, 실제로 일했다는 증거를 최대한 모으기
-                    ● 지급 요구 : 사장님께 밀린 급여를 달라고 내용증명 우편이나 문자등으로 공식적으로 요청(요청내용, 보낸증거 수집)
-                    ● 노동청 진정 : 위 증거들을 가지고 가까운 노동청에 '임금체불 진정'신청 
-                    
-                    현재 상태에서 회사를 구만두면 채불임금을 받는 과정이 더 복잡해질 수 있으니 신중하게 결정하세요.  
-                    
-                    ===================================
-                    
+                    1. 결론 먼저: 현재 상황을 한 줄로 진단할 것. (예: "현재 상황은 임금체불에 해당합니다.")
+                    2. 3단계 행동 지침: 해결을 위해 당장 해야 할 일을 우선순위대로 3가지만 기호를 달아 제시.
+                        - 각 지침은 1~2문장으로 짧게
+                        - 필수 사항이 3가지 이상이면 추가 제시 가능
+                        - 핵심 단어, 서류명, 경고 사항은 반드시 `**`로 강조 (예: **고용노동부 진정서**)
+                    3. 친절한 말투: 어렵고 힘든 사용자를 따뜻하게 위로하고 격려할 것.
+                    4. 금기사항: 어려운 법률 용어는 쉬운 말로 풀어 쓰고, 스마트폰 한 화면에 들어오도록 간결하게. 장황한 법리 해석 금지.
                     
                     사용자 상황: $scenario
                     관련 법령: $lawDetails
-                    ${languageSuffix()}
+                    $langSuffix
                     """.trimIndent()
 
-                Log.d("Diagnosis_LOG", "[4단계] generateFinalGuide 시작")
+                Log.d("Diagnosis_LOG", "[4단계] generateFinalGuide 스트리밍 시작")
                 return@withContext try {
-                    val response = generativeModel.generateContent(prompt)
-                    val result = response.text ?: "가이드를 생성하는 데 문제가 발생했습니다."
-                    Log.d("Diagnosis_LOG", "[4단계] 최종 가이드 생성 완료 - 길이: ${result.length}자")
+                    val sb = StringBuilder()
+                    generativeModel.generateContentStream(prompt).collect { chunk ->
+                        val text = chunk.text ?: return@collect
+                        sb.append(text)
+                        onChunk(text) // ViewModel의 StateFlow로 전달
+                    }
+                    val result = sb.toString()
+                    Log.d("Diagnosis_LOG", "[4단계] 스트리밍 완료 - 길이: ${result.length}자")
                     result
                 } catch (e: Exception) {
                     Log.e("Diagnosis_LOG", "[4단계] 최종 가이드 생성 실패: ${e.javaClass.simpleName} - ${e.message}")

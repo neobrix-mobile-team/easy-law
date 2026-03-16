@@ -16,5 +16,6 @@ interface DiagnosisRepository {
     suspend fun generateFinalGuide(
         scenario: String,
         lawDetails: String,
+        onChunk: (String) -> Unit,
     ): String
 }
