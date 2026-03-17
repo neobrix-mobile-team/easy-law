@@ -11,6 +11,9 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         gradlePluginPortal()
+        maven {
+            url 'https://repository.map.naver.com/archive/maven'
+        }
     }
 }
 

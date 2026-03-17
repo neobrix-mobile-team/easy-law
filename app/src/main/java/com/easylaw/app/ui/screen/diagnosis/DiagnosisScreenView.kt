@@ -10,9 +10,14 @@ import android.provider.Settings
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.StringRes
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -26,6 +31,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -64,6 +70,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -75,6 +82,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.easylaw.app.R
 import com.easylaw.app.domain.model.Diagnosis
 import com.easylaw.app.domain.model.DiagnosisPhase
 import com.easylaw.app.domain.model.RetryActionType
@@ -83,7 +91,10 @@ import com.easylaw.app.viewModel.DiagnosisViewModel
 import kotlinx.coroutines.delay
 
 @Composable
-fun DiagnosisScreen(viewModel: DiagnosisViewModel = hiltViewModel()) {
+fun DiagnosisScreen(
+    modifier: Modifier = Modifier,
+    viewModel: DiagnosisViewModel = hiltViewModel(),
+) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
 //    var currentAnswerText by remember { mutableStateOf("") }
@@ -104,9 +115,10 @@ fun DiagnosisScreen(viewModel: DiagnosisViewModel = hiltViewModel()) {
 
     Box(
         modifier =
-            Modifier
+            modifier
                 .fillMaxSize()
                 .background(Color(0xFFF9FAFB))
+                .safeDrawingPadding()
                 .imePadding(),
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -114,26 +126,19 @@ fun DiagnosisScreen(viewModel: DiagnosisViewModel = hiltViewModel()) {
 
             if (!uiState.isShowingResults) {
                 DiagnosisFormContent(
+                    modifier = Modifier.weight(1f),
                     userScenario = viewModel.userScenarioInput,
                     onUserScenarioChange = viewModel::onUserScenarioInputChange,
                     onStartDiagnosis = viewModel::onStartDiagnosis,
                 )
             } else {
                 DiagnosisResultContent(
+                    modifier = Modifier.weight(1f),
                     listState = listState,
                     uiState = uiState,
-//                    currentAnswerText = currentAnswerText,
-//                    onAnswerChange = { currentAnswerText = it },
-//                    onAnswerSend = {
-//                        viewModel.handleUserAnswerToQuestions(currentAnswerText)
-//                        currentAnswerText = ""
-//                    },
-                    onOptionSelected = { selectedOption ->
-                        viewModel.handleUserAnswerToQuestions(selectedOption)
-                    },
-                    onRetry = { retryType ->
-                        viewModel.retryAction(retryType)
-                    },
+                    onOptionSelected = { viewModel.handleUserAnswerToQuestions(it) },
+                    onRetry = { viewModel.retryAction(it) },
+                    onReset = viewModel::resetDiagnosis, // 추가
                 )
             }
         }
@@ -143,6 +148,7 @@ fun DiagnosisScreen(viewModel: DiagnosisViewModel = hiltViewModel()) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DiagnosisFormContent(
+    modifier: Modifier = Modifier,
     userScenario: String,
     onUserScenarioChange: (String) -> Unit,
     onStartDiagnosis: () -> Unit,
@@ -163,14 +169,14 @@ fun DiagnosisFormContent(
                     .padding(24.dp),
         ) {
             Text(
-                text = "자가진단",
+                text = stringResource(R.string.diagnosis_title),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black,
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "문제사항을 최대한 자세히 적어주시면,\n정확한 법률 진단을 받을 수 있습니다.",
+                text = stringResource(R.string.diagnosis_description),
                 style = MaterialTheme.typography.bodyLarge,
                 color = Color.Gray,
             )
@@ -182,10 +188,10 @@ fun DiagnosisFormContent(
                 modifier =
                     Modifier
                         .fillMaxWidth(),
-                label = { Text("법률 문제 상황 설명") },
+                label = { Text(stringResource(R.string.diagnosis_input_label)) },
                 placeholder = {
                     Text(
-                        text = "사장이 3개월동안 월급을 안줬는데...",
+                        text = stringResource(R.string.diagnosis_input_placeholder),
                         color = Color.Gray.copy(alpha = 0.5f),
                     )
                 },
@@ -202,7 +208,7 @@ fun DiagnosisFormContent(
                     IconButton(onClick = sttController.toggleListening) {
                         Icon(
                             imageVector = Icons.Default.Mic,
-                            contentDescription = "음성 입력",
+                            contentDescription = stringResource(R.string.diagnosis_voice_input_desc),
                             tint = Color.Gray,
                         )
                     }
@@ -221,7 +227,7 @@ fun DiagnosisFormContent(
             ) {
                 Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("자가진단 시작하기", style = MaterialTheme.typography.labelLarge)
+                Text(stringResource(R.string.diagnosis_start_btn), style = MaterialTheme.typography.labelLarge)
             }
         }
         SttBottomSheet(controller = sttController)
@@ -231,97 +237,122 @@ fun DiagnosisFormContent(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DiagnosisResultContent(
+    modifier: Modifier = Modifier,
     listState: LazyListState,
     uiState: DiagnosisUiState,
-//    currentAnswerText: String,
-//    onAnswerChange: (String) -> Unit,
-//    onAnswerSend: () -> Unit,
     onOptionSelected: (String) -> Unit,
     onRetry: (RetryActionType) -> Unit,
+    onReset: () -> Unit,
 ) {
-//    val sttController = rememberSpeechRecognizerHandler(
-//        onFinalResult = { recognizedText ->
-//            val newText = if (currentAnswerText.isBlank()) recognizedText else "$currentAnswerText $recognizedText"
-//            onAnswerChange(newText.trim())
-//        }
-//    )
+    val isGuideFinished =
+        uiState.currentPhase == DiagnosisPhase.IDLE &&
+            uiState.streamingText.isEmpty() &&
+            uiState.messages.lastOrNull() is Diagnosis.Bot &&
+            uiState.messages.size > 1
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            LazyColumn(
-                state = listState,
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 400.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                items(uiState.messages) { message ->
-                    when (message) {
-                        is Diagnosis.User -> UserBubble(message.text)
-                        is Diagnosis.Bot -> BotBubble(message.text)
-                        is Diagnosis.BotWithOptions ->
-                            BotWithOptionsBubble(
-                                text = message.text,
-                                options = message.options,
-                                onOptionSelected = onOptionSelected,
-                                isEnabled = uiState.currentPhase == DiagnosisPhase.AWAITING_ANSWERS && message == uiState.messages.last(),
-                            )
+    Log.d("BUTTON_DEBUG", "=== isGuideFinished: $isGuideFinished ===")
+    Log.d("BUTTON_DEBUG", "phase: ${uiState.currentPhase}")
+    Log.d("BUTTON_DEBUG", "streamingText empty: ${uiState.streamingText.isEmpty()}")
+    Log.d("BUTTON_DEBUG", "lastMsg: ${uiState.messages.lastOrNull()?.javaClass?.simpleName}")
+    Log.d("BUTTON_DEBUG", "msgSize: ${uiState.messages.size}")
 
-                        is Diagnosis.ErrorRetry ->
-                            ErrorRetryBubble(
-                                text = message.text,
-                                onRetry = { onRetry(message.retryActionType) },
-                            )
+    if (isGuideFinished) {
+        Log.d("BUTTON_DEBUG", ">>> 버튼 렌더링됨")
+    }
 
-                        is Diagnosis.Loading -> LoadingBubble()
-                    }
+    Box(modifier = modifier.fillMaxSize()) {
+        LazyColumn(
+            state = listState,
+            modifier = Modifier.fillMaxSize(),
+            contentPadding =
+                PaddingValues(
+                    start = 16.dp,
+                    top = 16.dp,
+                    end = 16.dp,
+                    // 버튼이 떠있을 때 마지막 아이템이 버튼에 가리지 않도록 여백 확보
+                    bottom = if (isGuideFinished) 80.dp else 16.dp,
+                ),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            items(uiState.messages) { message ->
+                when (message) {
+                    is Diagnosis.User -> UserBubble(message.text)
+                    is Diagnosis.Bot -> BotBubble(message.text)
+                    is Diagnosis.BotWithOptions ->
+                        BotWithOptionsBubble(
+                            text = message.text,
+                            options = message.options,
+                            onOptionSelected = onOptionSelected,
+                            isEnabled =
+                                uiState.currentPhase == DiagnosisPhase.AWAITING_ANSWERS &&
+                                    message == uiState.messages.last(),
+                        )
+
+                    is Diagnosis.ErrorRetry ->
+                        ErrorRetryBubble(
+                            text = message.text,
+                            onRetry = { onRetry(message.retryActionType) },
+                        )
+
+                    is Diagnosis.Loading -> LoadingBubble()
                 }
             }
-
-//            if (uiState.currentPhase == DiagnosisPhase.AWAITING_ANSWERS) {
-//                Row(
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .padding(16.dp)
-//                        .background(Color.White),
-//                    verticalAlignment = Alignment.CenterVertically
-//                ) {
-//                    TextField(
-//                        value = currentAnswerText,
-//                        onValueChange = onAnswerChange,
-//                        modifier = Modifier.weight(1f),
-//                        placeholder = { Text("직접 입력 또는 위의 버튼 선택...") },
-//                        shape = RoundedCornerShape(12.dp),
-//                        trailingIcon = {
-//                            IconButton(onClick = sttController.toggleListening) {
-//                                Icon(
-//                                    imageVector = Icons.Default.Mic,
-//                                    contentDescription = "음성 입력",
-//                                    tint = Color.Gray
-//                                )
-//                            }
-//                        }
-//                    )
-//                    Spacer(modifier = Modifier.width(8.dp))
-//                    Button(
-//                        onClick = onAnswerSend,
-//                        enabled = currentAnswerText.isNotBlank() && !sttController.isSheetVisible
-//                    ) {
-//                        Text("전송")
-//                    }
-//                }
-//            }
         }
-//        SttBottomSheet(controller = sttController)
+
+//        if (isGuideFinished) {
+//            Button(
+//                onClick = onReset,
+//                modifier = Modifier
+//                    .align(Alignment.BottomCenter)  // ← 핵심
+//                    .fillMaxWidth()
+//                    .padding(horizontal = 16.dp, vertical = 12.dp)
+//                    .height(52.dp),
+//                shape = RoundedCornerShape(16.dp),
+//                colors = ButtonDefaults.buttonColors(
+//                    containerColor = MaterialTheme.colorScheme.primary,
+//                ),
+//            ) {
+//                Text(
+//                    text = "처음으로 돌아가기",
+//                    style = MaterialTheme.typography.labelLarge,
+//                )
+//            }
+//        }
+
+        AnimatedVisibility(
+            visible = isGuideFinished,
+            enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+            modifier = Modifier.align(Alignment.BottomCenter),
+        ) {
+            Button(
+                onClick = onReset,
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                        .height(52.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors =
+                    ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                    ),
+            ) {
+                Text(
+                    text = "처음으로 돌아가기",
+                    style = MaterialTheme.typography.labelLarge,
+                )
+            }
+        }
     }
 }
 
 enum class SttPhase(
-    val message: String,
+    @StringRes val message: Int,
 ) {
-    IDLE(""),
-    CONNECTING("연결 중입니다..."),
-    LISTENING("듣고 있어요... 말씀하세요."),
-    PROCESSING("텍스트로 변환하는 중입니다..."),
+    IDLE(R.string.stt_empty),
+    CONNECTING(R.string.stt_connecting),
+    LISTENING(R.string.stt_listening),
+    PROCESSING(R.string.stt_processing),
 }
 
 data class SttController(
@@ -394,34 +425,34 @@ fun rememberSpeechRecognizerHandler(onFinalResult: (String) -> Unit): SttControl
 
                     when (error) {
                         SpeechRecognizer.ERROR_AUDIO ->
-                            Toast.makeText(context, "오디오 녹음 오류입니다. 마이크 상태를 확인해 주세요.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.stt_error_audio), Toast.LENGTH_SHORT).show()
 
                         SpeechRecognizer.ERROR_CLIENT ->
-                            Toast.makeText(context, "클라이언트 측 오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.stt_error_client), Toast.LENGTH_SHORT).show()
 
                         SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS ->
-                            Toast.makeText(context, "마이크 권한이 없습니다. 설정에서 허용해 주세요.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.stt_error_no_permission), Toast.LENGTH_SHORT).show()
 
                         SpeechRecognizer.ERROR_NETWORK ->
-                            Toast.makeText(context, "네트워크 연결이 원활하지 않습니다.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.stt_error_network), Toast.LENGTH_SHORT).show()
 
                         SpeechRecognizer.ERROR_NETWORK_TIMEOUT ->
-                            Toast.makeText(context, "네트워크 연결 시간이 초과되었습니다.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.stt_error_timeout), Toast.LENGTH_SHORT).show()
 
                         SpeechRecognizer.ERROR_NO_MATCH ->
-                            Toast.makeText(context, "인식된 결과가 없습니다. 다시 말씀해 주세요.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.stt_error_no_result), Toast.LENGTH_SHORT).show()
 
                         SpeechRecognizer.ERROR_RECOGNIZER_BUSY ->
-                            Toast.makeText(context, "서비스가 바쁩니다. 잠시 후 다시 시도해 주세요.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.stt_error_busy), Toast.LENGTH_SHORT).show()
 
                         SpeechRecognizer.ERROR_SERVER ->
-                            Toast.makeText(context, "서버 오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.stt_error_server), Toast.LENGTH_SHORT).show()
 
                         SpeechRecognizer.ERROR_SPEECH_TIMEOUT ->
-                            Toast.makeText(context, "말씀이 없어 인식을 종료합니다.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.stt_error_no_speech), Toast.LENGTH_SHORT).show()
 
                         else ->
-                            Toast.makeText(context, "알 수 없는 오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.stt_error_unknown), Toast.LENGTH_SHORT).show()
                     }
                 }
 
@@ -477,7 +508,7 @@ fun rememberSpeechRecognizerHandler(onFinalResult: (String) -> Unit): SttControl
             if (isGranted) {
                 startListeningInternal()
             } else {
-                Toast.makeText(context, "음성 인식을 위해 마이크 권한이 필요합니다.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.stt_permission_required), Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -491,7 +522,7 @@ fun rememberSpeechRecognizerHandler(onFinalResult: (String) -> Unit): SttControl
 
     val toggleListening = {
         if (speechRecognizer == null) {
-            Toast.makeText(context, "이 기기에서는 음성 인식을 지원하지 않습니다.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.stt_not_supported), Toast.LENGTH_SHORT).show()
         } else {
             val permissionCheck = ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO)
             if (permissionCheck == PackageManager.PERMISSION_GRANTED) {
@@ -503,11 +534,10 @@ fun rememberSpeechRecognizerHandler(onFinalResult: (String) -> Unit): SttControl
                         Manifest.permission.RECORD_AUDIO,
                     )
                 ) {
-                    Toast.makeText(context, "법률 진단을 위해 마이크 권한이 필요합니다.", Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, context.getString(R.string.stt_permission_legal), Toast.LENGTH_LONG).show()
                     permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
                 } else {
-                    Toast.makeText(context, "마이크 권한이 거부되어 있습니다. 설정에서 허용해주세요.", Toast.LENGTH_LONG).show()
-//                    permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                    Toast.makeText(context, context.getString(R.string.stt_permission_denied), Toast.LENGTH_LONG).show()
                     openSettings()
                 }
             }
@@ -558,7 +588,7 @@ fun SttBottomSheet(controller: SttController) {
                 // 마이크 아이콘 (듣는 중일 때 붉은색 활성화)
                 Icon(
                     imageVector = Icons.Default.Mic,
-                    contentDescription = "마이크",
+                    contentDescription = stringResource(R.string.diagnosis_mic_desc),
                     tint = if (controller.phase == SttPhase.LISTENING) Color.Red else Color.LightGray,
                     modifier = Modifier.size(48.dp),
                 )
@@ -566,7 +596,7 @@ fun SttBottomSheet(controller: SttController) {
 
                 // 상태 표시 (연결 중..., 듣고 있어요..., 변환 중...)
                 Text(
-                    text = controller.phase.message,
+                    text = stringResource(controller.phase.message),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,
@@ -575,7 +605,7 @@ fun SttBottomSheet(controller: SttController) {
 
                 // 실시간 부분 인식 결과 노출 영역 (회색 글씨)
                 Text(
-                    text = if (controller.partialText.isBlank()) "..." else controller.partialText,
+                    text = controller.partialText.ifBlank { "..." },
                     style = MaterialTheme.typography.bodyLarge,
                     color = if (controller.partialText.isBlank()) Color.LightGray else Color.Gray,
                     modifier = Modifier.fillMaxWidth(),
@@ -590,7 +620,7 @@ fun SttBottomSheet(controller: SttController) {
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                     enabled = controller.phase == SttPhase.LISTENING || controller.phase == SttPhase.CONNECTING,
                 ) {
-                    Text("입력 완료")
+                    Text(stringResource(R.string.diagnosis_submit_btn))
                 }
             }
         }
@@ -653,7 +683,7 @@ fun ErrorRetryBubble(
             onClick = onRetry,
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
         ) {
-            Text("분석 요청")
+            Text(stringResource(R.string.diagnosis_request_btn))
         }
     }
 }
@@ -730,7 +760,7 @@ fun LoadingBubble() {
             color = MaterialTheme.colorScheme.primary,
         )
         Spacer(modifier = Modifier.width(8.dp))
-        Text(text = "분석 중...", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+        Text(text = stringResource(R.string.diagnosis_analyzing), style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
     }
 }
 
@@ -742,39 +772,3 @@ fun LoadingBubble() {
 //        DiagnosisFormContent(userScenario = "", onUserScenarioChange = {}, onStartDiagnosis = {})
 //    }
 // }
-
-@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
-@Composable
-fun DiagnosisResultContentPreview() {
-    val dummyMessages =
-        listOf(
-            Diagnosis.Bot("안녕하세요! 어떤 법률적 도움이 필요하신가요?"),
-            Diagnosis.User("임금 체불 때문에 문의 드립니다."),
-            Diagnosis.BotWithOptions(
-                text = "미지급된 임금이 총 얼마 정도인가요?",
-                options = listOf("100만원 미만", "100~500만원", "500만원 이상"),
-            ),
-            Diagnosis.ErrorRetry("에러 발생", RetryActionType.FOLLOW_UP_QUESTIONS),
-        )
-
-    val dummyUiState =
-        DiagnosisUiState(
-            messages = dummyMessages,
-            currentPhase = DiagnosisPhase.AWAITING_ANSWERS,
-            isShowingResults = true,
-        )
-
-    MaterialTheme {
-        Surface(color = Color.White) {
-            DiagnosisResultContent(
-                listState = rememberLazyListState(),
-                uiState = dummyUiState,
-//                currentAnswerText = "직접 입력 중인 텍스트",
-//                onAnswerChange = {},
-//                onAnswerSend = {},
-                onOptionSelected = {},
-                onRetry = {},
-            )
-        }
-    }
-}

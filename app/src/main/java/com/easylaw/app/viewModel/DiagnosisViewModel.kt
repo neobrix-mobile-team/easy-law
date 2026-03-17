@@ -6,29 +6,33 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.easylaw.app.data.repository.DiagnosisRepository
 import com.easylaw.app.domain.model.Diagnosis
 import com.easylaw.app.domain.model.DiagnosisPhase
 import com.easylaw.app.domain.model.RetryActionType
+import com.easylaw.app.domain.usecase.GenerateDiagnosisGuideUseCase
+import com.easylaw.app.domain.usecase.GetFollowUpQuestionUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.text.clear
 
 data class DiagnosisUiState(
     val messages: List<Diagnosis> = emptyList(),
     val currentPhase: DiagnosisPhase = DiagnosisPhase.IDLE,
     val isShowingResults: Boolean = false,
     val questionCount: Int = 0,
+    val streamingText: String = "",
 )
 
 @HiltViewModel
 class DiagnosisViewModel
     @Inject
     constructor(
-        private val repository: DiagnosisRepository,
+        private val getFollowUpQuestionUseCase: GetFollowUpQuestionUseCase,
+        private val generateDiagnosisGuideUseCase: GenerateDiagnosisGuideUseCase,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(DiagnosisUiState())
         val uiState: StateFlow<DiagnosisUiState> = _uiState.asStateFlow()
@@ -43,16 +47,6 @@ class DiagnosisViewModel
         }
 
         private fun getOptimizedContext(): String {
-//            val firstScenario = conversationHistory.firstOrNull() ?: ""
-//            // 최신 질문과 답변 세트(최대 2개)만 잘라서 가져옵니다.
-//            val recentConversations =
-//                if (conversationHistory.size > 1) {
-//                    conversationHistory.takeLast(2).joinToString(" ")
-//                } else {
-//                    ""
-//                }
-//            return if (recentConversations.isNotEmpty()) "$firstScenario $recentConversations" else firstScenario
-
             if (conversationHistory.isEmpty()) return ""
             return conversationHistory.joinToString("\n")
         }
@@ -77,17 +71,19 @@ class DiagnosisViewModel
 
         private fun generateFollowUpQuestions(scenario: String) {
             viewModelScope.launch {
-                if (_uiState.value.questionCount >= 3) {
-                    executeDiagnosisPipeline()
-                    return@launch
-                }
-
                 try {
                     addLoading()
-                    val followUpAction = repository.getAdditionalQuestions(scenario)
+                    Log.d("Diagnosis_LOG", "[VM] 추가 질문 요청 중...")
+
+                    val followUpAction =
+                        getFollowUpQuestionUseCase(
+                            scenario = scenario,
+                            questionCount = _uiState.value.questionCount,
+                        )
                     removeLoadingOnly()
 
                     if (followUpAction.isEnough) {
+                        Log.d("Diagnosis_LOG", "[VM] 정보 충분 → 최종 분석 실행")
                         executeDiagnosisPipeline()
                     } else {
                         conversationHistory.add("시스템질문: ${followUpAction.question}")
@@ -104,8 +100,9 @@ class DiagnosisViewModel
                     }
                 } catch (e: Exception) {
                     removeLoadingOnly()
-                    Log.e("ERROR", "generateFollowUpQuestions error $e", e)
-                    showRetryError(RetryActionType.FOLLOW_UP_QUESTIONS)
+                    val errorMsg = resolveErrorMessage(e)
+                    Log.e("Diagnosis_LOG", "[VM] 추가 질문 실패: ${e.javaClass.simpleName} - ${e.message}")
+                    showRetryError(RetryActionType.FOLLOW_UP_QUESTIONS, errorMsg)
                 }
             }
         }
@@ -130,11 +127,24 @@ class DiagnosisViewModel
                 try {
                     addLoading()
                     val contextForAnalysis = getOptimizedContext()
-                    val lawNames = repository.extractTargetLaws(contextForAnalysis)
-                    val lawDetails = repository.fetchDiagnosisDetails(lawNames)
-                    val finalGuide = repository.generateFinalGuide(contextForAnalysis, lawDetails)
+                    Log.d("Diagnosis_LOG", "[VM] 최종 가이드 스트리밍 시작")
 
-                    removeLoadingOnly()
+                    Log.d("Diagnosis_LOG", "[VM] 최종 가이드 생성 시작")
+                    // UseCase가 법령추출 → 조회 → 가이드생성 파이프라인을 캡슐화
+                    val finalGuide =
+                        generateDiagnosisGuideUseCase(
+                            contextForAnalysis,
+                            onChunk = { chunk ->
+                                if (_uiState.value.streamingText.isEmpty()) {
+                                    removeLoadingOnly()
+                                }
+
+                                _uiState.value =
+                                    _uiState.value.copy(
+                                        streamingText = _uiState.value.streamingText + chunk,
+                                    )
+                            },
+                        )
 
                     val currentMessages = _uiState.value.messages.toMutableList()
                     currentMessages.add(Diagnosis.Bot(finalGuide))
@@ -143,18 +153,44 @@ class DiagnosisViewModel
                         _uiState.value.copy(
                             messages = currentMessages,
                             currentPhase = DiagnosisPhase.IDLE,
+                            streamingText = "",
                         )
+                    Log.d("Diagnosis_LOG", "[VM] 전체 파이프라인 완료")
                 } catch (e: Exception) {
                     removeLoadingOnly()
-                    showRetryError(RetryActionType.FINAL_GUIDE)
+                    _uiState.value = _uiState.value.copy(streamingText = "")
+                    val errorMsg = resolveErrorMessage(e)
+                    Log.e("Diagnosis_LOG", "[VM] 파이프라인 실패: ${e.javaClass.simpleName} - ${e.message}")
+                    showRetryError(RetryActionType.FINAL_GUIDE, errorMsg)
                 }
             }
         }
 
-        // 처음 사용된 구문 설명: 통신 에러가 발생했을 때 기존 메시지 리스트 하단에 "재시도" 버튼 UI 상태를 추가하는 함수입니다.
-        private fun showRetryError(type: RetryActionType) {
+        private fun resolveErrorMessage(e: Exception): String =
+            when {
+                e is kotlinx.coroutines.TimeoutCancellationException ->
+                    "AI 응답 시간이 초과되었습니다.\n잠시 후 다시 시도해주세요."
+
+                e.message?.contains("429") == true || e.message?.contains("quota") == true ->
+                    "AI 사용량 한도를 초과했습니다.\n잠시 후 다시 시도해주세요."
+
+                e.message?.contains("401") == true || e.message?.contains("403") == true ->
+                    "API 인증에 실패했습니다.\n앱을 재시작해주세요."
+
+                e.message?.contains("Unable to resolve host") == true ||
+                    e.message?.contains("timeout") == true ->
+                    "네트워크 연결을 확인해주세요."
+
+                else ->
+                    "분석이 일시 중단되었습니다.\n잠시 후 다시 요청해주세요."
+            }
+
+        private fun showRetryError(
+            type: RetryActionType,
+            message: String = "분석이 일시 중단되었습니다.\n잠시 후 다시 요청해주세요.",
+        ) {
             val currentMessages = _uiState.value.messages.toMutableList()
-            currentMessages.add(Diagnosis.ErrorRetry("분석이 일시 중단되었습니다.\n잠시 후 다시 요청해주세요.", type))
+            currentMessages.add(Diagnosis.ErrorRetry(message, type))
             _uiState.value =
                 _uiState.value.copy(
                     messages = currentMessages,
@@ -169,6 +205,7 @@ class DiagnosisViewModel
                 _uiState.value.copy(
                     messages = currentMessages,
                     currentPhase = DiagnosisPhase.PROCESSING,
+                    streamingText = "",
                 )
 
             when (type) {
@@ -187,5 +224,11 @@ class DiagnosisViewModel
             val currentMessages = _uiState.value.messages.toMutableList()
             currentMessages.removeAll { it is Diagnosis.Loading }
             _uiState.value = _uiState.value.copy(messages = currentMessages)
+        }
+
+        fun resetDiagnosis() {
+            conversationHistory.clear()
+            userScenarioInput = ""
+            _uiState.value = DiagnosisUiState()
         }
     }
