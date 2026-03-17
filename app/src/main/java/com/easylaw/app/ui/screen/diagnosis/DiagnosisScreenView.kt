@@ -40,6 +40,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Mic
@@ -118,8 +119,7 @@ fun DiagnosisScreen(
             modifier
                 .fillMaxSize()
                 .background(Color(0xFFF9FAFB))
-                .safeDrawingPadding()
-                .imePadding(),
+                .safeDrawingPadding(),
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             EasyLawTopBar()
@@ -166,7 +166,9 @@ fun DiagnosisFormContent(
             modifier =
                 Modifier
                     .fillMaxSize()
-                    .padding(24.dp),
+                    .padding(24.dp)
+                    .verticalScroll(rememberScrollState())
+                    .imePadding(),
         ) {
             Text(
                 text = stringResource(R.string.diagnosis_title),
