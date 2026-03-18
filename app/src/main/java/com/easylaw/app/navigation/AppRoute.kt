@@ -1,6 +1,5 @@
 package com.easylaw.app.navigation
 
-import CommunityDetailView
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -22,10 +21,13 @@ import com.easylaw.app.ui.screen.LegalSearchRoute
 import com.easylaw.app.ui.screen.Login.LoginView
 import com.easylaw.app.ui.screen.Login.SignView
 import com.easylaw.app.ui.screen.Self.SelfView
+import com.easylaw.app.ui.screen.community.CommunityDetailView
+import com.easylaw.app.ui.screen.community.CommunityUpdateView
 import com.easylaw.app.ui.screen.community.CommunityView
 import com.easylaw.app.ui.screen.community.CommunityWriteView
 import com.easylaw.app.ui.screen.onboarding.OnboardingView
 import com.easylaw.app.viewmodel.CommunityDetailViewModel
+import com.easylaw.app.viewmodel.CommunityUpdateViewModel
 import com.easylaw.app.viewmodel.CommunityViewModel
 import com.easylaw.app.viewmodel.CommunityWriteViewModel
 import com.easylaw.app.viewmodel.LoginViewModel
@@ -47,6 +49,7 @@ object NavRoute {
     const val LAW_CONSULT = "lawConsult"
     const val COMMUNITY = "community"
     const val COMMUNITY_WRITE = "communityWrite"
+    const val COMMUNITY_UPDATE = "communityUpdate/{updateId}"
     const val SELF = "self"
     const val COMMUNITY_DETAIL = "communityDetail/{id}"
 
@@ -183,6 +186,22 @@ fun AppRoute(
                 goBack = {
                     navController.popBackStack()
                 },
+                goUpdate = { updateId ->
+                    navController.navigate("communityUpdate/$updateId") {
+                        launchSingleTop = true
+                    }
+                },
+            )
+        }
+        composable(
+            route = NavRoute.COMMUNITY_UPDATE,
+            arguments = listOf(navArgument("updateId") { type = NavType.LongType }),
+        ) {
+            val communityUpdateViewModel: CommunityUpdateViewModel = hiltViewModel()
+            CommunityUpdateView(
+                modifier = modifier,
+                viewModel = communityUpdateViewModel,
+                goBack = { navController.popBackStack() },
             )
         }
         // 커뮤니티 - 글쓰기

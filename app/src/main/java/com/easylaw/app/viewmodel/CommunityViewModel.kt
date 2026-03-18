@@ -6,14 +6,21 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.easylaw.app.data.models.CategoryModel
+import com.easylaw.app.data.models.CommunityNewsModel
+import com.easylaw.app.data.models.CommunityPrecModel
 import com.easylaw.app.data.models.CommunityWriteModel
 import com.easylaw.app.data.models.NaverNewsModel
-import com.easylaw.app.data.repository.NaverNewRepo
+import com.easylaw.app.data.repository.CommunityRepo
+import com.easylaw.app.data.repository.NaverNewsRepo
+import com.easylaw.app.domain.model.TopCommenter
 import com.google.ai.client.generativeai.GenerativeModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.postgrest.query.Columns
 import io.github.jan.supabase.postgrest.query.Order
+import io.github.jan.supabase.postgrest.rpc
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -38,6 +45,9 @@ data class CommunityViewState(
             total = 0,
         ),
     val showCounselor: Boolean = false,
+    val topCommenters: List<TopCommenter> = emptyList(),
+    val communityNewList: List<CommunityNewsModel> = emptyList(),
+    val communityPrecList: List<CommunityPrecModel> = emptyList(),
 )
 
 // 커뮤니티 화면 뷰 모델
@@ -47,7 +57,8 @@ class CommunityViewModel
     constructor(
         private val supabase: SupabaseClient,
         private val ai: GenerativeModel,
-        private val naverNewsRepo: NaverNewRepo,
+        private val naverNewsRepo: NaverNewsRepo,
+        private val communityRepo: CommunityRepo,
     ) : ViewModel() {
         private val _communityState = MutableStateFlow(CommunityViewState())
         val communityState = _communityState.asStateFlow()
@@ -55,20 +66,29 @@ class CommunityViewModel
         init {
             viewModelScope.launch {
                 loadCategories()
-                loadCommunityLists()
+//                loadCommunityLists()
 //                aiCommunity()
             }
         }
 
-        fun onBottomSheet(keyworkd: String) {
+        fun refreshCommunityList() {
+            viewModelScope.launch {
+                loadCommunityLists()
+            }
+        }
+
+        fun onBottomSheet(keyword: String) {
             _communityState.update {
                 it.copy(
-                    selectedKeyword = keyworkd,
+                    selectedKeyword = keyword,
                 )
             }
+
+            val formatKeyword = "$keyword 변호사 칼럼"
+
             viewModelScope.launch {
                 // api 호출
-                fetchNaverNews(keyworkd)
+                fetchNaverNews(formatKeyword)
             }
         }
 
@@ -90,9 +110,10 @@ class CommunityViewModel
                         item.copy(
                             description = item.description.decodeHtml(),
                             title = item.title.decodeHtml(),
+                            link = item.link.decodeHtml().replace("\\u003d", "="),
                         )
                     }
-
+                Log.d("formatitem", formatItem.toString())
                 _communityState.update {
                     it.copy(
                         naverNewsItem = res.copy(items = formatItem),
@@ -116,10 +137,37 @@ class CommunityViewModel
         }
 
         fun showCounselorList() {
-            _communityState.update {
-                it.copy(
-                    showCounselor = !it.showCounselor,
-                )
+            viewModelScope.launch {
+                _communityState.update {
+                    it.copy(
+                        showCounselor = !it.showCounselor,
+                    )
+                }
+            }
+        }
+
+        suspend fun fetchCommunityLaw(newsList: List<CommunityNewsModel>) {
+            try {
+                // mutableListOf 수정 가능한 리스트
+                val tempList = mutableListOf<CommunityPrecModel>()
+
+                newsList.forEach { item ->
+                    val res = communityRepo.getCommunityLaw(item.searchQuery)
+                    res.precSearch.prec.let {
+                        tempList.addAll(it)
+                    }
+                }
+
+                _communityState.update {
+                    it.copy(
+                        communityPrecList = tempList,
+                    )
+                }
+
+//        val res =  communityRepo.getCommunityLaw(query)
+                Log.d("커뮤니티 판례", _communityState.value.communityPrecList.toString())
+            } catch (e: Exception) {
+                Log.e("커뮤니티 판례 에러", e.toString())
             }
         }
 
@@ -217,35 +265,31 @@ class CommunityViewModel
 
         suspend fun loadCategories() {
             try {
-                val result =
-                    supabase
-                        .from("categories")
-                        .select()
-                        .decodeList<CategoryModel>()
+                val result = supabase.from("categories").select().decodeList<CategoryModel>()
 
-                /*
-                    associate  :list 형식을 map으로 변환
-                    ex)
-                    [
-                    CategoryModel(key="CIVIL", name="민사"),
-                    CategoryModel(key="CRIMINAL", name="형사"),
-                    ]
-                        ->
-                    {
-                      "CIVIL" : "민사",
-                      "CRIMINAL" : "형사",
-                      "LABOR" : "노무"
-                    }
+            /*
+                associate  :list 형식을 map으로 변환
+                ex)
+                [
+                CategoryModel(key="CIVIL", name="민사"),
+                CategoryModel(key="CRIMINAL", name="형사"),
+                ]
+                    ->
+                {
+                  "CIVIL" : "민사",
+                  "CRIMINAL" : "형사",
+                  "LABOR" : "노무"
+                }
 
-    //                val map = result.associate { it.key to it.name }
-    //                _communityState.update{
-    //                    it.copy(
-    //                        categoryList = map
-    //                    )
-    //                }
-    //                Log.d("카테고리", _communityState.value.categoryList.toString())
+//                val map = result.associate { it.key to it.name }
+//                _communityState.update{
+//                    it.copy(
+//                        categoryList = map
+//                    )
+//                }
+//                Log.d("카테고리", _communityState.value.categoryList.toString())
 
-                 */
+             */
                 val map = linkedMapOf<String, String>()
                 map["ALL"] = "전체"
 
@@ -269,10 +313,23 @@ class CommunityViewModel
             try {
                 val categoryKoreanName = _communityState.value.categoryList[categoryKey]
 
+                loadTopCommenters()
+                loadCommunityNews()
+                fetchCommunityLaw(newsList = _communityState.value.communityNewList)
+
                 val result =
                     supabase
                         .from("community")
-                        .select {
+                        .select(
+                            columns =
+                                Columns.raw(
+                                    """
+                                    *,
+                                    comment_count:community_comments(count),
+                                    comment_like:community_likes(count)
+                                    """.trimIndent(),
+                                ),
+                        ) {
                             filter {
                                 if (categoryKey != "ALL" && categoryKoreanName != null) {
                                     eq("category", categoryKoreanName)
@@ -282,18 +339,45 @@ class CommunityViewModel
                         }.decodeList<CommunityWriteModel>()
 
                 _communityState.update { it.copy(communityList = result) }
-
-                /*
-
-                여기서 이름수 카운트해서 이름이랑 횟수 띄우기?
-//                result.forEach{
-//                    it.comments.a
-//                }
-                 */
             } catch (e: Exception) {
                 Log.e("supabase community error", e.toString())
             } finally {
                 _communityState.update { it.copy(isCommunityListLoading = false) }
+            }
+        }
+
+        suspend fun loadTopCommenters() {
+            try {
+                val topCommenters =
+                    supabase.postgrest
+                        .rpc("get_top_commenters")
+                        .decodeList<TopCommenter>()
+
+                _communityState.update { it.copy(topCommenters = topCommenters) }
+            } catch (e: Exception) {
+                Log.e("TopCommenter Error", e.toString())
+            }
+        }
+
+        suspend fun loadCommunityNews() {
+            try {
+                val response =
+                    supabase
+                        .from("community_news")
+                        .select()
+                        .decodeList<CommunityNewsModel>()
+
+//            val newsTitles = response.map { it.title }
+
+                _communityState.update {
+                    it.copy(
+                        communityNewList = response,
+                    )
+                }
+
+//            Log.d("loadCommunityNews", "가져온 뉴스 개수: ${newsTitles.size}")
+            } catch (e: Exception) {
+                Log.e("loadCommunityNews error", e.toString())
             }
         }
 

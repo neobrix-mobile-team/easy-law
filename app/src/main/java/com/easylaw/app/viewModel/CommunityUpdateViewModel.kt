@@ -3,6 +3,7 @@ package com.easylaw.app.viewmodel
 import android.content.Context
 import android.net.Uri
 import android.util.Log
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.easylaw.app.data.models.CategoryModel
@@ -23,53 +24,49 @@ import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
 
-data class CommunityWriteViewState(
+data class CommunityUpdateViewState(
 //    val categories: List<String> = listOf("민사", "형사", "노무", "가사", "기타"),
 //    val selectedCategory: String = "",
     val categoryList: Map<String, String> = emptyMap(),
     val selectedCategory: String = "ALL",
-    val communityWriteTitleField: String = "",
-    val communityWriteContentField: String = "",
+    val communityUpdateTitleField: String = "",
+    val communityUpdateContentField: String = "",
     val selectedImages: List<String> = emptyList(),
     val isShowDialog: Boolean = false,
     val previewImage: String? = "",
-    val isWriteLoading: Boolean = false,
-    val isWriteErrorLoading: Boolean = false,
+    val isUpdateLoading: Boolean = false,
+    val isUpdateErrorLoading: Boolean = false,
 )
 
 @HiltViewModel
-class CommunityWriteViewModel
+class CommunityUpdateViewModel
     @Inject
     constructor(
+        private val savedStateHandle: SavedStateHandle,
         private val supabase: SupabaseClient,
         private val userSession: UserSession,
         @ApplicationContext private val context: Context,
     ) : ViewModel() {
-        private val _commnuityWriteViewState = MutableStateFlow(CommunityWriteViewState())
-        val commnuityWriteViewState = _commnuityWriteViewState.asStateFlow()
+        private val _commnuityUpdateViewState = MutableStateFlow(CommunityUpdateViewState())
+        val commnuityUpdateViewState = _commnuityUpdateViewState.asStateFlow()
 
-        // 글쓰기 성공 감지(뒤로가기 용)
-        // channel : 하나의 상태를 알려주기 위함
-        private val _isWriteSuccess = Channel<Unit>()
-        val isWriteSuccess = _isWriteSuccess.receiveAsFlow()
+        private val updateId: Long = savedStateHandle.get<Long>("updateId") ?: 0L
+
+        private val _isUpdateSuccess = Channel<Unit>()
+        val isUpdateSuccess = _isUpdateSuccess.receiveAsFlow()
 
         init {
-//            Log.d("ViewModel_LifeCycle", "CommunityWriteViewModel 생성 (HashCode: ${this.hashCode()})")
             viewModelScope.launch {
                 loadCategories()
+                loadCommunityUpdate()
             }
-        }
-
-        override fun onCleared() {
-            super.onCleared()
-//        Log.d("ViewModel_LifeCycle", "CommunityWriteViewModel 파괴 (onCleared)")
         }
 
         suspend fun loadCategories() {
             try {
-                _commnuityWriteViewState.update {
+                _commnuityUpdateViewState.update {
                     it.copy(
-                        isWriteLoading = true,
+                        isUpdateLoading = true,
                     )
                 }
 
@@ -80,111 +77,157 @@ class CommunityWriteViewModel
                         .decodeList<CategoryModel>()
                 val map = result.associate { it.key to it.name }
 
-                _commnuityWriteViewState.update {
+                _commnuityUpdateViewState.update {
                     it.copy(categoryList = map)
                 }
             } catch (e: Exception) {
                 Log.e("Category Error", e.toString())
             } finally {
-                _commnuityWriteViewState.update {
+                _commnuityUpdateViewState.update {
                     it.copy(
-                        isWriteLoading = false,
+                        isUpdateLoading = false,
                     )
                 }
             }
         }
 
+        suspend fun loadCommunityUpdate() {
+            try {
+                val updatePost =
+                    supabase
+                        .from("community")
+                        .select {
+                            filter {
+                                eq("id", updateId)
+                            }
+                        }.decodeSingle<CommunityWriteModel>()
+//            Log.d("CategoryCheck", "DB에서 가져온 카테고리: '${updatePost.category}'")
+
+                val initialKey =
+                    _commnuityUpdateViewState.value.categoryList
+                        .filterValues { it == updatePost.category }
+                        .keys
+                        .firstOrNull() ?: "ETC"
+
+                _commnuityUpdateViewState.update {
+                    it.copy(
+                        communityUpdateTitleField = updatePost.title, // 제목 매핑
+                        communityUpdateContentField = updatePost.content, // 내용 매핑
+                        selectedCategory = initialKey, // 카테고리 매핑
+//                    selectedCategory = updatePost.category.trim(),         // 카테고리 매핑
+                        selectedImages = updatePost.images,
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e("mapping error", e.toString())
+            }
+        }
+
         fun onCategorySelected(category: String) {
-            _commnuityWriteViewState.update {
+            _commnuityUpdateViewState.update {
                 it.copy(selectedCategory = category)
             }
         }
 
         fun onTitleFieldChanged(title: String) {
-            _commnuityWriteViewState.update { it.copy(communityWriteTitleField = title) }
+            _commnuityUpdateViewState.update { it.copy(communityUpdateTitleField = title) }
         }
 
         fun onContentFieldChanged(content: String) {
-            _commnuityWriteViewState.update { it.copy(communityWriteContentField = content) }
+            _commnuityUpdateViewState.update { it.copy(communityUpdateContentField = content) }
         }
 
         // 선택한 이미지 문자열로 저장
         fun onImageAdded(uri: String) {
-            _commnuityWriteViewState.update {
+            _commnuityUpdateViewState.update {
                 it.copy(selectedImages = it.selectedImages + uri)
             }
         }
 
         fun removeSelectedImage(uri: String) {
-            _commnuityWriteViewState.update {
+            _commnuityUpdateViewState.update {
                 it.copy(selectedImages = it.selectedImages - uri)
             }
         }
 
         fun onShowDialog() {
-            _commnuityWriteViewState.update {
+            _commnuityUpdateViewState.update {
                 it.copy(isShowDialog = true)
             }
         }
 
         fun closeShowDialog() {
-            _commnuityWriteViewState.update {
+            _commnuityUpdateViewState.update {
                 it.copy(isShowDialog = false)
             }
         }
 
         fun onImagePreview(uri: String) {
-            _commnuityWriteViewState.update { it.copy(previewImage = uri) }
+            _commnuityUpdateViewState.update { it.copy(previewImage = uri) }
         }
 
         fun onImagePreviewDismissed() {
-            _commnuityWriteViewState.update { it.copy(previewImage = "") }
+            _commnuityUpdateViewState.update { it.copy(previewImage = "") }
         }
 
-        fun writeCommunity() {
+        fun updateCommunity() {
             viewModelScope.launch {
                 try {
-                    _commnuityWriteViewState.update {
+                    _commnuityUpdateViewState.update {
                         it.copy(
-                            isWriteLoading = true,
-                            isWriteErrorLoading = false,
+                            isUpdateLoading = true,
+                            isUpdateErrorLoading = false,
                         )
                     }
 
-                    // 현재 뷰에서의 상태(변수)
-                    val state = _commnuityWriteViewState.value
+                    val state = _commnuityUpdateViewState.value
                     val selectedCategory = state.categoryList[state.selectedCategory] ?: "기타"
 
-                    val uploadedImageUrls =
-                        if (state.selectedImages.isNotEmpty()) {
-                            uploadImagesToStorage(state.selectedImages)
+                    val alreadyImg = state.selectedImages.filter { it.startsWith("http") }
+                    val newUrl = state.selectedImages.filter { !it.startsWith("http") }
+
+                    val newImg =
+                        if (newUrl.isNotEmpty()) {
+                            uploadImagesToStorage(newUrl) // 새 이미지만 던짐
                         } else {
                             emptyList()
                         }
 
-                    val writeModel =
+                    val finalImg = alreadyImg + newImg
+
+//                Log.d("finalImg", finalImg.size.toString())
+//                Log.d("alreadyImg", alreadyImg.toString())
+//                Log.d("newImg", newImg.toString())
+//                Log.d("state.selectedImages", state.selectedImages.toString())
+
+                    val updateModel =
                         CommunityWriteModel(
                             category = selectedCategory,
-                            title = state.communityWriteTitleField,
-                            content = state.communityWriteContentField,
+                            title = state.communityUpdateTitleField,
+                            content = state.communityUpdateContentField,
                             author = userSession.getUserState().name,
 //                            images = state.selectedImages,
-                            images = uploadedImageUrls,
+                            images = if (finalImg.size == 0) emptyList() else finalImg,
+//                        images = uploadedImageUrls,
                         )
-                    supabase.from("community").insert(writeModel)
+                    supabase.from("community").update(updateModel) {
+                        filter {
+                            eq("id", updateId)
+                        }
+                    }
                     // 성공 신호 보내기
-                    _isWriteSuccess.send(Unit)
+                    _isUpdateSuccess.send(Unit)
                 } catch (e: Exception) {
-                    _commnuityWriteViewState.update {
+                    _commnuityUpdateViewState.update {
                         it.copy(
-                            isWriteErrorLoading = true,
+                            isUpdateErrorLoading = true,
                         )
                     }
-                    Log.e("write error", e.toString())
+                    Log.e("update error", e.toString())
                 } finally {
-                    _commnuityWriteViewState.update {
+                    _commnuityUpdateViewState.update {
                         it.copy(
-                            isWriteLoading = false,
+                            isUpdateLoading = false,
                         )
                     }
                 }

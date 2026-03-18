@@ -11,6 +11,8 @@ plugins {
 
     id 'com.google.gms.google-services'
     id 'com.google.android.libraries.mapsplatform.secrets-gradle-plugin'
+
+    id 'kotlin-parcelize'
 }
 
 // Load local.properties
@@ -25,6 +27,7 @@ def lawApiKey = localProperties.getProperty('LAW_API_KEY', '')
 def geminiApiKeyHkw = localProperties.getProperty('GEMINI_API_KEY_HKW', '')
 def naverClientId = localProperties.getProperty('NAVER_CLIENT_ID', '')
 def naverClientSecret = localProperties.getProperty('NAVER_CLIENT_SECRET', '')
+def kakaonativekey = localProperties.getProperty('KAKAO_NATIVE_KEY', '')
 
 android {
     namespace 'com.easylaw.app'
@@ -46,6 +49,8 @@ android {
         buildConfigField "String", "GEMINI_API_KEY_HKW", "\"${geminiApiKeyHkw}\""
         buildConfigField "String", "NAVER_CLIENT_ID", "\"${naverClientId}\""
         buildConfigField "String", "NAVER_CLIENT_SECRET", "\"${naverClientSecret}\""
+        buildConfigField "String", "KAKAO_NATIVE_KEY", "\"${kakaonativekey}\""
+        manifestPlaceholders = [KAKAO_NATIVE_KEY: kakaonativekey]
     }
 
     buildTypes {
@@ -222,6 +227,9 @@ dependencies {
     // ============ DataStore ============
     implementation("androidx.datastore:datastore-preferences:1.1.1")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+
+    // ============ KaKao ============
+    implementation "com.kakao.sdk:v2-share:2.20.1"
 
 
 

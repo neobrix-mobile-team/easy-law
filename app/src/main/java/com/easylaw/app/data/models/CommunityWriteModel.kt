@@ -1,5 +1,7 @@
 package com.easylaw.app.data.models
 
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -13,6 +15,20 @@ data class CommunityWriteModel(
     val title: String,
     val content: String,
     val author: String,
+//    val images: List<String> = emptyList(),
+    @EncodeDefault
     val images: List<String> = emptyList(),
     val comments: List<CommentModel> = emptyList(),
-)
+    /*
+        검색 쿼리에서 수까지 같이 받아온다.
+     */
+    @SerialName("comment_count")
+    val commentCountList: List<LikeCountResponse> = emptyList(),
+    @SerialName("comment_like")
+    val commentLikeList: List<LikeCountResponse> = emptyList(),
+) {
+    val commentCount: Int
+        get() = commentCountList.firstOrNull()?.count ?: 0
+    val likeCount: Int
+        get() = commentLikeList.firstOrNull()?.count ?: 0
+}

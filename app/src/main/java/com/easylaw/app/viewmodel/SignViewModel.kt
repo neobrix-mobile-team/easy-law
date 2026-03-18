@@ -5,6 +5,7 @@ import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.easylaw.app.domain.model.UserSession
+import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.gotrue.auth
@@ -14,6 +15,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import javax.inject.Inject
@@ -107,25 +109,51 @@ class SignViewModel
 
                     Log.d("현재 유저상태", userRole)
 
-                    supabase.auth.signUpWith(Email) {
-                        this.email = email
-                        this.password = password
-                    }
+                    val authUser =
+                        supabase.auth.signUpWith(Email) {
+                            this.email = email
+                            this.password = password
+                        }
 
-                    val user = supabase.auth.currentUserOrNull()
-                    val userId = user?.id
+                    Log.d("authUser", authUser.toString())
 
-                    if (userId != null) {
+                    val realId = authUser?.id
+                    Log.d("realId", realId.toString())
+
+//                    val user = supabase.auth.currentUserOrNull()
+//                    Log.d("user", user.toString())
+//                    val userId = user?.id
+
+                    if (realId != null) {
+                        val fcmToken =
+                            try {
+                                FirebaseMessaging.getInstance().token.await()
+                            } catch (e: Exception) {
+                                Log.e("FCM", "토큰 가져오기 실패", e)
+                                null
+                            }
                         val userRequest =
                             UserRequest(
-                                id = userId,
+                                id = realId,
                                 name = name,
                                 email = email,
                                 user_role = userRole,
+                                fcmToken = fcmToken,
                             )
                         supabase.from("users").insert(userRequest)
                         _signViewState.update { it.copy(isSignSuccess = true) }
                     }
+//                    else{
+//                        val userRequest =
+//                            UserRequest(
+//                                id = realId,
+//                                name = name,
+//                                email = email,
+//                                user_role = userRole,
+//                            )
+//                        supabase.from("users").insert(userRequest)
+//                        _signViewState.update { it.copy(isSignSuccess = true) }
+//                    }
                 } catch (e: Exception) {
                     val errorMsg = e.message ?: ""
                     if (errorMsg.contains("already", ignoreCase = true)) {

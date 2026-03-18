@@ -1,6 +1,7 @@
 package com.easylaw.app.common.util
 
 import com.easylaw.app.BuildConfig // BuildConfig 경로 확인 필요
+import com.easylaw.app.data.datasource.CommunityApiService
 import com.easylaw.app.data.datasource.NaverApiService
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonParser
@@ -20,7 +21,7 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object ApiUtil {
-    const val BASE_URL = "http://www.law.go.kr/"
+    const val BASE_URL = "https://www.law.go.kr/"
     const val NAVER_BASE_URL = "https://openapi.naver.com/"
 
     @Provides
@@ -122,6 +123,12 @@ object ApiUtil {
     fun provideNaverApiService(
         @Named("NaverRetrofit") retrofit: Retrofit,
     ): NaverApiService = retrofit.create(NaverApiService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideCommunityApiService(
+        @Named("LawRetrofit") retrofit: Retrofit,
+    ): CommunityApiService = retrofit.create(CommunityApiService::class.java)
 }
 
 class ErrorLoggingInterceptor : Interceptor {

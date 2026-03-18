@@ -4,7 +4,7 @@ import com.easylaw.app.data.datasource.NaverApiService
 import com.easylaw.app.data.models.NaverNewsModel
 import javax.inject.Inject
 
-class NaverNewRepo
+class NaverNewsRepo
     @Inject
     constructor(
         private val service: NaverApiService,

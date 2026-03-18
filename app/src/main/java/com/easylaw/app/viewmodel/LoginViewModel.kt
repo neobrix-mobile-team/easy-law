@@ -122,9 +122,15 @@ class LoginViewModel
                         throw Exception("유저 정보를 찾을 수 없습니다.")
                     }
                 } catch (e: Exception) {
+                    val errorText =
+                        when {
+                            e.toString().contains("Email not confirmed") -> "이메일 인증을 진행해 주세요."
+                            e.toString().contains("Invalid login credentials") -> "아이디 또는 비밀번호가 일치하지 않습니다."
+                            else -> "알 수 없는 에러"
+                        }
                     Log.e("loginError", "로그인 실패: ${e.message}")
                     _loginViewState.update {
-                        it.copy(isLoginError = "아이디 또는 비밀번호가 일치하지 않습니다.")
+                        it.copy(isLoginError = errorText)
                     }
                 } finally {
                     _loginViewState.update { it.copy(isLoginLoading = false) }
@@ -170,9 +176,13 @@ class LoginViewModel
                             null
                         }
 
+                    val supabaseUser = supabase.auth.currentUserOrNull()
+                    val supabaseUid = supabaseUser?.id ?: throw Exception("Supabase ID 발급 실패")
+
                     val userData =
                         UserRequest(
-                            id = firebaseUser.uid,
+                            id = supabaseUid,
+//                            id = firebaseUser.uid,
                             name = firebaseUser.displayName ?: "이름 없음",
                             email = firebaseUser.email ?: "",
                             user_role = userSession.getUserRole(),
