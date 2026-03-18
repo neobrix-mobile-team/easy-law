@@ -4,9 +4,12 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.easylaw.app.data.repository.LawRepository
+import com.easylaw.app.data.repository.PrecedentLabelTranslation
+import com.easylaw.app.data.repository.TranslationRepository
 import com.easylaw.app.domain.model.Precedent
 import com.easylaw.app.domain.usecase.SearchPrecedentsUseCase
 import com.easylaw.app.domain.usecase.SummarizePrecedentUseCase
+import com.easylaw.app.util.PreferenceManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,16 +29,19 @@ class LegalSearchViewModel
         private val searchPrecedentsUseCase: SearchPrecedentsUseCase,
         private val summarizePrecedentUseCase: SummarizePrecedentUseCase,
         private val lawRepository: LawRepository,
+        private val translationRepository: TranslationRepository,
+        private val preferenceManager: PreferenceManager,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(LegalSearchUiState())
         val uiState: StateFlow<LegalSearchUiState> = _uiState.asStateFlow()
 
         private val _searchResults = MutableStateFlow<List<Precedent>>(emptyList())
-
         private val _filterKeyword = MutableStateFlow("")
         val filterKeyword: StateFlow<String> = _filterKeyword.asStateFlow()
 
         private var searchJob: Job? = null
+
+        private val translatingIds = mutableSetOf<String>()
 
         val displayResults: StateFlow<List<Precedent>> =
             combine(
@@ -92,6 +98,8 @@ class LegalSearchViewModel
 
             _searchResults.value = emptyList()
             _filterKeyword.value = ""
+            translatingIds.clear()
+            _uiState.update { it.copy(translatedTitles = emptyMap()) }
 
             viewModelScope.launch {
                 val isAiNeeded =
@@ -182,15 +190,83 @@ class LegalSearchViewModel
                 }
         }
 
+        fun translateVisibleItems(visiblePrecedents: List<Precedent>) {
+            Log.d("Translation_LOG", "translateVisibleItems 호출 - ${visiblePrecedents.size}건, translatingIds: $translatingIds")
+            val targetLang =
+                PrecedentLabelTranslation.toDeepLLang(
+                    preferenceManager.languageState.value,
+                ) ?: run {
+                    Log.d("Translation_LOG", "한국어 선택 → 번역 스킵")
+                    return
+                }
+            val currentTranslations = _uiState.value.translatedTitles
+
+            // 미번역 + 미진행 항목만 필터링
+            val untranslated =
+                visiblePrecedents.filter { precedent ->
+                    !currentTranslations.containsKey(precedent.title) &&
+                        !translatingIds.contains(precedent.id)
+                }
+
+            Log.d("Translation_LOG", "미번역 항목: ${untranslated.size}건, targetLang: $targetLang")
+
+            if (untranslated.isEmpty()) return
+
+            val labelTranslations =
+                untranslated
+                    .flatMap { precedent ->
+                        listOf(
+                            precedent.category to PrecedentLabelTranslation.translateCategory(precedent.category, targetLang),
+                            precedent.court to PrecedentLabelTranslation.translateCategory(precedent.court, targetLang),
+                            precedent.judgmentType to PrecedentLabelTranslation.translateCategory(precedent.judgmentType, targetLang),
+                        )
+                    }.filter { (original, translated) -> original.isNotEmpty() && original != translated }
+                    .toMap()
+
+            if (labelTranslations.isNotEmpty()) {
+                _uiState.update { state ->
+                    state.copy(translatedTitles = state.translatedTitles + labelTranslations)
+                }
+            }
+
+            // 진행 중 표시 (중복 요청 방지)
+            untranslated.forEach { translatingIds.add(it.id) }
+
+            viewModelScope.launch {
+                val titles = untranslated.map { it.title }
+                Log.d("Translation_LOG", "[번역] DeepL 요청 - ${titles.size}건")
+
+                val translated = translationRepository.translateTitles(titles, targetLang)
+
+                Log.d("Translation_LOG", "DeepL 응답: $translated")
+
+                _uiState.update { state ->
+                    state.copy(
+                        translatedTitles = state.translatedTitles + translated,
+                    )
+                }
+
+                Log.d("Translation_LOG", "캐시 저장 후 총 번역 수: ${_uiState.value.translatedTitles.size}")
+
+                // 완료된 항목을 진행 중 목록에서 제거
+                untranslated.forEach { translatingIds.remove(it.id) }
+
+                Log.d("Translation_LOG", "[번역] 완료 - ${translated.size}건 누적: ${_uiState.value.translatedTitles.size}건")
+            }
+        }
+
         fun onPrecedentClick(precedent: Precedent) {
+            val isNonKorean = preferenceManager.languageState.value != "ko"
+
             _uiState.update {
                 it.copy(
                     showDetailDialog = true,
                     isDetailLoading = true,
-                    detailViewMode = DetailViewMode.ORIGINAL,
+                    detailViewMode = if (isNonKorean) DetailViewMode.SUMMARY else DetailViewMode.ORIGINAL,
                     summaryText = "",
                     streamingSummaryText = "",
                     selectedPrecedentLink = precedent.detailLink,
+                    isSummaryLoading = isNonKorean,
                 )
             }
 
@@ -199,14 +275,51 @@ class LegalSearchViewModel
                     .getPrecedentDetail(precedent.id)
                     .onSuccess { detail ->
                         _uiState.update { it.copy(currentPrecedentDetail = detail, isDetailLoading = false) }
+
+                        if (isNonKorean) {
+                            startSummary(detail.fullTextForAi)
+                        }
                     }.onFailure {
                         _uiState.update { it.copy(isDetailLoading = false) }
                     }
             }
         }
 
+        private fun startSummary(originalText: String) {
+            _uiState.update { it.copy(isSummaryLoading = true, streamingSummaryText = "") }
+
+            viewModelScope.launch {
+                try {
+                    Log.d("LegalSearch_LOG", "[판례 요약] 요청 시작")
+                    val summary =
+                        summarizePrecedentUseCase(
+                            originalText,
+                            onChunk = { chunk ->
+                                if (_uiState.value.streamingSummaryText.isEmpty()) {
+                                    _uiState.update { it.copy(isSummaryLoading = false) }
+                                }
+                                _uiState.update { it.copy(streamingSummaryText = it.streamingSummaryText + chunk) }
+                            },
+                        )
+                    Log.d("LegalSearch_LOG", "[판례 요약] 완료")
+                    _uiState.update { it.copy(summaryText = summary, streamingSummaryText = "", isSummaryLoading = false) }
+                } catch (e: Exception) {
+                    Log.e("LegalSearch_LOG", "[판례 요약] 실패: ${e.javaClass.simpleName} - ${e.message}")
+                    _uiState.update {
+                        it.copy(
+                            summaryText = "요약 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+                            streamingSummaryText = "",
+                            isSummaryLoading = false,
+                        )
+                    }
+                }
+            }
+        }
+
         fun closeDetailDialog() {
-            _uiState.update { it.copy(showDetailDialog = false, currentPrecedentDetail = null, streamingSummaryText = "") }
+            _uiState.update {
+                it.copy(showDetailDialog = false, currentPrecedentDetail = null, streamingSummaryText = "")
+            }
         }
 
         fun toggleDetailViewMode(mode: DetailViewMode) {
@@ -214,39 +327,13 @@ class LegalSearchViewModel
 
             val currentState = _uiState.value
 
-            if (mode == DetailViewMode.SUMMARY && currentState.summaryText.isEmpty()) {
+            // 요약 탭 수동 클릭 시 - 아직 요약이 없고 상세 데이터가 있을 때만 실행
+            if (mode == DetailViewMode.SUMMARY &&
+                currentState.summaryText.isEmpty() &&
+                !currentState.isSummaryLoading
+            ) {
                 val originalText = currentState.currentPrecedentDetail?.fullTextForAi ?: return
-
-                _uiState.update { it.copy(isSummaryLoading = true, streamingSummaryText = "") }
-
-                viewModelScope.launch {
-                    try {
-                        Log.d("LegalSearch_LOG", "[판례 요약] 요청 시작")
-                        // UseCase를 통해 간접 접근
-                        val summary =
-                            summarizePrecedentUseCase(
-                                originalText,
-                                onChunk = { chunk ->
-                                    if (_uiState.value.streamingSummaryText.isEmpty()) {
-                                        _uiState.update { it.copy(isSummaryLoading = false) }
-                                    }
-
-                                    _uiState.update { it.copy(streamingSummaryText = it.streamingSummaryText + chunk) }
-                                },
-                            )
-                        Log.d("LegalSearch_LOG", "[판례 요약] 완료")
-                        _uiState.update { it.copy(summaryText = summary, streamingSummaryText = "", isSummaryLoading = false) }
-                    } catch (e: Exception) {
-                        Log.e("LegalSearch_LOG", "[판례 요약] 실패: ${e.javaClass.simpleName} - ${e.message}")
-                        _uiState.update {
-                            it.copy(
-                                summaryText = "요약 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
-                                streamingSummaryText = "",
-                                isSummaryLoading = false,
-                            )
-                        }
-                    }
-                }
+                startSummary(originalText)
             }
         }
     }

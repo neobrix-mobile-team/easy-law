@@ -86,10 +86,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         if (savedInstanceState == null) {
-            lifecycleScope.launch {
-                val savedLanguage = preferenceManager.getLanguage()
-                applyLocale(this@MainActivity, savedLanguage)
-            }
+            val savedLanguage = preferenceManager.languageState.value
+            applyLocale(this, savedLanguage)
         }
 
         // 앱 시작 시 로컬 저장소에서 유저 정보 불러오기
@@ -115,7 +113,7 @@ class MainActivity : ComponentActivity() {
                 // 유저 상태랑 별개로 로딩변수만 따로 감지
                 val isInitialized by userSession.isInitialized.collectAsState()
 
-                val currentLanguageCode by preferenceManager.languageFlow.collectAsState(initial = "ko")
+                val currentLanguageCode by preferenceManager.languageState.collectAsState()
                 val currentLanguageDisplay = LANGUAGE_DISPLAY_MAP[currentLanguageCode] ?: "한국어"
 
                 val hideBarsRoutes =
@@ -170,9 +168,7 @@ class MainActivity : ComponentActivity() {
                                 state.scope.launch {
                                     userSession.sessionClear()
                                     preferenceManager.sessionClear()
-
                                     state.drawerState.close()
-
                                     if (state.navController.currentBackStackEntry
                                             ?.destination
                                             ?.route != NavRoute.ONBOARDING
@@ -209,7 +205,12 @@ class MainActivity : ComponentActivity() {
                                                     fontSize = 10.sp,
                                                 )
                                             },
-                                            icon = { Icon(imageVector = item.icon, contentDescription = stringResource(item.titleResId)) },
+                                            icon = {
+                                                Icon(
+                                                    imageVector = item.icon,
+                                                    contentDescription = stringResource(item.titleResId),
+                                                )
+                                            },
                                             colors =
                                                 NavigationBarItemDefaults.colors(
                                                     selectedIconColor = SELECTED_ICON_COLOR,

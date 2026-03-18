@@ -340,7 +340,7 @@ fun DiagnosisResultContent(
                     ),
             ) {
                 Text(
-                    text = "처음으로 돌아가기",
+                    text = stringResource(R.string.diagnosis_back_to_start),
                     style = MaterialTheme.typography.labelLarge,
                 )
             }

@@ -102,6 +102,7 @@
     <string name="self_situation_placeholder">Describe your situation</string>
     <string name="self_checklist_prefix">What to prepare: %s</string>
     <string name="self_diagnose_btn">Diagnose</string>
+    <string name="diagnosis_back_to_start">Back to Start</string>
 
     <!--  자가진단 (DiagnosisScreen)  -->
     <string name="diagnosis_title">Self Diagnosis</string>
@@ -150,6 +151,7 @@
     <string name="legal_search_detail_label">Details</string>
     <string name="legal_search_detail_placeholder">Describe what happened in detail (optional)</string>
     <string name="legal_search_analyzing">Analyzing keywords…</string>
+    <string name="legal_search_ai_analyzing">AI Analysis Keywords</string>
     <string name="legal_search_btn">Search Cases</string>
     <string name="legal_search_result_title">Case Search Results</string>
     <string name="legal_search_no_result">No results found.</string>
