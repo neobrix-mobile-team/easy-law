@@ -1,12 +1,16 @@
 package com.easylaw.app.viewModel
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.easylaw.app.domain.model.UserSession
+import com.easylaw.app.util.PreferenceManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
@@ -34,6 +38,7 @@ class OnboardingViewModel
     constructor(
         private val userSession: UserSession,
         private val savedStateHandle: SavedStateHandle,
+        private val preferenceManager: PreferenceManager,
     ) : ViewModel() {
         private val _onboardingViewState = MutableStateFlow(OnboardingViewState())
         val onboardingViewState = _onboardingViewState.asStateFlow()
@@ -51,6 +56,14 @@ class OnboardingViewModel
             userSession.setUserRole(
                 userRole,
             )
+
+//            val language = if (role == "외국인") "en" else "ko"
+            val language = if (role == "I am a foreign resident in Korea.") "en" else "ko"
+            viewModelScope.launch {
+                preferenceManager.saveLanguage(language)
+                Log.d("Onboarding_LOG", "역할: $role → 언어 저장: $language")
+                Log.d("Onboarding_LOG", "저장 완료: $language / 현재값: ${preferenceManager.languageState.value}")
+            }
         }
 
         // 다음 단계로 이동

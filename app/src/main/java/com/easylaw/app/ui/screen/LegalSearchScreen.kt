@@ -649,7 +649,7 @@ fun PrecedentDetailDialog(
 
                     // 2. 판례 제목
                     Text(
-                        text = detail.title,
+                        text = uiState.detailTitle.ifBlank { detail.title },
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.Black,

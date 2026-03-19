@@ -13,6 +13,7 @@ class SummarizePrecedentUseCase
          */
         suspend operator fun invoke(
             originalText: String,
+            language: String,
             onChunk: (String) -> Unit,
-        ): String = aiRepository.summarizePrecedent(originalText, onChunk)
+        ): String = aiRepository.summarizePrecedent(originalText, language, onChunk)
     }

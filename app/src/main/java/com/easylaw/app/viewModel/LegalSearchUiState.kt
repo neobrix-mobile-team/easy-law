@@ -37,6 +37,7 @@ data class LegalSearchUiState(
     val currentPrecedentDetail: PrecedentDetail? = null, // 상세 API로 받아온 원본 데이터
     val selectedPrecedentLink: String = "",
     val isDetailLoading: Boolean = false, // 상세 API 로딩
+    val detailTitle: String = "",
     val summaryText: String = "", // 요약본
     val isSummaryLoading: Boolean = false, // 요약 로딩
     val streamingSummaryText: String = "",

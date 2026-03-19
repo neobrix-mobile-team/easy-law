@@ -27,18 +27,11 @@ class PrecedentRepositoryImpl
                 else -> "알 수 없는 오류 e:$e"
             }
 
-        /**
-         * [수정] 요약 프롬프트 전체를 언어별로 완전 분리
-         *
-         * - 이전: 프롬프트 본문([역할], [요약 원칙], [절대 금지])이 한국어로 고정되고
-         *         prefix/suffix/구조 가이드만 언어별 분기
-         *         → 한국어 비중이 압도적으로 높아 AI가 한국어로 답변
-         * - 수정: 프롬프트 전체를 언어별로 분리
-         *         요약 프롬프트는 사용자에게 직접 노출되는 결과물이므로
-         *         관리 비용보다 정확한 언어 출력이 더 중요
-         */
-        private fun buildSummaryPrompt(originalText: String): String =
-            when (preferenceManager.languageState.value) {
+        private fun buildSummaryPrompt(
+            originalText: String,
+            language: String,
+        ): String =
+            when (language) {
                 "en" ->
                     """
                     [SYSTEM] You MUST respond ONLY in English. Do NOT use Korean under any circumstances.
@@ -203,11 +196,12 @@ class PrecedentRepositoryImpl
 
         override suspend fun summarizePrecedent(
             originalText: String,
+            language: String,
             onChunk: (String) -> Unit,
         ): String {
-            val prompt = buildSummaryPrompt(originalText)
+            val prompt = buildSummaryPrompt(originalText, language)
 
-            Log.d("PrecedentRepositoryImpl_LOG", "[판례 요약] 스트리밍 시작 - 원문 길이: ${originalText.length}자")
+            Log.d("PrecedentRepositoryImpl_LOG", "[판례 요약] 스트리밍 시작 - 언어: $language, 원문 길이: ${originalText.length}자")
             val sb = StringBuilder()
             generativeModel.generateContentStream(prompt).collect { chunk ->
                 val text = chunk.text ?: return@collect

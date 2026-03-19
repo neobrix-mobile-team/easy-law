@@ -210,6 +210,12 @@ fun MapScreen(viewModel: MapViewModel = hiltViewModel()) {
                         locationTrackingMode = LocationTrackingMode.NoFollow,
                     ),
                 onMapClick = { _, _ -> viewModel.clearSelection() },
+                onMapDoubleTab = { _, _ ->
+                    coroutineScope.launch {
+                        cameraPositionState.animate(CameraUpdate.zoomIn())
+                    }
+                    true
+                },
             ) {
                 clusters.forEach { cluster ->
                     if (cluster.isSingle) {
@@ -243,7 +249,6 @@ fun MapScreen(viewModel: MapViewModel = hiltViewModel()) {
                             },
                         )
                     } else {
-                        // ── 클러스터 마커 ────────────────────────────────
                         // 클러스터 개수에 따라 색상 구분
                         val clusterColor =
                             when {

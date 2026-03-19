@@ -256,13 +256,22 @@ class LegalSearchViewModel
         }
 
         fun onPrecedentClick(precedent: Precedent) {
-            val isNonKorean = preferenceManager.languageState.value != "ko"
+            val language = preferenceManager.languageState.value
+            val isNonKorean = language != "ko"
+
+            val displayTitle =
+                if (isNonKorean) {
+                    _uiState.value.translatedTitles[precedent.title] ?: precedent.title
+                } else {
+                    precedent.title
+                }
 
             _uiState.update {
                 it.copy(
                     showDetailDialog = true,
                     isDetailLoading = true,
                     detailViewMode = if (isNonKorean) DetailViewMode.SUMMARY else DetailViewMode.ORIGINAL,
+                    detailTitle = displayTitle,
                     summaryText = "",
                     streamingSummaryText = "",
                     selectedPrecedentLink = precedent.detailLink,
@@ -277,7 +286,7 @@ class LegalSearchViewModel
                         _uiState.update { it.copy(currentPrecedentDetail = detail, isDetailLoading = false) }
 
                         if (isNonKorean) {
-                            startSummary(detail.fullTextForAi)
+                            startSummary(detail.fullTextForAi, language)
                         }
                     }.onFailure {
                         _uiState.update { it.copy(isDetailLoading = false) }
@@ -285,15 +294,19 @@ class LegalSearchViewModel
             }
         }
 
-        private fun startSummary(originalText: String) {
+        private fun startSummary(
+            originalText: String,
+            language: String,
+        ) {
             _uiState.update { it.copy(isSummaryLoading = true, streamingSummaryText = "") }
 
             viewModelScope.launch {
                 try {
-                    Log.d("LegalSearch_LOG", "[판례 요약] 요청 시작")
+                    Log.d("LegalSearch_LOG", "[판례 요약] 요청 시작 - 언어: $language")
                     val summary =
                         summarizePrecedentUseCase(
                             originalText,
+                            language,
                             onChunk = { chunk ->
                                 if (_uiState.value.streamingSummaryText.isEmpty()) {
                                     _uiState.update { it.copy(isSummaryLoading = false) }
@@ -318,7 +331,7 @@ class LegalSearchViewModel
 
         fun closeDetailDialog() {
             _uiState.update {
-                it.copy(showDetailDialog = false, currentPrecedentDetail = null, streamingSummaryText = "")
+                it.copy(showDetailDialog = false, currentPrecedentDetail = null, streamingSummaryText = "", detailTitle = "")
             }
         }
 
@@ -333,7 +346,8 @@ class LegalSearchViewModel
                 !currentState.isSummaryLoading
             ) {
                 val originalText = currentState.currentPrecedentDetail?.fullTextForAi ?: return
-                startSummary(originalText)
+                val language = preferenceManager.languageState.value
+                startSummary(originalText, language)
             }
         }
     }
