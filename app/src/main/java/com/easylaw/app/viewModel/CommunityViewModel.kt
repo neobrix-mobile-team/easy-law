@@ -1,4 +1,4 @@
-package com.easylaw.app.viewmodel
+package com.easylaw.app.viewModel
 
 import android.os.Build
 import android.text.Html

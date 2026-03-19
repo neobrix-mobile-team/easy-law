@@ -1,4 +1,4 @@
-package com.easylaw.app.viewmodel
+package com.easylaw.app.viewModel
 
 import android.content.Context
 import android.content.Intent
@@ -513,10 +513,10 @@ class CommunityDetailViewModel
                                     imageUrl = firstImage ?: "https://your-image-url.com/logo.png",
                                     link =
                                         Link(
-                                        /*
-                                            1. 공유 시 postId = "해당 id"  전달
-                                            2. 앱에서 클릭 시 해당 번호를 보고 기존 앱으로 이동
-                                         */
+                                            /*
+                                                1. 공유 시 postId = "해당 id"  전달
+                                                2. 앱에서 클릭 시 해당 번호를 보고 기존 앱으로 이동
+                                             */
                                             androidExecutionParams = mapOf("postId" to contents.id.toString()), // ✅ 핵심
                                             iosExecutionParams = mapOf("postId" to contents.id.toString()),
                                             // 주소 이동 활성화를 위한 더미 주소

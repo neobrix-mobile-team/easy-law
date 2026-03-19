@@ -77,7 +77,7 @@ import com.easylaw.app.ui.components.CommonDialog
 import com.easylaw.app.ui.components.CommonFilterCategory
 import com.easylaw.app.ui.components.CommonIndicator
 import com.easylaw.app.util.Common
-import com.easylaw.app.viewmodel.CommunityViewModel
+import com.easylaw.app.viewModel.CommunityViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

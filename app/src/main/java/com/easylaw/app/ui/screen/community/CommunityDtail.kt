@@ -10,7 +10,6 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -36,7 +35,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Delete
@@ -91,8 +89,8 @@ import com.easylaw.app.data.models.CommunityCommentModel
 import com.easylaw.app.ui.components.CommonIndicator
 import com.easylaw.app.ui.components.CommonPreview
 import com.easylaw.app.util.Common
-import com.easylaw.app.viewmodel.CommunityDetailViewModel
-import com.easylaw.app.viewmodel.CommunityDetailViewState
+import com.easylaw.app.viewModel.CommunityDetailViewModel
+import com.easylaw.app.viewModel.CommunityDetailViewState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

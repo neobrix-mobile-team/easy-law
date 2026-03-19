@@ -23,7 +23,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
-import androidx.compose.material.icons.filled.Login
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -48,7 +47,7 @@ import com.easylaw.app.R
 import com.easylaw.app.ui.components.CommonDialog
 import com.easylaw.app.ui.components.CommonIndicator
 import com.easylaw.app.ui.components.CommonTextField
-import com.easylaw.app.viewmodel.SignViewModel
+import com.easylaw.app.viewModel.SignViewModel
 
 /**
  * [SignView]

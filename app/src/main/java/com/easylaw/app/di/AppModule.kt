@@ -4,14 +4,12 @@ import android.util.Log
 import com.easylaw.app.BuildConfig
 import com.easylaw.app.data.datasource.KakaoLocalApi
 import com.easylaw.app.data.datasource.LawApiService
-import com.easylaw.app.data.datasource.PrecedentService
 import com.easylaw.app.data.repository.DiagnosisRepository
 import com.easylaw.app.data.repository.DiagnosisRepositoryImpl
 import com.easylaw.app.data.repository.LawRepository
 import com.easylaw.app.data.repository.LawRepositoryImpl
 import com.easylaw.app.data.repository.MapRepository
 import com.easylaw.app.data.repository.MapRepositoryImpl
-import com.easylaw.app.data.repository.PrecedentAiRepository
 import com.easylaw.app.util.PreferenceManager
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.gson.GsonBuilder
@@ -184,10 +182,10 @@ object AppModule {
     @Singleton
     fun provideMapRepository(apiService: KakaoLocalApi): MapRepository = MapRepositoryImpl(apiService)
 
-    @Provides
-    @Singleton
-    fun providePrecedentAiRepository(
-        generativeModel: GenerativeModel,
-        preferenceManager: PreferenceManager,
-    ): PrecedentAiRepository = PrecedentService(generativeModel, preferenceManager)
+//    @Provides
+//    @Singleton
+//    fun providePrecedentAiRepository(
+//        generativeModel: GenerativeModel,
+//        preferenceManager: PreferenceManager,
+//    ): PrecedentAiRepository = PrecedentRepositoryImpl(generativeModel, preferenceManager)
 }

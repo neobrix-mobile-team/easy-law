@@ -1,4 +1,4 @@
-package com.easylaw.app.viewmodel
+package com.easylaw.app.viewModel
 
 import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel

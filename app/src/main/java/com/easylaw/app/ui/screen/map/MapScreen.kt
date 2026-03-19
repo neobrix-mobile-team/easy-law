@@ -62,8 +62,8 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.easylaw.app.R
 import com.easylaw.app.domain.model.LawPlace
-import com.easylaw.app.viewmodel.MapFilter
-import com.easylaw.app.viewmodel.MapViewModel
+import com.easylaw.app.viewModel.MapFilter
+import com.easylaw.app.viewModel.MapViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberMultiplePermissionsState

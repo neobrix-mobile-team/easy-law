@@ -64,7 +64,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import com.easylaw.app.R
 import com.easylaw.app.ui.components.CommonButton
-import com.easylaw.app.viewmodel.OnboardingViewModel
+import com.easylaw.app.viewModel.OnboardingViewModel
 
 @Composable
 fun OnboardingView(

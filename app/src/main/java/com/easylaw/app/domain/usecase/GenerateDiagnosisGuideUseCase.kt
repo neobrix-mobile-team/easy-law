@@ -1,6 +1,7 @@
 package com.easylaw.app.domain.usecase
 
 import com.easylaw.app.data.repository.DiagnosisRepository
+import com.google.ai.client.generativeai.type.Content
 import javax.inject.Inject
 
 class GenerateDiagnosisGuideUseCase
@@ -14,11 +15,11 @@ class GenerateDiagnosisGuideUseCase
          * @throws Exception Repository 호출 실패 시 — ViewModel의 catch로 전파
          */
         suspend operator fun invoke(
-            context: String,
+            history: List<Content>,
             onChunk: (String) -> Unit,
         ): String {
-            val lawNames = repository.extractTargetLaws(context)
+            val lawNames = repository.extractTargetLaws(history)
             val lawDetails = repository.fetchDiagnosisDetails(lawNames)
-            return repository.generateFinalGuide(context, lawDetails, onChunk)
+            return repository.generateFinalGuide(history, lawDetails, onChunk)
         }
     }

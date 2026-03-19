@@ -71,10 +71,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.easylaw.app.R
 import com.easylaw.app.domain.model.Precedent
 import com.easylaw.app.util.debouncedClickable
-import com.easylaw.app.viewmodel.CourtTypeOption
-import com.easylaw.app.viewmodel.DetailViewMode
-import com.easylaw.app.viewmodel.LegalSearchUiState
-import com.easylaw.app.viewmodel.LegalSearchViewModel
+import com.easylaw.app.viewModel.CourtTypeOption
+import com.easylaw.app.viewModel.DetailViewMode
+import com.easylaw.app.viewModel.LegalSearchUiState
+import com.easylaw.app.viewModel.LegalSearchViewModel
 
 @Composable
 fun LegalSearchRoute(viewModel: LegalSearchViewModel = hiltViewModel()) {

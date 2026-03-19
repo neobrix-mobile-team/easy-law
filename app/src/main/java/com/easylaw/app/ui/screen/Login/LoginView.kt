@@ -30,7 +30,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
@@ -46,7 +45,7 @@ import com.easylaw.app.R
 import com.easylaw.app.ui.components.CommonDialog
 import com.easylaw.app.ui.components.CommonIndicator
 import com.easylaw.app.ui.components.CommonTextField
-import com.easylaw.app.viewmodel.LoginViewModel
+import com.easylaw.app.viewModel.LoginViewModel
 
 /**
  * [LoginView]

@@ -1,4 +1,4 @@
-package com.easylaw.app.viewmodel
+package com.easylaw.app.viewModel
 
 import android.util.Log
 import android.util.Patterns

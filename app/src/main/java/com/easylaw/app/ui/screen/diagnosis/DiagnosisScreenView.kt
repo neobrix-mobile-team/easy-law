@@ -86,8 +86,8 @@ import com.easylaw.app.R
 import com.easylaw.app.domain.model.Diagnosis
 import com.easylaw.app.domain.model.DiagnosisPhase
 import com.easylaw.app.domain.model.RetryActionType
-import com.easylaw.app.viewmodel.DiagnosisUiState
-import com.easylaw.app.viewmodel.DiagnosisViewModel
+import com.easylaw.app.viewModel.DiagnosisUiState
+import com.easylaw.app.viewModel.DiagnosisViewModel
 import kotlinx.coroutines.delay
 
 @Composable

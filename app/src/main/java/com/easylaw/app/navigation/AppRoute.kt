@@ -30,21 +30,13 @@ import com.easylaw.app.ui.screen.community.CommunityWriteView
 import com.easylaw.app.ui.screen.diagnosis.DiagnosisScreen
 import com.easylaw.app.ui.screen.map.MapScreen
 import com.easylaw.app.ui.screen.onboarding.OnboardingView
-import com.easylaw.app.viewmodel.CommunityDetailViewModel
-import com.easylaw.app.viewmodel.CommunityUpdateViewModel
-import com.easylaw.app.viewmodel.CommunityViewModel
-import com.easylaw.app.viewmodel.CommunityWriteViewModel
-import com.easylaw.app.viewmodel.LoginViewModel
-import com.easylaw.app.viewmodel.OnboardingViewModel
-import com.easylaw.app.viewmodel.SignViewModel
-
-// import com.easylaw.app.viewmodel.CommunityViewModel
-// import com.easylaw.app.viewmodel.CommunityWriteViewModel
-// import com.easylaw.app.viewmodel.LoginViewModel
-// import com.easylaw.app.viewmodel.OnboardingViewModel
-// import com.easylaw.app.viewmodel.SignViewModel
-// import com.easylaw.app.viewmodel.CommunityDetailViewModel
-// import com.easylaw.app.viewmodel.CommunityUpdateViewModel
+import com.easylaw.app.viewModel.CommunityDetailViewModel
+import com.easylaw.app.viewModel.CommunityUpdateViewModel
+import com.easylaw.app.viewModel.CommunityViewModel
+import com.easylaw.app.viewModel.CommunityWriteViewModel
+import com.easylaw.app.viewModel.LoginViewModel
+import com.easylaw.app.viewModel.OnboardingViewModel
+import com.easylaw.app.viewModel.SignViewModel
 
 data class BottomNavItem(
     val route: String,
