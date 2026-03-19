@@ -55,13 +55,15 @@ android {
         buildConfigField "String", "NAVER_CLIENT_ID", "\"${naverClientId}\""
         buildConfigField "String", "NAVER_CLIENT_SECRET", "\"${naverClientSecret}\""
         buildConfigField "String", "KAKAO_NATIVE_KEY", "\"${kakaonativekey}\""
-        manifestPlaceholders = [KAKAO_NATIVE_KEY: kakaonativekey]
+//        manifestPlaceholders = [KAKAO_NATIVE_KEY: kakaonativekey]
         buildConfigField "String", "NAVER_MAP_KEY", "\"${naverMapKey}\""
         buildConfigField "String", "NAVER_MAP_ID", "\"${naverMapId}\""
 //        buildConfigField "String", "NAVER_SEARCH_KEY", "\"${naverSearchKey}\""
 //        buildConfigField "String", "NAVER_SEARCH_ID", "\"${naverSearchId}\""
         buildConfigField("String", "KAKAO_REST_API_KEY", "\"${kakaoRestApiKey}\"")
-        manifestPlaceholders = [NAVER_MAP_ID: naverMapId]
+        manifestPlaceholders = [
+                KAKAO_NATIVE_KEY: kakaonativekey,
+                NAVER_MAP_ID: naverMapId]
         buildConfigField("String", "DEEPL_API_KEY", "\"${deeplApiKey}\"")
     }
 
