@@ -32,6 +32,10 @@
             android:usesCleartextTraffic="false"
             tools:targetApi="31">
 
+        <meta-data
+                android:name="com.naver.maps.map.NCP_KEY_ID"
+                android:value="${NAVER_MAP_ID}" />
+
         <!-- Hilt 설정 -->
         <activity
                 android:name=".MainActivity"

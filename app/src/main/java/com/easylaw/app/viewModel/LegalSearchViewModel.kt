@@ -3,10 +3,10 @@ package com.easylaw.app.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.easylaw.app.data.datasource.PrecedentService
 import com.easylaw.app.data.repository.LawRepository
 import com.easylaw.app.domain.model.Precedent
-import com.easylaw.app.util.KeywordOptimizer
+import com.easylaw.app.domain.usecase.SearchPrecedentsUseCase
+import com.easylaw.app.domain.usecase.SummarizePrecedentUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,51 +19,18 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-data class SearchParams(
-    val query: String,
-    val orgCode: String?,
-)
-
 @HiltViewModel
 class LegalSearchViewModel
     @Inject
     constructor(
-        private val repository: LawRepository,
-        private val precedentService: PrecedentService,
-        private val keywordOptimizer: KeywordOptimizer,
+        private val searchPrecedentsUseCase: SearchPrecedentsUseCase,
+        private val summarizePrecedentUseCase: SummarizePrecedentUseCase,
+        private val lawRepository: LawRepository,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(LegalSearchUiState())
         val uiState: StateFlow<LegalSearchUiState> = _uiState.asStateFlow()
 
-//    private val _searchParams = MutableStateFlow<SearchParams?>(null)
-
-//        val searchResults: Flow<PagingData<Precedent>> =
-//            _searchParams
-//                .filterNotNull()
-//                .flatMapLatest { params ->
-//                    repository.getPrecedentsStream(
-//                        query = params.query,
-//                        org = params.orgCode,
-//                        onTotalCountFetched = { totalCnt ->
-//                            _uiState.update { it.copy(totalSearchCount = totalCnt) }
-//                        },
-//                    )
-//                }.cachedIn(viewModelScope)
-//                .combine(_listFilterText) { pagingData, filterQuery ->
-//                    if (filterQuery.isBlank()) {
-//                        pagingData
-//                    } else {
-//                        pagingData.filter { precedent ->
-//                            precedent.title.contains(filterQuery, ignoreCase = true) ||
-//                                precedent.category.contains(filterQuery, ignoreCase = true) ||
-//                                precedent.judgmentType.contains(filterQuery, ignoreCase = true)
-//                        }
-//                    }
-//                }.cachedIn(viewModelScope)
-//                .stateIn(viewModelScope, SharingStarted.Lazily, PagingData.empty())
-
-        val _searchResults = MutableStateFlow<List<Precedent>>(emptyList())
-//    val searchResults: StateFlow<List<Precedent>> = _searchResults.asStateFlow()
+        private val _searchResults = MutableStateFlow<List<Precedent>>(emptyList())
 
         private val _filterKeyword = MutableStateFlow("")
         val filterKeyword: StateFlow<String> = _filterKeyword.asStateFlow()
@@ -125,105 +92,93 @@ class LegalSearchViewModel
 
             _searchResults.value = emptyList()
             _filterKeyword.value = ""
-//        _uiState.update { it.copy(listFilterText = "") }
 
-            val canBypass = keywordOptimizer.shouldBypassGemini(currentState.situation, currentState.details)
-
-            if (canBypass) {
-                val rawKeyword = currentState.situation.trim()
-
-                _uiState.update {
-                    it.copy(
-                        isSituationError = false,
-                        totalSearchCount = 0,
-                        showResults = true,
-                        isLoadingGemini = false, // AI 로딩 화면 생략
-                        extractedKeyword = rawKeyword, // 원본 단어 그대로 표출
+            viewModelScope.launch {
+                val isAiNeeded =
+                    !com.easylaw.app.util.KeywordOptimizer().shouldBypassGemini(
+                        currentState.situation,
+                        currentState.details,
                     )
+
+                if (isAiNeeded) {
+                    _uiState.update { it.copy(isLoadingGemini = true, isSituationError = false, totalSearchCount = 0) }
                 }
 
-                // 바로 페이징 검색 트리거
-//            _searchParams.value = SearchParams(query = rawKeyword, orgCode = currentState.selectedCourt.orgCode)
-                fetchPrecedentsList(rawKeyword, currentState.selectedCourt.orgCode)
-            } else {
-                // 키워드 분석
-                _uiState.update { it.copy(isLoadingGemini = true, isSituationError = false, totalSearchCount = 0) }
+                try {
+                    Log.d("LegalSearch_LOG", "[키워드 추출] 시작")
+                    val resolution =
+                        searchPrecedentsUseCase.resolveKeyword(
+                            currentState.situation,
+                            currentState.details,
+                        )
+                    Log.d("LegalSearch_LOG", "[키워드 추출] 완료: ${resolution.keyword}, AI사용: ${resolution.wasOptimizedByAi}")
 
-                viewModelScope.launch {
-                    try {
-                        // Gemini를 활용하여 긴 문장을 핵심 키워드로 압축 (API 통신 실패 방지)
-                        val keyword = precedentService.extractKeyword(currentState.situation, currentState.details)
-
-                        // 상태 업데이트 및 Paging 트리거 발동
-                        _uiState.update {
-                            it.copy(
-                                isLoadingGemini = false,
-                                showResults = true,
-                                extractedKeyword = keyword,
-                            )
-                        }
-
-//                    _searchParams.value =
-//                        SearchParams(
-//                            query = keyword,
-//                            orgCode = currentState.selectedCourt.orgCode,
-//                        )
-                        fetchPrecedentsList(keyword, currentState.selectedCourt.orgCode)
-                    } catch (e: Exception) {
-                        Log.e("searchLegalAdvice failed", "키워드 추출 실패: $e")
-                        _uiState.update { it.copy(isLoadingGemini = false) }
+                    _uiState.update {
+                        it.copy(
+                            isLoadingGemini = false,
+                            isSituationError = false,
+                            totalSearchCount = 0,
+                            showResults = true,
+                            extractedKeyword = resolution.keyword,
+                        )
                     }
+
+                    fetchPrecedentsFromKeywords(resolution.keywords, currentState.selectedCourt.orgCode)
+                } catch (e: Exception) {
+                    Log.e("LegalSearch_LOG", "[키워드 추출] 실패: ${e.javaClass.simpleName} - ${e.message}")
+                    _uiState.update { it.copy(isLoadingGemini = false) }
                 }
             }
         }
 
-        private fun fetchPrecedentsList(
-            query: String,
+        private fun fetchPrecedentsFromKeywords(
+            keywords: List<String>,
             orgCode: String?,
         ) {
-//        viewModelScope.launch {
-//            val (totalCount, list) = repository.getPrecedents(query = query, org = orgCode)
-//
-//            _uiState.update { it.copy(totalSearchCount = totalCount) }
-//            _searchResults.value = list
-//        }
-
             searchJob?.cancel()
 
             searchJob =
                 viewModelScope.launch {
-                    var currentPage = 1
-                    val displaySize = 100
-                    var isFetching = true
+                    val seenIds = mutableSetOf<String>()
 
-                    while (isFetching) {
-                        val (totalCount, list) =
-                            repository.getPrecedents(
-                                query = query,
-                                org = orgCode,
-                                page = currentPage,
-                                display = displaySize,
-                            )
+                    keywords.forEachIndexed { index, keyword ->
+                        Log.d("LegalSearchViewModel", "[검색 시작] 키워드: \"$keyword\" (${index + 1}/${keywords.size})")
+                        var currentPage = 1
+                        val displaySize = 100
+                        var isFetching = true
 
-                        if (currentPage == 1) {
-                            // 첫 페이지는 즉시 화면에 노출하기 위해 바로 업데이트
-                            _uiState.update { it.copy(totalSearchCount = totalCount, isLoading = true) }
-                            _searchResults.value = list
-                        } else {
-                            // 두 번째 페이지부터는 기존 데이터 뒤에 새 데이터를 병합(누적)
-                            _searchResults.update { currentList -> currentList + list }
-                        }
+                        while (isFetching) {
+                            lawRepository
+                                .getPrecedents(
+                                    query = keyword,
+                                    org = orgCode,
+                                    page = currentPage,
+                                    display = displaySize,
+                                ).onSuccess { result ->
+                                    val newItems = result.items.filter { seenIds.add(it.id) }
 
-                        if (list.isEmpty() || _searchResults.value.size >= totalCount) {
-                            _uiState.update { it.copy(isLoading = false) }
-                            isFetching = false
-                            Log.d("LegalSearchViewModel", "모든 검색 결과 로딩 완료 (${_searchResults.value.size}건)")
-                        } else {
-                            currentPage++
-                            // 다음 호출 전 0.5초 대기
-//                    delay(500)
+                                    if (index == 0 && currentPage == 1) {
+                                        _uiState.update { it.copy(totalSearchCount = result.totalCount, isLoading = true) }
+                                        _searchResults.value = newItems
+                                    } else {
+                                        _uiState.update { it.copy(totalSearchCount = it.totalSearchCount + result.totalCount) }
+                                        _searchResults.update { it + newItems }
+                                    }
+
+                                    if (result.items.isEmpty() || _searchResults.value.size >= result.totalCount) {
+                                        isFetching = false
+                                    } else {
+                                        currentPage++
+                                    }
+                                }.onFailure { e ->
+                                    Log.e("LegalSearchViewModel", "판례 조회 실패 (키워드: $keyword, 페이지 $currentPage): ${e.message}")
+                                    isFetching = false
+                                }
                         }
                     }
+
+                    _uiState.update { it.copy(isLoading = false) }
+                    Log.d("LegalSearchViewModel", "모든 검색 결과 로딩 완료 (${_searchResults.value.size}건)")
                 }
         }
 
@@ -234,18 +189,24 @@ class LegalSearchViewModel
                     isDetailLoading = true,
                     detailViewMode = DetailViewMode.ORIGINAL,
                     summaryText = "",
+                    streamingSummaryText = "",
                     selectedPrecedentLink = precedent.detailLink,
                 )
             }
 
             viewModelScope.launch {
-                val detail = repository.getPrecedentDetail(precedent.id)
-                _uiState.update { it.copy(currentPrecedentDetail = detail, isDetailLoading = false) }
+                lawRepository
+                    .getPrecedentDetail(precedent.id)
+                    .onSuccess { detail ->
+                        _uiState.update { it.copy(currentPrecedentDetail = detail, isDetailLoading = false) }
+                    }.onFailure {
+                        _uiState.update { it.copy(isDetailLoading = false) }
+                    }
             }
         }
 
         fun closeDetailDialog() {
-            _uiState.update { it.copy(showDetailDialog = false, currentPrecedentDetail = null) }
+            _uiState.update { it.copy(showDetailDialog = false, currentPrecedentDetail = null, streamingSummaryText = "") }
         }
 
         fun toggleDetailViewMode(mode: DetailViewMode) {
@@ -256,11 +217,35 @@ class LegalSearchViewModel
             if (mode == DetailViewMode.SUMMARY && currentState.summaryText.isEmpty()) {
                 val originalText = currentState.currentPrecedentDetail?.fullTextForAi ?: return
 
-                _uiState.update { it.copy(isSummaryLoading = true) }
+                _uiState.update { it.copy(isSummaryLoading = true, streamingSummaryText = "") }
 
                 viewModelScope.launch {
-                    val summary = precedentService.summarizePrecedent(originalText)
-                    _uiState.update { it.copy(summaryText = summary, isSummaryLoading = false) }
+                    try {
+                        Log.d("LegalSearch_LOG", "[판례 요약] 요청 시작")
+                        // UseCase를 통해 간접 접근
+                        val summary =
+                            summarizePrecedentUseCase(
+                                originalText,
+                                onChunk = { chunk ->
+                                    if (_uiState.value.streamingSummaryText.isEmpty()) {
+                                        _uiState.update { it.copy(isSummaryLoading = false) }
+                                    }
+
+                                    _uiState.update { it.copy(streamingSummaryText = it.streamingSummaryText + chunk) }
+                                },
+                            )
+                        Log.d("LegalSearch_LOG", "[판례 요약] 완료")
+                        _uiState.update { it.copy(summaryText = summary, streamingSummaryText = "", isSummaryLoading = false) }
+                    } catch (e: Exception) {
+                        Log.e("LegalSearch_LOG", "[판례 요약] 실패: ${e.javaClass.simpleName} - ${e.message}")
+                        _uiState.update {
+                            it.copy(
+                                summaryText = "요약 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+                                streamingSummaryText = "",
+                                isSummaryLoading = false,
+                            )
+                        }
+                    }
                 }
             }
         }

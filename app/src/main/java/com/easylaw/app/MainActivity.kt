@@ -204,16 +204,22 @@ class MainActivity : ComponentActivity() {
                                                 selected = isSelected,
                                                 label = {
                                                     Text(
-                                                        text = item.title,
+                                                        text = getString(item.titleResId),
                                                         fontSize = 11.sp,
                                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                                         letterSpacing = (-0.3).sp,
                                                     )
+//                                                    Text(
+//                                                        text = item.titleResId,
+//                                                        fontSize = 11.sp,
+//                                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+//                                                        letterSpacing = (-0.3).sp,
+//                                                    )
                                                 },
                                                 icon = {
                                                     Icon(
                                                         imageVector = item.icon,
-                                                        contentDescription = item.title,
+                                                        contentDescription = getString(item.titleResId),
                                                         modifier = Modifier.size(24.dp),
                                                     )
                                                 },

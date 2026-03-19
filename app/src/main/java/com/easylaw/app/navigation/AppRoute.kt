@@ -1,5 +1,6 @@
 package com.easylaw.app.navigation
 
+import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -7,6 +8,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Gavel
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -17,14 +19,16 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.easylaw.app.R
 import com.easylaw.app.ui.screen.LegalSearchRoute
 import com.easylaw.app.ui.screen.Login.LoginView
 import com.easylaw.app.ui.screen.Login.SignView
-import com.easylaw.app.ui.screen.Self.SelfView
 import com.easylaw.app.ui.screen.community.CommunityDetailView
 import com.easylaw.app.ui.screen.community.CommunityUpdateView
 import com.easylaw.app.ui.screen.community.CommunityView
 import com.easylaw.app.ui.screen.community.CommunityWriteView
+import com.easylaw.app.ui.screen.diagnosis.DiagnosisScreen
+import com.easylaw.app.ui.screen.map.MapScreen
 import com.easylaw.app.ui.screen.onboarding.OnboardingView
 import com.easylaw.app.viewmodel.CommunityDetailViewModel
 import com.easylaw.app.viewmodel.CommunityUpdateViewModel
@@ -32,12 +36,19 @@ import com.easylaw.app.viewmodel.CommunityViewModel
 import com.easylaw.app.viewmodel.CommunityWriteViewModel
 import com.easylaw.app.viewmodel.LoginViewModel
 import com.easylaw.app.viewmodel.OnboardingViewModel
-import com.easylaw.app.viewmodel.SelfViewModel
 import com.easylaw.app.viewmodel.SignViewModel
+
+// import com.easylaw.app.viewmodel.CommunityViewModel
+// import com.easylaw.app.viewmodel.CommunityWriteViewModel
+// import com.easylaw.app.viewmodel.LoginViewModel
+// import com.easylaw.app.viewmodel.OnboardingViewModel
+// import com.easylaw.app.viewmodel.SignViewModel
+// import com.easylaw.app.viewmodel.CommunityDetailViewModel
+// import com.easylaw.app.viewmodel.CommunityUpdateViewModel
 
 data class BottomNavItem(
     val route: String,
-    val title: String,
+    @StringRes val titleResId: Int,
     val icon: ImageVector,
 )
 
@@ -51,23 +62,25 @@ object NavRoute {
     const val COMMUNITY_WRITE = "communityWrite"
     const val COMMUNITY_UPDATE = "communityUpdate/{updateId}"
     const val SELF = "self"
+    const val CAR_CRUSH = "carCrush"
+    const val MAP = "map"
     const val COMMUNITY_DETAIL = "communityDetail/{id}"
 
     val bottomItems =
         listOf(
             BottomNavItem(
                 route = COMMUNITY,
-                title = "커뮤니티",
+                titleResId = R.string.sidebar_menu_community,
                 icon = Icons.Default.Share,
             ),
             BottomNavItem(
                 route = LAW_CONSULT,
-                title = "판례검색",
+                titleResId = R.string.sidebar_menu_precedent,
                 icon = Icons.Default.Gavel,
             ),
             BottomNavItem(
                 route = SELF,
-                title = "자가진단",
+                titleResId = R.string.sidebar_menu_self_diagnosis,
                 icon = Icons.Default.Check,
             ),
 //        BottomNavItem(
@@ -75,6 +88,11 @@ object NavRoute {
 //            title = "영상 분석",
 //            icon = Icons.Default.Videocam
 //        )
+            BottomNavItem(
+                route = MAP,
+                titleResId = R.string.sidebar_menu_nearby,
+                icon = Icons.Default.Map,
+            ),
         )
 }
 
@@ -229,11 +247,13 @@ fun AppRoute(
         composable(
             route = NavRoute.SELF,
         ) {
-            val selfViewModel: SelfViewModel = hiltViewModel()
-            SelfView(
-                modifier = modifier,
-                viewModel = selfViewModel,
-            )
+            DiagnosisScreen(modifier = modifier)
+        }
+
+        composable(
+            route = NavRoute.MAP,
+        ) {
+            MapScreen()
         }
     }
 }

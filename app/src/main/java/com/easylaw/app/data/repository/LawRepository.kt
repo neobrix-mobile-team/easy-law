@@ -16,7 +16,13 @@ interface LawRepository {
         org: String?,
         page: Int = 1,
         display: Int = 100,
-    ): Pair<Int, List<Precedent>>
+    ): Result<PrecedentResult>
 
-    suspend fun getPrecedentDetail(caseId: String): PrecedentDetail?
+    suspend fun getPrecedentDetail(caseId: String): Result<PrecedentDetail>
 }
+
+/** getPrecedents 결과를 명시적으로 표현하는 Domain 모델 */
+data class PrecedentResult(
+    val totalCount: Int,
+    val items: List<Precedent>,
+)

@@ -28,6 +28,12 @@ def geminiApiKeyHkw = localProperties.getProperty('GEMINI_API_KEY_HKW', '')
 def naverClientId = localProperties.getProperty('NAVER_CLIENT_ID', '')
 def naverClientSecret = localProperties.getProperty('NAVER_CLIENT_SECRET', '')
 def kakaonativekey = localProperties.getProperty('KAKAO_NATIVE_KEY', '')
+def naverMapId = localProperties.getProperty('NAVER_MAP_ID', '')
+def naverMapKey = localProperties.getProperty('NAVER_MAP_KEY', '')
+//def naverSearchId = localProperties.getProperty('NAVER_SEARCH_ID', '')
+//def naverSearchKey = localProperties.getProperty('NAVER_SEARCH_KEY', '')
+def kakaoRestApiKey = localProperties.getProperty('KAKAO_REST_API_KEY', '')
+
 
 android {
     namespace 'com.easylaw.app'
@@ -51,6 +57,12 @@ android {
         buildConfigField "String", "NAVER_CLIENT_SECRET", "\"${naverClientSecret}\""
         buildConfigField "String", "KAKAO_NATIVE_KEY", "\"${kakaonativekey}\""
         manifestPlaceholders = [KAKAO_NATIVE_KEY: kakaonativekey]
+        buildConfigField "String", "NAVER_MAP_KEY", "\"${naverMapKey}\""
+        buildConfigField "String", "NAVER_MAP_ID", "\"${naverMapId}\""
+//        buildConfigField "String", "NAVER_SEARCH_KEY", "\"${naverSearchKey}\""
+//        buildConfigField "String", "NAVER_SEARCH_ID", "\"${naverSearchId}\""
+        buildConfigField("String", "KAKAO_REST_API_KEY", "\"${kakaoRestApiKey}\"")
+        manifestPlaceholders = [NAVER_MAP_ID: naverMapId]
     }
 
     buildTypes {
@@ -102,7 +114,6 @@ configurations.all {
 }
 
 
-
 dependencies {
     // ============ Core Android ============
     implementation 'androidx.core:core-ktx:1.12.0'
@@ -136,10 +147,6 @@ dependencies {
     implementation("com.google.firebase:firebase-messaging-ktx")
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
-
-
-
-
 
     // ============ Jetpack Libraries ============
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2'
@@ -175,10 +182,13 @@ dependencies {
     implementation("com.github.chrisbanes:PhotoView:2.3.0")
 
     // ============ Location ============
-    implementation 'com.google.android.gms:play-services-location:21.0.1'
+//    implementation 'com.google.android.gms:play-services-location:21.0.1'
 
     // ============ Maps (Naver) ============
-    // TODO: Naver Map SDK 추가 (별도 설정 필요)
+    implementation 'io.github.fornewid:naver-map-compose:1.5.7'
+    implementation 'com.naver.maps:map-sdk:3.23.1'
+    implementation 'com.google.accompanist:accompanist-permissions:0.34.0'
+    implementation 'com.google.android.gms:play-services-location:21.1.0'
 
     // ============ Speech Recognition & TTS ============
 //    implementation 'com.google.android.gms:play-services-mlkit-speech-recognition:16.3.0'
@@ -230,8 +240,6 @@ dependencies {
 
     // ============ KaKao ============
     implementation "com.kakao.sdk:v2-share:2.20.1"
-
-
 
 
 

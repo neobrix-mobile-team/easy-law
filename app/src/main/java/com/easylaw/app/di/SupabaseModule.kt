@@ -1,4 +1,4 @@
-package com.easylaw.app.common.util
+package com.easylaw.app.di
 
 import dagger.Module
 import dagger.Provides

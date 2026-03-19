@@ -1,14 +1,16 @@
 package com.easylaw.app.viewmodel
 
+import androidx.annotation.StringRes
+import com.easylaw.app.R
 import com.easylaw.app.domain.model.PrecedentDetail
 
 enum class CourtTypeOption(
-    val displayName: String,
+    @StringRes val displayName: Int,
     val orgCode: String?,
 ) {
-    ALL("전체 (선택 안함)", null),
-    SUPREME("대법원", "400201"),
-    LOWER("하위법원", "400202"),
+    ALL(R.string.court_all, null),
+    SUPREME(R.string.court_supreme, "400201"),
+    LOWER(R.string.court_lower, "400202"),
 }
 
 enum class DetailViewMode {
@@ -36,4 +38,5 @@ data class LegalSearchUiState(
     val isDetailLoading: Boolean = false, // 상세 API 로딩
     val summaryText: String = "", // 요약본
     val isSummaryLoading: Boolean = false, // 요약 로딩
+    val streamingSummaryText: String = "",
 )
