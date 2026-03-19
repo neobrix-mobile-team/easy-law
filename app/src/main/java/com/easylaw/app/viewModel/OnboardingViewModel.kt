@@ -1,5 +1,6 @@
 package com.easylaw.app.viewModel
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import com.easylaw.app.domain.model.UserSession
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,6 +23,9 @@ import javax.inject.Inject
 data class OnboardingViewState(
     val currentStep: Int = 1,
     val userRole: String = "",
+    val isPermissionGranted: Boolean = false,
+    val isPrivacyAgreed: Boolean = false,
+    val isOpen: Boolean = false,
 )
 
 @HiltViewModel
@@ -29,13 +33,14 @@ class OnboardingViewModel
     @Inject
     constructor(
         private val userSession: UserSession,
+        private val savedStateHandle: SavedStateHandle,
     ) : ViewModel() {
-        private val _onboardingVState = MutableStateFlow(OnboardingViewState())
-        val onboardingViewState = _onboardingVState.asStateFlow()
+        private val _onboardingViewState = MutableStateFlow(OnboardingViewState())
+        val onboardingViewState = _onboardingViewState.asStateFlow()
 
         // 사용자 유형 선택 (선택 시 상태 업데이트)
         fun selectRole(role: String) {
-            _onboardingVState.update { it.copy(userRole = role) }
+            _onboardingViewState.update { it.copy(userRole = role) }
 
             val userRole =
                 when (role) {
@@ -50,13 +55,39 @@ class OnboardingViewModel
 
         // 다음 단계로 이동
         fun nextStep() {
-            val currentState = _onboardingVState.value
-            _onboardingVState.update { it.copy(currentStep = currentState.currentStep + 1) }
+            val currentState = _onboardingViewState.value
+            _onboardingViewState.update { it.copy(currentStep = currentState.currentStep + 1) }
         }
 
         fun previousStep() {
-            if (_onboardingVState.value.currentStep > 1) {
-                _onboardingVState.update { it.copy(currentStep = it.currentStep - 1) }
+            if (_onboardingViewState.value.currentStep > 1) {
+                _onboardingViewState.update { it.copy(currentStep = it.currentStep - 1) }
+            }
+        }
+
+        fun updatePermissionStatus(isGranted: Boolean) {
+            _onboardingViewState.value = _onboardingViewState.value.copy(isPermissionGranted = isGranted)
+        }
+
+        fun onRequiredInformation() {
+            _onboardingViewState.value = _onboardingViewState.value.copy(isOpen = true)
+        }
+
+        fun closeRequiredInformation() {
+            _onboardingViewState.update {
+                it.copy(
+                    isOpen = false,
+                    isPrivacyAgreed = false,
+                )
+            }
+        }
+
+        fun agreeRequiredInformation() {
+            _onboardingViewState.update {
+                it.copy(
+                    isOpen = false, // 다이얼로그 닫기
+                    isPrivacyAgreed = true, // 체크박스 체크
+                )
             }
         }
     }

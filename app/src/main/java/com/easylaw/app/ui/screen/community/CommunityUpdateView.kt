@@ -49,26 +49,18 @@ import com.easylaw.app.ui.components.CommonFilterCategory
 import com.easylaw.app.ui.components.CommonIndicator
 import com.easylaw.app.ui.components.CommonPreview
 import com.easylaw.app.ui.components.CommonTextField
-import com.easylaw.app.viewModel.CommunityWriteViewModel
+import com.easylaw.app.viewModel.CommunityUpdateViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CommunityWriteView(
+fun CommunityUpdateView(
     modifier: Modifier = Modifier,
-    viewModel: CommunityWriteViewModel,
+    viewModel: CommunityUpdateViewModel,
     goBack: () -> Unit,
 ) {
-    val viewState by viewModel.commnuityWriteViewState.collectAsState()
+    val viewState by viewModel.commnuityUpdateViewState.collectAsState()
     val scrollState = rememberScrollState()
 
-    /*
-        갤러리 실행기
-        1. launch : 클릭 시 앱은 잠시 멈추고 시스템 갤러리가 화면을 덮는다.
-        2. 사용자가 한 장 고르면 해당 주소를 가지고 앱으로 복귀
-        3. 콜백 실행
-        4. 저장
-
-     */
     val galleryLauncher =
         rememberLauncherForActivityResult(
             contract = ActivityResultContracts.GetContent(),
@@ -77,10 +69,9 @@ fun CommunityWriteView(
                 viewModel.onImageAdded(it.toString())
             }
         }
-    // LaunchedEffect(Unit) : 화면이 시작되면 감지 시작
     LaunchedEffect(Unit) {
         // channel, collect : 뒤로 가기 로직
-        viewModel.isWriteSuccess.collect {
+        viewModel.isUpdateSuccess.collect {
             goBack()
         }
     }
@@ -100,11 +91,11 @@ fun CommunityWriteView(
                             Modifier
                                 .fillMaxWidth()
                                 .height(56.dp),
-                        text = "작성 완료",
+                        text = "수정 완료",
                         isEnable =
                             if (
-                                viewState.communityWriteTitleField.isNotEmpty() &&
-                                viewState.communityWriteContentField.isNotEmpty()
+                                viewState.communityUpdateTitleField.isNotEmpty() &&
+                                viewState.communityUpdateContentField.isNotEmpty()
                             ) {
                                 true
                             } else {
@@ -112,7 +103,7 @@ fun CommunityWriteView(
                             },
                         onClick = {
                             //                        디비 연동
-                            viewModel.writeCommunity()
+                            viewModel.updateCommunity()
                         },
                         color = Color(0xFF3182F6),
                         icon = Icons.Default.Check,
@@ -149,50 +140,18 @@ fun CommunityWriteView(
                         viewModel.onCategorySelected(it)
                     },
                 )
-
-//                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-//                    items(viewState.categoryList) { category ->
-//                        val isSelected = (viewState.selectedCategory == category)
-//                        FilterChip(
-//                            selected = isSelected,
-//                            onClick = { viewModel.onCategorySelected(category) },
-//                            label = {
-//                                Text(
-//                                    text = category,
-//                                    style =
-//                                        TextStyle(
-//                                            fontSize = 14.sp,
-// //                                        fontWeight = FontWeight.Bold,
-//                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-//                                        ),
-//                                )
-//                            },
-//                            shape = RoundedCornerShape(20.dp),
-//                            colors =
-//                                FilterChipDefaults.filterChipColors(
-//                                    containerColor = Color(0xFFF2F4F6),
-//                                    labelColor = Color(0xFF6B7684),
-//                                    selectedContainerColor = Color(0xFFE8F3FF),
-//                                    selectedLabelColor = Color(0xFF3182F6),
-//                                ),
-//                            border = null,
-//                            elevation = FilterChipDefaults.filterChipElevation(0.dp),
-//                        )
-//                    }
-//                }
-
                 Spacer(modifier = Modifier.height(12.dp))
 
                 CommonTextField(
                     title = "제목",
-                    value = viewState.communityWriteTitleField,
+                    value = viewState.communityUpdateTitleField,
                     placeholder = "제목을 입력해주세요.",
                     onValueChange = { viewModel.onTitleFieldChanged(it) },
                 )
 
                 CommonTextField(
                     title = "본문",
-                    value = viewState.communityWriteContentField,
+                    value = viewState.communityUpdateContentField,
                     placeholder = "본문을 입력해주세요.",
                     singleLine = false,
                     modifier =
@@ -293,7 +252,7 @@ fun CommunityWriteView(
                 onConfirm = { viewModel.closeShowDialog() },
             )
         }
-        if (viewState.isWriteLoading) {
+        if (viewState.isUpdateLoading) {
             CommonIndicator(title = "잠시만 기다려주세요...")
         }
     }

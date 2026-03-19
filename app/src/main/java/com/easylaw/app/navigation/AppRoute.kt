@@ -15,17 +15,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.easylaw.app.R
 import com.easylaw.app.ui.screen.LegalSearchRoute
 import com.easylaw.app.ui.screen.Login.LoginView
 import com.easylaw.app.ui.screen.Login.SignView
+import com.easylaw.app.ui.screen.community.CommunityDetailView
+import com.easylaw.app.ui.screen.community.CommunityUpdateView
 import com.easylaw.app.ui.screen.community.CommunityView
 import com.easylaw.app.ui.screen.community.CommunityWriteView
 import com.easylaw.app.ui.screen.diagnosis.DiagnosisScreen
 import com.easylaw.app.ui.screen.map.MapScreen
 import com.easylaw.app.ui.screen.onboarding.OnboardingView
+import com.easylaw.app.viewModel.CommunityDetailViewModel
+import com.easylaw.app.viewModel.CommunityUpdateViewModel
 import com.easylaw.app.viewModel.CommunityViewModel
 import com.easylaw.app.viewModel.CommunityWriteViewModel
 import com.easylaw.app.viewModel.LoginViewModel
@@ -46,9 +52,11 @@ object NavRoute {
     const val LAW_CONSULT = "lawConsult"
     const val COMMUNITY = "community"
     const val COMMUNITY_WRITE = "communityWrite"
+    const val COMMUNITY_UPDATE = "communityUpdate/{updateId}"
     const val SELF = "self"
     const val CAR_CRUSH = "carCrush"
     const val MAP = "map"
+    const val COMMUNITY_DETAIL = "communityDetail/{id}"
 
     val bottomItems =
         listOf(
@@ -129,7 +137,12 @@ fun AppRoute(
                 },
                 goToMainView = {
                     navController.navigate(NavRoute.COMMUNITY) {
-                        popUpTo(NavRoute.LOGIN) { inclusive = true }
+                        // navController.graph.id
+                        // 이전 스택 전부 지우고 다음 화면 스택만 남긴다.
+                        popUpTo(navController.graph.id) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
                     }
                 },
             )
@@ -165,6 +178,40 @@ fun AppRoute(
                         launchSingleTop = true
                     }
                 },
+                gotoDetail = { clickedId ->
+                    navController.navigate("communityDetail/$clickedId") {
+                        launchSingleTop = true
+                    }
+                },
+            )
+        }
+        composable(
+            route = "communityDetail/{id}",
+            arguments = listOf(navArgument("id") { type = NavType.StringType }),
+        ) {
+            val communityDetailViewModel: CommunityDetailViewModel = hiltViewModel()
+            CommunityDetailView(
+                modifier = modifier,
+                viewModel = communityDetailViewModel,
+                goBack = {
+                    navController.popBackStack()
+                },
+                goUpdate = { updateId ->
+                    navController.navigate("communityUpdate/$updateId") {
+                        launchSingleTop = true
+                    }
+                },
+            )
+        }
+        composable(
+            route = NavRoute.COMMUNITY_UPDATE,
+            arguments = listOf(navArgument("updateId") { type = NavType.LongType }),
+        ) {
+            val communityUpdateViewModel: CommunityUpdateViewModel = hiltViewModel()
+            CommunityUpdateView(
+                modifier = modifier,
+                viewModel = communityUpdateViewModel,
+                goBack = { navController.popBackStack() },
             )
         }
         // 커뮤니티 - 글쓰기
@@ -183,6 +230,9 @@ fun AppRoute(
             CommunityWriteView(
                 modifier = modifier,
                 viewModel = communityWriteViewModel,
+                goBack = {
+                    navController.popBackStack()
+                },
             )
         }
         // 자가진단 화면

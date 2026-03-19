@@ -11,6 +11,8 @@ plugins {
 
     id 'com.google.gms.google-services'
     id 'com.google.android.libraries.mapsplatform.secrets-gradle-plugin'
+
+    id 'kotlin-parcelize'
 }
 
 // Load local.properties
@@ -22,6 +24,10 @@ if (localPropertiesFile.exists()) {
 
 def geminiApiKey = localProperties.getProperty('GEMINI_API_KEY', '')
 def lawApiKey = localProperties.getProperty('LAW_API_KEY', '')
+def geminiApiKeyHkw = localProperties.getProperty('GEMINI_API_KEY_HKW', '')
+def naverClientId = localProperties.getProperty('NAVER_CLIENT_ID', '')
+def naverClientSecret = localProperties.getProperty('NAVER_CLIENT_SECRET', '')
+def kakaonativekey = localProperties.getProperty('KAKAO_NATIVE_KEY', '')
 def naverMapId = localProperties.getProperty('NAVER_MAP_ID', '')
 def naverMapKey = localProperties.getProperty('NAVER_MAP_KEY', '')
 def kakaoRestApiKey = localProperties.getProperty('KAKAO_REST_API_KEY', '')
@@ -45,12 +51,19 @@ android {
         // API 키를 BuildConfig에 주입
         buildConfigField "String", "GEMINI_API_KEY", "\"${geminiApiKey}\""
         buildConfigField "String", "LAW_API_KEY", "\"${lawApiKey}\""
+        buildConfigField "String", "GEMINI_API_KEY_HKW", "\"${geminiApiKeyHkw}\""
+        buildConfigField "String", "NAVER_CLIENT_ID", "\"${naverClientId}\""
+        buildConfigField "String", "NAVER_CLIENT_SECRET", "\"${naverClientSecret}\""
+        buildConfigField "String", "KAKAO_NATIVE_KEY", "\"${kakaonativekey}\""
+//        manifestPlaceholders = [KAKAO_NATIVE_KEY: kakaonativekey]
         buildConfigField "String", "NAVER_MAP_KEY", "\"${naverMapKey}\""
         buildConfigField "String", "NAVER_MAP_ID", "\"${naverMapId}\""
 //        buildConfigField "String", "NAVER_SEARCH_KEY", "\"${naverSearchKey}\""
 //        buildConfigField "String", "NAVER_SEARCH_ID", "\"${naverSearchId}\""
         buildConfigField("String", "KAKAO_REST_API_KEY", "\"${kakaoRestApiKey}\"")
-        manifestPlaceholders = [NAVER_MAP_ID: naverMapId]
+        manifestPlaceholders = [
+                KAKAO_NATIVE_KEY: kakaonativekey,
+                NAVER_MAP_ID: naverMapId]
         buildConfigField("String", "DEEPL_API_KEY", "\"${deeplApiKey}\"")
     }
 
@@ -168,6 +181,7 @@ dependencies {
 
     // ============ Image Loading ============
     implementation 'io.coil-kt:coil-compose:2.5.0'
+    implementation("com.github.chrisbanes:PhotoView:2.3.0")
 
     // ============ Location ============
 //    implementation 'com.google.android.gms:play-services-location:21.0.1'
@@ -211,6 +225,7 @@ dependencies {
     implementation platform('io.github.jan-tennert.supabase:bom:2.5.0')
     implementation 'io.github.jan-tennert.supabase:postgrest-kt'
     implementation 'io.github.jan-tennert.supabase:gotrue-kt'
+    implementation("io.github.jan-tennert.supabase:storage-kt")
 
     // ============ AI ============
     implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
@@ -222,8 +237,14 @@ dependencies {
     implementation 'com.google.android.libraries.identity.googleid:googleid:1.2.0'
 
     // ============ DataStore ============
-    implementation("androidx.datastore:datastore-preferences:1.1.1")
+//    implementation("androidx.datastore:datastore-preferences:1.1.1")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+
+    // ============ KaKao ============
+    implementation "com.kakao.sdk:v2-share:2.20.1"
+
+
+
 
 
 }

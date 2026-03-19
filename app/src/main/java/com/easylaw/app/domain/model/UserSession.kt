@@ -40,6 +40,10 @@ class UserSession
         private val _isInitialized = MutableStateFlow(false)
         val isInitialized = _isInitialized.asStateFlow()
 
+        fun setInitialized(value: Boolean) {
+            _isInitialized.value = value
+        }
+
         fun finishInitialized() {
             _isInitialized.value = true
         }
