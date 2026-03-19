@@ -6,9 +6,16 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.easylaw.app.domain.model.UserInfo
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
@@ -32,7 +39,9 @@ class PreferenceManager
         private val userDataKey = stringPreferencesKey("user_data")
         private val languageKey = stringPreferencesKey("app_language")
 
-        // 기기에 저장된 값 가져오기
+        // Singleton scope: PreferenceManager 생명주기와 동일하게 유지
+        private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
         val userData: Flow<UserInfo?> =
             dataStore.data.map { prefs ->
                 val json = prefs[userDataKey] ?: return@map null
@@ -64,10 +73,10 @@ class PreferenceManager
             }
         }
 
-        suspend fun getLanguage(): String = dataStore.data.first()[languageKey] ?: "ko"
-
-        val languageFlow: Flow<String> =
-            dataStore.data.map { prefs ->
-                prefs[languageKey] ?: "ko"
-            }
+        val languageState: StateFlow<String> =
+            dataStore.data.map { prefs -> prefs[languageKey] ?: "ko" }.stateIn(
+                scope = scope,
+                started = SharingStarted.Eagerly,
+                initialValue = runBlocking { dataStore.data.first()[languageKey] ?: "ko" },
+            )
     }

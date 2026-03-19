@@ -123,6 +123,7 @@
     <string name="diagnosis_bot_greeting">こんにちは！法律に関してどのようなお悩みですか？</string>
     <string name="diagnosis_user_sample">賃金未払いについてお問い合わせします。</string>
     <string name="diagnosis_error">エラーが発生しました</string>
+    <string name="diagnosis_back_to_start">最初に戻る</string>
 
     <!-- 음성인식 상태 -->
     <string name="stt_empty"> </string>
@@ -155,6 +156,7 @@
     <string name="legal_search_detail_label">詳細内容</string>
     <string name="legal_search_detail_placeholder">発生した出来事を具体的に記入してください（任意）</string>
     <string name="legal_search_analyzing">キーワードを分析中…</string>
+    <string name="legal_search_ai_analyzing">AI分析キーワード</string>
     <string name="legal_search_btn">判例検索</string>
     <string name="legal_search_result_title">判例検索結果</string>
     <string name="legal_search_no_result">検索結果がありません。</string>

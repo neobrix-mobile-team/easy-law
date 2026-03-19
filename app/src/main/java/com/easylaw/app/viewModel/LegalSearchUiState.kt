@@ -30,6 +30,7 @@ data class LegalSearchUiState(
     val extractedKeyword: String = "",
     val totalSearchCount: Int = 0,
     val listFilterText: String = "",
+    val translatedTitles: Map<String, String> = emptyMap(),
     // 본문
     val showDetailDialog: Boolean = false, // 상세 팝업 노출 여부
     val detailViewMode: DetailViewMode = DetailViewMode.ORIGINAL, // 원문 or 요약 모드

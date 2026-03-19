@@ -11,13 +11,14 @@ import com.easylaw.app.domain.model.DiagnosisPhase
 import com.easylaw.app.domain.model.RetryActionType
 import com.easylaw.app.domain.usecase.GenerateDiagnosisGuideUseCase
 import com.easylaw.app.domain.usecase.GetFollowUpQuestionUseCase
+import com.google.ai.client.generativeai.type.Content
+import com.google.ai.client.generativeai.type.content
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.text.clear
 
 data class DiagnosisUiState(
     val messages: List<Diagnosis> = emptyList(),
@@ -37,7 +38,7 @@ class DiagnosisViewModel
         private val _uiState = MutableStateFlow(DiagnosisUiState())
         val uiState: StateFlow<DiagnosisUiState> = _uiState.asStateFlow()
 
-        private val conversationHistory = mutableListOf<String>()
+        private val conversationHistory = mutableListOf<Content>()
 
         var userScenarioInput by mutableStateOf("")
             private set
@@ -46,16 +47,11 @@ class DiagnosisViewModel
             userScenarioInput = newValue
         }
 
-        private fun getOptimizedContext(): String {
-            if (conversationHistory.isEmpty()) return ""
-            return conversationHistory.joinToString("\n")
-        }
-
         fun onStartDiagnosis() {
             if (userScenarioInput.isBlank()) return
 
             conversationHistory.clear()
-            conversationHistory.add("최초상황: $userScenarioInput")
+            conversationHistory.add(content("user") { text(userScenarioInput) })
 
             val initialMessages = listOf(Diagnosis.User(userScenarioInput))
             _uiState.value =
@@ -66,10 +62,10 @@ class DiagnosisViewModel
                     questionCount = 0,
                 )
 
-            generateFollowUpQuestions(getOptimizedContext())
+            generateFollowUpQuestions()
         }
 
-        private fun generateFollowUpQuestions(scenario: String) {
+        private fun generateFollowUpQuestions() {
             viewModelScope.launch {
                 try {
                     addLoading()
@@ -77,7 +73,7 @@ class DiagnosisViewModel
 
                     val followUpAction =
                         getFollowUpQuestionUseCase(
-                            scenario = scenario,
+                            history = conversationHistory,
                             questionCount = _uiState.value.questionCount,
                         )
                     removeLoadingOnly()
@@ -86,7 +82,8 @@ class DiagnosisViewModel
                         Log.d("Diagnosis_LOG", "[VM] 정보 충분 → 최종 분석 실행")
                         executeDiagnosisPipeline()
                     } else {
-                        conversationHistory.add("시스템질문: ${followUpAction.question}")
+                        // AI 질문을 model role로 history에 추가
+                        conversationHistory.add(content("model") { text(followUpAction.question) })
 
                         val currentMessages = _uiState.value.messages.toMutableList()
                         currentMessages.add(Diagnosis.BotWithOptions(followUpAction.question, followUpAction.options))
@@ -112,33 +109,30 @@ class DiagnosisViewModel
 
             val currentMessages = _uiState.value.messages.toMutableList()
             currentMessages.add(Diagnosis.User(text))
-            conversationHistory.add("추가답변: $text")
+            conversationHistory.add(content("user") { text(text) })
 
             _uiState.value =
                 _uiState.value.copy(
                     messages = currentMessages,
                     currentPhase = DiagnosisPhase.PROCESSING,
                 )
-            generateFollowUpQuestions(getOptimizedContext())
+            generateFollowUpQuestions()
         }
 
         private fun executeDiagnosisPipeline() {
             viewModelScope.launch {
                 try {
                     addLoading()
-                    val contextForAnalysis = getOptimizedContext()
                     Log.d("Diagnosis_LOG", "[VM] 최종 가이드 스트리밍 시작")
-
                     Log.d("Diagnosis_LOG", "[VM] 최종 가이드 생성 시작")
-                    // UseCase가 법령추출 → 조회 → 가이드생성 파이프라인을 캡슐화
+
                     val finalGuide =
                         generateDiagnosisGuideUseCase(
-                            contextForAnalysis,
+                            history = conversationHistory,
                             onChunk = { chunk ->
                                 if (_uiState.value.streamingText.isEmpty()) {
                                     removeLoadingOnly()
                                 }
-
                                 _uiState.value =
                                     _uiState.value.copy(
                                         streamingText = _uiState.value.streamingText + chunk,
@@ -209,7 +203,7 @@ class DiagnosisViewModel
                 )
 
             when (type) {
-                RetryActionType.FOLLOW_UP_QUESTIONS -> generateFollowUpQuestions(getOptimizedContext())
+                RetryActionType.FOLLOW_UP_QUESTIONS -> generateFollowUpQuestions()
                 RetryActionType.FINAL_GUIDE -> executeDiagnosisPipeline()
             }
         }

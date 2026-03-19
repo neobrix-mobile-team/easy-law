@@ -1,28 +1,34 @@
 package com.easylaw.app.data.models
 
-import com.google.gson.JsonElement
-import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 
+@Serializable
 data class DiagnosisDetailResponse(
-    @SerializedName("법령") val lawInfo: DiagnosisInfo? = null,
+    @SerialName("법령") val lawInfo: DiagnosisInfo? = null,
 )
 
+@Serializable
 data class DiagnosisInfo(
-    @SerializedName("기본정보") val basicInfo: BasicInfo? = null,
-    @SerializedName("조문") val articles: ArticleWrapper? = null,
+    @SerialName("기본정보") val basicInfo: BasicInfo? = null,
+    @SerialName("조문") val articles: ArticleWrapper? = null,
 )
 
+@Serializable
 data class BasicInfo(
-    @SerializedName("법령명_한글") val lawName: String? = null,
-    @SerializedName("시행일자") val enforceDate: String? = null,
+    @SerialName("법령명_한글") val lawName: String? = null,
+    @SerialName("시행일자") val enforceDate: String? = null,
 )
 
+@Serializable
 data class ArticleWrapper(
-    @SerializedName("조문단위") val articleList: List<ArticleItem> = emptyList(),
+    @SerialName("조문단위") val articleList: List<ArticleItem> = emptyList(),
 )
 
+@Serializable
 data class ArticleItem(
-    @SerializedName("조문번호") val articleNo: String? = null,
-    @SerializedName("조문내용") val articleContent: String? = null,
-    @SerializedName("항") val paragraphs: JsonElement? = null,
+    @SerialName("조문번호") val articleNo: String? = null,
+    @SerialName("조문내용") val articleContent: String? = null,
+    @SerialName("항") val paragraphs: JsonElement? = null,
 )
