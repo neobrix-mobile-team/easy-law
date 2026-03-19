@@ -1,5 +1,6 @@
 package com.easylaw.app.ui.screen
 
+import android.util.Log
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -50,6 +51,7 @@ import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -100,6 +102,7 @@ fun LegalSearchRoute(viewModel: LegalSearchViewModel = hiltViewModel()) {
                 onFilterKeywordChange = viewModel::updateListFilterText,
                 onPrecedentClick = viewModel::onPrecedentClick,
                 onDismiss = viewModel::closeResults,
+                onVisibleItemsChanged = viewModel::translateVisibleItems,
             )
         }
 
@@ -314,6 +317,7 @@ fun PrecedentResultDialog(
     onFilterKeywordChange: (String) -> Unit,
     onPrecedentClick: (Precedent) -> Unit,
     onDismiss: () -> Unit,
+    onVisibleItemsChanged: (List<Precedent>) -> Unit,
 ) {
     Dialog(
         onDismissRequest = onDismiss,
@@ -339,7 +343,7 @@ fun PrecedentResultDialog(
 
                         // 키워드 노출
                         Text(
-                            text = "AI 분석 키워드: ${uiState.extractedKeyword}",
+                            text = "${stringResource(R.string.legal_search_ai_analyzing)}: ${uiState.extractedKeyword}",
                             fontSize = 14.sp,
                             color = Color(0xFF1967D2),
                             fontWeight = FontWeight.Bold,
@@ -367,53 +371,69 @@ fun PrecedentResultDialog(
                     }
                 }
 
-                if (uiState.isLoading) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = Color(0xFF6B9DE8))
-                    }
-                } else {
-                    OutlinedTextField(
-                        value = uiState.listFilterText,
-                        onValueChange = onFilterKeywordChange,
-                        placeholder = { Text(stringResource(R.string.legal_search_re_search_placeholder)) },
-                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = stringResource(R.string.legal_search_re_search_desc)) },
-                        modifier =
-                            Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 24.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        singleLine = true,
-                        colors =
-                            OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFF1967D2),
-                                unfocusedBorderColor = Color(0xFFE0E0E0),
-                                focusedContainerColor = Color.White,
-                                unfocusedContainerColor = Color(0xFFFAFAFA),
-                            ),
-                    )
-                }
+                OutlinedTextField(
+                    value = uiState.listFilterText,
+                    onValueChange = onFilterKeywordChange,
+                    placeholder = { Text(stringResource(R.string.legal_search_re_search_placeholder)) },
+                    leadingIcon = {
+                        Icon(
+                            Icons.Default.Search,
+                            contentDescription = stringResource(R.string.legal_search_re_search_desc),
+                        )
+                    },
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true,
+                    enabled = !uiState.isLoading,
+                    colors =
+                        OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF1967D2),
+                            unfocusedBorderColor = Color(0xFFE0E0E0),
+                            focusedContainerColor = Color.White,
+                            unfocusedContainerColor = Color(0xFFFAFAFA),
+                        ),
+                )
 
                 Spacer(modifier = Modifier.height(16.dp))
                 HorizontalDivider(color = Color(0xFFEEEEEE))
 
                 // 검색 결과 리스트
-                LazyColumn(
-                    modifier =
-                        Modifier
-                            .weight(1f)
-                            .padding(horizontal = 24.dp),
-                    contentPadding = PaddingValues(vertical = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                ) {
+                Box(modifier = Modifier.weight(1f)) {
+                    LazyColumn(
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 24.dp),
+                        contentPadding = PaddingValues(vertical = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        // paging
 //                    items(count = pagingItems.itemCount) { index ->
 //                        val precedent = pagingItems[index]
 //                        if (precedent != null) {
 //                            PrecedentCard(precedent) { onPrecedentClick(precedent) }
 //                        }
 //                    }
-                    items(precedents) { precedent ->
-                        PrecedentCard(precedent) { onPrecedentClick(precedent) }
-                    }
+
+                        Log.d("Translation_LOG", "LazyColumn items 렌더링 - precedents.size: ${precedents.size}")
+                        items(precedents, key = { it.id }) { precedent ->
+
+                            LaunchedEffect(precedent.id) {
+                                onVisibleItemsChanged(listOf(precedent))
+                            }
+
+                            PrecedentCard(
+                                precedent = precedent,
+                                translatedTitle = uiState.translatedTitles[precedent.title],
+                                translatedCategory = uiState.translatedTitles[precedent.category],
+                                translatedCourt = uiState.translatedTitles[precedent.court],
+                                translatedJudgmentType = uiState.translatedTitles[precedent.judgmentType],
+                                onClick = { onPrecedentClick(precedent) },
+                            )
+                        }
 
 //                    if (pagingItems.loadState.append is LoadState.Loading) {
 //                        item {
@@ -429,18 +449,31 @@ fun PrecedentResultDialog(
 //                        }
 //                    }
 
-                    if (precedents.isEmpty() && uiState.listFilterText.isNotBlank()) {
-                        item {
-                            Box(
-                                modifier =
-                                    Modifier
-                                        .fillMaxWidth()
-                                        .padding(32.dp),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Text(text = stringResource(R.string.legal_search_filter_no_result), color = Color.Gray)
+                        if (precedents.isEmpty() && uiState.listFilterText.isNotBlank()) {
+                            item {
+                                Box(
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .padding(32.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Text(text = stringResource(R.string.legal_search_filter_no_result), color = Color.Gray)
+                                }
                             }
                         }
+                    }
+                }
+
+                if (uiState.isLoading) {
+                    Box(
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .background(Color.White.copy(alpha = 0.7f)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        CircularProgressIndicator(color = Color(0xFF6B9DE8))
                     }
                 }
 
@@ -465,8 +498,18 @@ fun PrecedentResultDialog(
 @Composable
 fun PrecedentCard(
     precedent: Precedent,
+    translatedTitle: String? = null,
+    translatedCategory: String? = null,
+    translatedCourt: String? = null,
+    translatedJudgmentType: String? = null,
     onClick: () -> Unit,
 ) {
+    // 번역값이 있으면 번역값 사용, 없으면 원문 표시
+    val displayTitle = translatedTitle ?: precedent.title
+    val displayCategory = translatedCategory ?: precedent.category
+    val displayCourt = translatedCourt ?: precedent.court
+    val displayJudgmentType = translatedJudgmentType ?: precedent.judgmentType
+
     Column(
         modifier =
             Modifier
@@ -478,7 +521,7 @@ fun PrecedentCard(
                 .padding(20.dp),
     ) {
         Text(
-            text = precedent.title,
+            text = displayTitle,
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             color = Color.Black,
@@ -489,48 +532,33 @@ fun PrecedentCard(
         Spacer(modifier = Modifier.height(12.dp))
 
         Row(verticalAlignment = Alignment.CenterVertically) {
-            if (precedent.category.isNotEmpty()) {
+            if (displayCategory.isNotEmpty()) {
                 Box(
                     modifier =
                         Modifier
                             .background(Color(0xFFE8F0FE), RoundedCornerShape(8.dp))
                             .padding(horizontal = 8.dp, vertical = 4.dp),
                 ) {
-                    Text(text = precedent.category, color = Color(0xFF1967D2), fontSize = 12.sp)
+                    Text(text = displayCategory, color = Color(0xFF1967D2), fontSize = 12.sp)
                 }
             }
 
-            if (precedent.court.isNotEmpty()) {
+            if (displayCourt.isNotEmpty()) {
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(text = precedent.court, color = Color.Gray, fontSize = 12.sp)
+                Text(text = displayCourt, color = Color.Gray, fontSize = 12.sp)
             }
         }
 
         Spacer(modifier = Modifier.height(12.dp))
 
-//        Row(verticalAlignment = Alignment.CenterVertically) {
-//            Text(
-//                text = if (precedent.judgmentType.isNotEmpty()) {
-//                    "⚖️"
-//                } else "", fontSize = 14.sp
-//            )
-//            Spacer(modifier = Modifier.width(4.dp))
-//            Text(
-//                text = precedent.judgmentType, color = Color.Gray, fontSize = 14.sp, modifier = Modifier.weight(1f)
-//            )
-//
-//            Spacer(modifier = Modifier.width(4.dp))
-//            Text(text = "선고일자: ${precedent.date}", color = Color.Gray, fontSize = 14.sp)
-//        }
-
         Column(modifier = Modifier.fillMaxWidth()) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                if (precedent.judgmentType.isNotEmpty()) {
+                if (displayJudgmentType.isNotEmpty()) {
                     Text(text = "⚖️", fontSize = 14.sp)
                     Spacer(modifier = Modifier.width(4.dp))
                 }
                 Text(
-                    text = precedent.judgmentType,
+                    text = displayJudgmentType,
                     color = Color.Gray,
                     fontSize = 14.sp,
                     modifier = Modifier.weight(1f),

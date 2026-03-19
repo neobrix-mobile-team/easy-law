@@ -116,6 +116,7 @@
     <string name="diagnosis_bot_greeting">안녕하세요! 어떤 법률적 도움이 필요하신가요?</string>
     <string name="diagnosis_user_sample">임금 체불 때문에 문의 드립니다.</string>
     <string name="diagnosis_error">에러 발생</string>
+    <string name="diagnosis_back_to_start">처음으로 돌아가기</string>
 
     <!-- 음성인식 상태 -->
     <string name="stt_empty"> </string>
@@ -148,6 +149,7 @@
     <string name="legal_search_detail_label">상세 내용</string>
     <string name="legal_search_detail_placeholder">발생한 일을 구체적으로 적어주세요 (선택)</string>
     <string name="legal_search_analyzing">키워드 분석 중…</string>
+    <string name="legal_search_ai_analyzing">AI 분석 키워드</string>
     <string name="legal_search_btn">판례 검색</string>
     <string name="legal_search_result_title">판례 검색 결과</string>
     <string name="legal_search_no_result">검색된 항목이 없습니다.</string>

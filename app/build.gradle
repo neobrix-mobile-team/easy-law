@@ -30,9 +30,8 @@ def naverClientSecret = localProperties.getProperty('NAVER_CLIENT_SECRET', '')
 def kakaonativekey = localProperties.getProperty('KAKAO_NATIVE_KEY', '')
 def naverMapId = localProperties.getProperty('NAVER_MAP_ID', '')
 def naverMapKey = localProperties.getProperty('NAVER_MAP_KEY', '')
-//def naverSearchId = localProperties.getProperty('NAVER_SEARCH_ID', '')
-//def naverSearchKey = localProperties.getProperty('NAVER_SEARCH_KEY', '')
 def kakaoRestApiKey = localProperties.getProperty('KAKAO_REST_API_KEY', '')
+def deeplApiKey = localProperties.getProperty('DEEPL_API_KEY', '')
 
 
 android {
@@ -63,6 +62,7 @@ android {
 //        buildConfigField "String", "NAVER_SEARCH_ID", "\"${naverSearchId}\""
         buildConfigField("String", "KAKAO_REST_API_KEY", "\"${kakaoRestApiKey}\"")
         manifestPlaceholders = [NAVER_MAP_ID: naverMapId]
+        buildConfigField("String", "DEEPL_API_KEY", "\"${deeplApiKey}\"")
     }
 
     buildTypes {

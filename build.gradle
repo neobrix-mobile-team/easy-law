@@ -37,7 +37,7 @@ subprojects {
 detekt {
     toolVersion = "1.23.3"
     config = files("detekt.yml")
-    buildUponDefaultConfig = true  // ← 추가 권장
+    buildUponDefaultConfig = true
 
     reports {
         html.enabled = true
