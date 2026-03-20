@@ -68,5 +68,6 @@ class UserSession
 
         fun sessionClear() {
             _userInfo.value = UserInfo()
+            _isInitialized.value = true
         }
     }

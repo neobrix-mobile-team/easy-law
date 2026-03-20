@@ -57,9 +57,11 @@ class PreferenceManager
         // 로그인 시 세션 정보 저장
         suspend fun saveUser(userInfo: UserInfo) {
             val json = Json.encodeToString(userInfo)
+            Log.d("PreferenceManager", "DataStore에 저장 시도: $json") // 👈 추가
             dataStore.edit { prefs ->
                 prefs[userDataKey] = json
             }
+            Log.d("PreferenceManager", "DataStore 저장 완료!") // 👈 추가
         }
 
         // 로그아웃
