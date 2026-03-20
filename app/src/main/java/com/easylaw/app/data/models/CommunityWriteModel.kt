@@ -18,8 +18,9 @@ data class CommunityWriteModel(
 //    val images: List<String> = emptyList(),
     @EncodeDefault
     val images: List<String> = emptyList(),
-    val comments: List<CommentModel> = emptyList(),
     /*
+    val comments: List<CommentModel> = emptyList(),
+
         검색 쿼리에서 수까지 같이 받아온다.
      */
     @SerialName("comment_count")

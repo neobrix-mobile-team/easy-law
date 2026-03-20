@@ -232,6 +232,7 @@ class CommunityDetailViewModel
                     )
 
                 insertComment(newComment)
+//                getFCMToken(id)
 
                 if (_communityDetailViewState.value.isReplyMode) {
                     val replyList = _communityDetailViewState.value.communityToalComments.filter { it.parent_id == parentId }
@@ -786,5 +787,37 @@ class CommunityDetailViewModel
                     _isDeleteSuccess.send(Unit)
                 }
             }
+        }
+
+        // #################################################
+        // FCM token
+        // 댓글이 달리는 순간 게시글 주인 정보를 받아온다.
+        suspend fun getFCMToken(communityId: Long): String? {
+            try {
+                // 1. 댓글 입력 하면 게시글의 id를 가지고 user_id를 찾는다.
+                val communityUserId =
+                    supabase
+                        .from("community")
+                        .select(columns = Columns.raw("user_id")) {
+                            filter { eq("id", communityId) }
+                        }.decodeSingle<Map<String, String>>()["user_id"]
+
+                // 2. 찾은 게시글의 user_id로 users테이블의 토큰을 가져온다.
+                if (communityUserId != null) {
+                    val userToken =
+                        supabase
+                            .from("users")
+                            .select(columns = Columns.raw("fcm_token")) {
+                                filter { eq("id", communityUserId) }
+                            }.decodeSingleOrNull<Map<String, String>>()
+                            ?.get("fcm_token")
+                    Log.d("FCM Token", "FCM Token: $userToken")
+                    return userToken
+                }
+            } catch (e: Exception) {
+                Log.e("FCM Token Error", e.toString())
+                return null
+            }
+            return null
         }
     }
