@@ -49,7 +49,7 @@ class OnboardingViewModel
 
             val userRole =
                 when (role) {
-                    "내국인" -> "내국인"
+                    "ko" -> "내국인"
                     else -> "외국인"
                 }
 
@@ -58,11 +58,11 @@ class OnboardingViewModel
             )
 
 //            val language = if (role == "외국인") "en" else "ko"
-            val language = if (role == "I am a foreign resident in Korea.") "en" else "ko"
+//            val language = if (role == "I am a foreign resident in Korea.") "en" else "ko"
             viewModelScope.launch {
-                preferenceManager.saveLanguage(language)
-                Log.d("Onboarding_LOG", "역할: $role → 언어 저장: $language")
-                Log.d("Onboarding_LOG", "저장 완료: $language / 현재값: ${preferenceManager.languageState.value}")
+                preferenceManager.saveLanguage(role)
+                Log.d("Onboarding_LOG", "역할: $role → 언어 저장: $role")
+                Log.d("Onboarding_LOG", "저장 완료: $role / 현재값: ${preferenceManager.languageState.value}")
             }
         }
 
