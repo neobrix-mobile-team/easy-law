@@ -51,10 +51,11 @@ import com.easylaw.app.ui.components.LanguageBottombar
 import com.easylaw.app.ui.theme.EasyLawTheme
 import com.easylaw.app.util.PreferenceManager
 import com.easylaw.app.viewModel.RememberMainViewState
+import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.gotrue.auth
-import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -99,6 +100,15 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (!task.isSuccessful) {
+                Log.w("FCM_TEST", "토큰 가져오기 실패", task.exception)
+                return@addOnCompleteListener
+            }
+            val token = task.result
+            Log.d("FCM_TEST", "내 폰의 진짜 토큰: $token")
+        }
+
 //        Log.d("DeepLink", "intent.data = ${intent.data}")
 //        Log.d("DeepLink", "intent.extras = ${intent.extras?.keySet()}")
 //
@@ -126,29 +136,35 @@ class MainActivity : ComponentActivity() {
         // 앱 시작 시 로컬 저장소 및 세션 정보 불러오기
         lifecycleScope.launch {
             try {
-                val savedUser = preferenceManager.userData.firstOrNull()
+                val savedUser = preferenceManager.userData.first()
                 val currentSupabaseSession = supabase.auth.currentSessionOrNull()
 
-                if (currentSupabaseSession != null && savedUser != null) {
+                Log.d("session 유지 확인", "savedUser: $savedUser, currentSupabaseSession: $currentSupabaseSession")
+
+                if (savedUser != null && savedUser.id.isNotEmpty()) {
                     userSession.setLoginInfo(savedUser)
                 } else {
                     userSession.sessionClear()
                     preferenceManager.sessionClear()
-                    supabase.auth.signOut()
+                    if (currentSupabaseSession != null) supabase.auth.signOut()
+//                    supabase.auth.signOut()
+                    userSession.setInitialized(true)
                 }
             } catch (e: Exception) {
-                Log.e("Init", "유저 정보 로드 실패: ${e.message}")
-            } finally {
-                // 성공/실패 여부와 상관없이 초기화 완료 신호 전달
+                Log.e("session error", "유저 정보 로드 실패: ${e.message}")
                 userSession.setInitialized(true)
             }
+//            finally {
+//                // 성공/실패 여부와 상관없이 초기화 완료 신호 전달
+//                userSession.setInitialized(true)
+//            }
         }
 
         setContent {
             EasyLawTheme {
                 // 상태 관찰
                 val userInfo by userSession.userInfo.collectAsState()
-
+                Log.d("userinfo", userSession.getUserState().toString())
                 val isInitialized by userSession.isInitialized.collectAsState()
 
                 if (!isInitialized) {
@@ -168,7 +184,7 @@ class MainActivity : ComponentActivity() {
 
                     // 로그인 상태에 따른 시작 경로 결정
                     val startRoute = if (userInfo.id.isNotEmpty()) NavRoute.COMMUNITY else NavRoute.ONBOARDING
-
+                    Log.d("시작 위치", startRoute)
 //                    LaunchedEffect(navController) {
 //                        pendingPostId?.let { postId ->
 //                            navController.navigate("communityDetail/$postId")
