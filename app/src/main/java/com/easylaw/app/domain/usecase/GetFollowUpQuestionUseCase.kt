@@ -23,11 +23,12 @@ class GetFollowUpQuestionUseCase
         suspend operator fun invoke(
             history: List<Content>,
             questionCount: Int,
+            language: String,
         ): FollowUpAction {
             // 질문 횟수 한도 도달 시 비즈니스 규칙으로 ENOUGH 처리
             if (questionCount >= MAX_QUESTION_COUNT) {
                 return FollowUpAction(isEnough = true)
             }
-            return repository.getAdditionalQuestions(history)
+            return repository.getAdditionalQuestions(history, language)
         }
     }

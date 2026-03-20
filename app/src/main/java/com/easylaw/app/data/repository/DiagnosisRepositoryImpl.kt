@@ -28,15 +28,15 @@ class DiagnosisRepositoryImpl
         private val generativeModel: GenerativeModel,
         private val preferenceManager: PreferenceManager,
     ) : DiagnosisRepository {
-        private fun jsonLanguagePrefix(): String =
-            when (preferenceManager.languageState.value) {
+        private fun jsonLanguagePrefix(language: String): String =
+            when (language) {
                 "en" -> "[SYSTEM] You MUST respond ONLY in English. Do NOT use Korean under any circumstances.\n"
                 "ja" -> "[システム] 必ず日本語のみで回答してください。韓国語は一切使用しないでください。\n"
                 else -> ""
             }
 
-        private fun jsonLanguageSuffix(): String =
-            when (preferenceManager.languageState.value) {
+        private fun jsonLanguageSuffix(language: String): String =
+            when (language) {
                 "en" ->
                     """
                     [CRITICAL REMINDER]
@@ -58,15 +58,15 @@ class DiagnosisRepositoryImpl
                 else -> ""
             }
 
-        private fun guideLanguagePrefix(): String =
-            when (preferenceManager.languageState.value) {
+        private fun guideLanguagePrefix(language: String): String =
+            when (language) {
                 "en" -> "[SYSTEM] You MUST respond ONLY in English. Do NOT use Korean under any circumstances.\n"
                 "ja" -> "[システム] 必ず日本語のみで回答してください。韓国語は一切使用しないでください。\n"
                 else -> ""
             }
 
-        private fun guideLanguageSuffix(): String =
-            when (preferenceManager.languageState.value) {
+        private fun guideLanguageSuffix(language: String): String =
+            when (language) {
                 "en" ->
                     """
                     [CRITICAL REMINDER]
@@ -91,11 +91,14 @@ class DiagnosisRepositoryImpl
                     .joinToString("") { it.text }
             }
 
-        override suspend fun getAdditionalQuestions(history: List<Content>): FollowUpAction =
+        override suspend fun getAdditionalQuestions(
+            history: List<Content>,
+            language: String,
+        ): FollowUpAction =
             withContext(Dispatchers.IO) {
                 val systemPrompt =
                     """
-                    ${jsonLanguagePrefix()}
+                    ${jsonLanguagePrefix(language)}
                     당신은 전문 법률 상담가입니다. 사용자의 문제 상황을 분석하세요.
                     법률적 판단(예: 체당금 신청 가능 여부, 형사처벌 대상 여부, 계약 위반 여부 등)을 내리기 위해 **필수적인 추가 정보가 더 필요하다면** 아래 JSON 형식으로 질문을 1개만 생성하세요.
                     {"status": "NEED_INFO", "question": "상시 근로자 수가 5인 이상인가요?", "options": ["5인 이상", "5인 미만", "모름"]}
@@ -108,12 +111,12 @@ class DiagnosisRepositoryImpl
                     {"status": "ENOUGH"}
                     
                     반드시 마크다운이나 다른 텍스트 없이 순수 JSON 형식만 출력하세요.
-                    ${jsonLanguageSuffix()}
+                    ${jsonLanguageSuffix(language)}
                     """.trimIndent()
 
                 val fullHistory = history + content("user") { text(systemPrompt) }
 
-                Log.d("Diagnosis_LOG", "[1단계] getAdditionalQuestions 시작, history 길이: ${history.size}")
+                Log.d("Diagnosis_LOG", "[1단계] getAdditionalQuestions 시작, language: $language, history 길이: ${history.size}")
                 return@withContext try {
                     val response = generativeModel.generateContent(*fullHistory.toTypedArray())
                     val responseText =
@@ -250,6 +253,7 @@ class DiagnosisRepositoryImpl
         override suspend fun generateFinalGuide(
             history: List<Content>,
             lawDetails: String,
+            language: String,
             onChunk: (String) -> Unit,
         ): String =
             withContext(Dispatchers.IO) {
@@ -257,7 +261,7 @@ class DiagnosisRepositoryImpl
 
                 val prompt =
                     """
-                    ${guideLanguagePrefix()}
+                    ${guideLanguagePrefix(language)}
                     너는 취약계층을 돕는 친절한 법률 전문가야. 
                     사용자의 상황과 [관련 법령]을 바탕으로 아래 [필수 규칙]을 엄격하게 지켜 답변을 작성해.
                     
@@ -272,10 +276,10 @@ class DiagnosisRepositoryImpl
                     
                     사용자 상황: $contextText
                     관련 법령: $lawDetails
-                    ${guideLanguageSuffix()}
+                    ${guideLanguageSuffix(language)}
                     """.trimIndent()
 
-                Log.d("Diagnosis_LOG", "[4단계] generateFinalGuide 스트리밍 시작")
+                Log.d("Diagnosis_LOG", "[4단계] generateFinalGuide 스트리밍 시작 - language: $language")
                 return@withContext try {
                     val sb = StringBuilder()
                     generativeModel.generateContentStream(prompt).collect { chunk ->

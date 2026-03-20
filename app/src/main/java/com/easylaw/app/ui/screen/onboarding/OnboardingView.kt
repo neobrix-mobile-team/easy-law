@@ -244,7 +244,7 @@ fun RoleSelectionView(
     val context = LocalContext.current
     val roleKOR = stringResource(id = R.string.btn_korean)
     val roleENG = stringResource(id = R.string.btn_foreigner)
-    val roles = listOf(roleKOR, roleENG)
+    val roles = listOf(Pair("ko", roleKOR), Pair("en", roleENG))
 
     Column(
         modifier =
@@ -275,24 +275,20 @@ fun RoleSelectionView(
         Spacer(modifier = Modifier.height(40.dp))
 
         roles.forEach { role ->
-            val isSelected = selectedRole == role
+            val isSelected = selectedRole == role.first
 
             val scale by animateFloatAsState(if (isSelected) 1.02f else 1f, label = "scale")
             val elevation by animateDpAsState(if (isSelected) 8.dp else 2.dp, label = "elevation")
 
             Surface(
                 onClick = {
-                    onRoleSelected(role)
-                    val currentLang =
-                        context.resources.configuration.locales[0]
-                            .language
-                    if (role == roleENG && currentLang != "en") {
+                    onRoleSelected(role.first)
+                    if (role.first == "en") {
                         setLocale(context, "en")
-                        (context as? Activity)?.recreate()
-                    } else if (role == roleKOR && currentLang != "ko") {
+                    } else {
                         setLocale(context, "ko")
-                        (context as? Activity)?.recreate()
                     }
+                    (context as? Activity)?.recreate()
                 },
                 modifier =
                     Modifier
@@ -314,13 +310,13 @@ fun RoleSelectionView(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = if (role == roleKOR) "🇰🇷" else "🌐",
+                        text = if (role.first == "ko") "🇰🇷" else "🌐",
                         fontSize = 24.sp,
                         modifier = Modifier.padding(end = 16.dp),
                     )
 
                     Text(
-                        text = role,
+                        text = role.second,
                         modifier = Modifier.weight(1f),
                         style =
                             TextStyle(

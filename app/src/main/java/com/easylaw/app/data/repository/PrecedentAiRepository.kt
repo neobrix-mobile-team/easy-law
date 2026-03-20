@@ -16,6 +16,7 @@ interface PrecedentAiRepository {
      */
     suspend fun summarizePrecedent(
         originalText: String,
+        language: String,
         onChunk: (String) -> Unit,
     ): String
 }

@@ -5,7 +5,10 @@ import com.google.ai.client.generativeai.type.Content
 
 interface DiagnosisRepository {
     // 사용자 문제 분석 후 추가질문 생성
-    suspend fun getAdditionalQuestions(history: List<Content>): FollowUpAction
+    suspend fun getAdditionalQuestions(
+        history: List<Content>,
+        language: String,
+    ): FollowUpAction
 
     // 문제에서 법령 조회용 키워드 추출
     suspend fun extractTargetLaws(history: List<Content>): List<String>
@@ -17,6 +20,7 @@ interface DiagnosisRepository {
     suspend fun generateFinalGuide(
         history: List<Content>,
         lawDetails: String,
+        language: String,
         onChunk: (String) -> Unit,
     ): String
 }

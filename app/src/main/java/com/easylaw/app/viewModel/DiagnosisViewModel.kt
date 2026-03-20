@@ -11,12 +11,16 @@ import com.easylaw.app.domain.model.DiagnosisPhase
 import com.easylaw.app.domain.model.RetryActionType
 import com.easylaw.app.domain.usecase.GenerateDiagnosisGuideUseCase
 import com.easylaw.app.domain.usecase.GetFollowUpQuestionUseCase
+import com.easylaw.app.util.PreferenceManager
 import com.google.ai.client.generativeai.type.Content
 import com.google.ai.client.generativeai.type.content
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -34,14 +38,26 @@ class DiagnosisViewModel
     constructor(
         private val getFollowUpQuestionUseCase: GetFollowUpQuestionUseCase,
         private val generateDiagnosisGuideUseCase: GenerateDiagnosisGuideUseCase,
+        private val preferenceManager: PreferenceManager,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(DiagnosisUiState())
         val uiState: StateFlow<DiagnosisUiState> = _uiState.asStateFlow()
 
         private val conversationHistory = mutableListOf<Content>()
 
+        private var capturedLanguage: String = "ko"
+
         var userScenarioInput by mutableStateOf("")
             private set
+
+        init {
+            preferenceManager.languageState
+                .drop(1)
+                .onEach { newLanguage ->
+                    Log.d("Diagnosis_LOG", "[VM] 언어 변경 감지: $newLanguage → 히스토리 초기화")
+                    resetDiagnosis()
+                }.launchIn(viewModelScope)
+        }
 
         fun onUserScenarioInputChange(newValue: String) {
             userScenarioInput = newValue
@@ -49,6 +65,9 @@ class DiagnosisViewModel
 
         fun onStartDiagnosis() {
             if (userScenarioInput.isBlank()) return
+
+            capturedLanguage = preferenceManager.languageState.value
+            Log.d("Diagnosis_LOG", "[VM] 진단 시작 - 언어 캡처: $capturedLanguage")
 
             conversationHistory.clear()
             conversationHistory.add(content("user") { text(userScenarioInput) })
@@ -69,12 +88,13 @@ class DiagnosisViewModel
             viewModelScope.launch {
                 try {
                     addLoading()
-                    Log.d("Diagnosis_LOG", "[VM] 추가 질문 요청 중...")
+                    Log.d("Diagnosis_LOG", "[VM] 추가 질문 요청 중... language: $capturedLanguage")
 
                     val followUpAction =
                         getFollowUpQuestionUseCase(
                             history = conversationHistory,
                             questionCount = _uiState.value.questionCount,
+                            language = capturedLanguage,
                         )
                     removeLoadingOnly()
 
@@ -123,12 +143,14 @@ class DiagnosisViewModel
             viewModelScope.launch {
                 try {
                     addLoading()
+                    Log.d("Diagnosis_LOG", "[VM] 최종 가이드 스트리밍 시작 - language: $capturedLanguage")
                     Log.d("Diagnosis_LOG", "[VM] 최종 가이드 스트리밍 시작")
                     Log.d("Diagnosis_LOG", "[VM] 최종 가이드 생성 시작")
 
                     val finalGuide =
                         generateDiagnosisGuideUseCase(
                             history = conversationHistory,
+                            language = capturedLanguage,
                             onChunk = { chunk ->
                                 if (_uiState.value.streamingText.isEmpty()) {
                                     removeLoadingOnly()
@@ -223,6 +245,7 @@ class DiagnosisViewModel
         fun resetDiagnosis() {
             conversationHistory.clear()
             userScenarioInput = ""
+            capturedLanguage = "ko"
             _uiState.value = DiagnosisUiState()
         }
     }
