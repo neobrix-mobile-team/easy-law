@@ -1,4 +1,4 @@
-package com.easylaw.app.common.util
+package com.easylaw.app.di
 
 import dagger.Module
 import dagger.Provides
@@ -8,6 +8,7 @@ import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.gotrue.Auth
 import io.github.jan.supabase.postgrest.Postgrest
+import io.github.jan.supabase.storage.Storage
 import javax.inject.Singleton
 
 @Module
@@ -23,6 +24,7 @@ object SupabaseModule {
                     "YrUAPYN33L3KTpwyk09PMxQ1-nSHVIH84ZaQ37KTJEc",
         ) {
             install(Postgrest)
+            install(Storage)
             install(Auth)
         }
 }

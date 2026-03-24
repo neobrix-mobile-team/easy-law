@@ -1,20 +1,26 @@
-package com.easylaw.app.viewmodel
+package com.easylaw.app.viewModel.community
 
+import android.content.Context
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.easylaw.app.data.models.CategoryModel
 import com.easylaw.app.data.models.CommunityWriteModel
 import com.easylaw.app.domain.model.UserSession
+import com.easylaw.app.util.Numbers
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.storage.storage
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.UUID
 import javax.inject.Inject
 
 data class CommunityWriteViewState(
@@ -37,6 +43,7 @@ class CommunityWriteViewModel
     constructor(
         private val supabase: SupabaseClient,
         private val userSession: UserSession,
+        @ApplicationContext private val context: Context,
     ) : ViewModel() {
         private val _commnuityWriteViewState = MutableStateFlow(CommunityWriteViewState())
         val commnuityWriteViewState = _commnuityWriteViewState.asStateFlow()
@@ -47,9 +54,15 @@ class CommunityWriteViewModel
         val isWriteSuccess = _isWriteSuccess.receiveAsFlow()
 
         init {
+//            Log.d("ViewModel_LifeCycle", "CommunityWriteViewModel 생성 (HashCode: ${this.hashCode()})")
             viewModelScope.launch {
                 loadCategories()
             }
+        }
+
+        override fun onCleared() {
+            super.onCleared()
+//        Log.d("ViewModel_LifeCycle", "CommunityWriteViewModel 파괴 (onCleared)")
         }
 
         suspend fun loadCategories() {
@@ -142,13 +155,21 @@ class CommunityWriteViewModel
                     val state = _commnuityWriteViewState.value
                     val selectedCategory = state.categoryList[state.selectedCategory] ?: "기타"
 
+                    val uploadedImageUrls =
+                        if (state.selectedImages.isNotEmpty()) {
+                            uploadImagesToStorage(state.selectedImages)
+                        } else {
+                            emptyList()
+                        }
+
                     val writeModel =
                         CommunityWriteModel(
                             category = selectedCategory,
                             title = state.communityWriteTitleField,
                             content = state.communityWriteContentField,
                             author = userSession.getUserState().name,
-                            images = state.selectedImages,
+//                            images = state.selectedImages,
+                            images = uploadedImageUrls,
                         )
                     supabase.from("community").insert(writeModel)
                     // 성공 신호 보내기
@@ -168,5 +189,30 @@ class CommunityWriteViewModel
                     }
                 }
             }
+        }
+
+        private suspend fun uploadImagesToStorage(uris: List<String>): List<String> {
+            val publicUrls = mutableListOf<String>()
+
+            uris.forEach { uriString ->
+                val uri = Uri.parse(uriString)
+                val fileName = "community_${System.currentTimeMillis()}_${UUID.randomUUID().toString().take(Numbers.FIVE)}.jpg"
+
+                val inputStream = context.contentResolver.openInputStream(uri)
+                val bytes = inputStream?.use { it.readBytes() }
+
+                if (bytes != null) {
+                    val bucket = supabase.storage.from("community")
+
+                    bucket.upload(
+                        path = fileName,
+                        data = bytes,
+                        upsert = false,
+                    )
+                    val url = bucket.publicUrl(fileName)
+                    publicUrls.add(url)
+                }
+            }
+            return publicUrls
         }
     }

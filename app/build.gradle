@@ -11,6 +11,8 @@ plugins {
 
     id 'com.google.gms.google-services'
     id 'com.google.android.libraries.mapsplatform.secrets-gradle-plugin'
+
+    id 'kotlin-parcelize'
 }
 
 // Load local.properties
@@ -22,10 +24,47 @@ if (localPropertiesFile.exists()) {
 
 def geminiApiKey = localProperties.getProperty('GEMINI_API_KEY', '')
 def lawApiKey = localProperties.getProperty('LAW_API_KEY', '')
+def geminiApiKeyHkw = localProperties.getProperty('GEMINI_API_KEY_HKW', '')
+def naverClientId = localProperties.getProperty('NAVER_CLIENT_ID', '')
+def naverClientSecret = localProperties.getProperty('NAVER_CLIENT_SECRET', '')
+def kakaonativekey = localProperties.getProperty('KAKAO_NATIVE_KEY', '')
+def naverMapId = localProperties.getProperty('NAVER_MAP_ID', '')
+def naverMapKey = localProperties.getProperty('NAVER_MAP_KEY', '')
+def kakaoRestApiKey = localProperties.getProperty('KAKAO_REST_API_KEY', '')
+def deeplApiKey = localProperties.getProperty('DEEPL_API_KEY', '')
+
+def releaseStorePwd = localProperties.getProperty('RELEASE_STORE_PASSWORD', '')
+def releaseKeyPwd = localProperties.getProperty('RELEASE_KEY_PASSWORD', '')
+def releaseAlias = localProperties.getProperty('RELEASE_KEY_ALIAS', '')
+
 
 android {
     namespace 'com.easylaw.app'
     compileSdk 35
+
+    flavorDimensions "version"
+
+    productFlavors {
+        // 개발용 설정
+        dev {
+            dimension "version"
+            // 패키지명 뒤에 .dev를 붙여서 릴리즈 앱과 충돌 방지
+            applicationIdSuffix ".dev"
+            versionNameSuffix "-dev"
+            // 앱 이름을 다르게 설정 (기본 앱 이름과 구분하기 위함)
+            resValue "string", "app_name", "easylaw(dev)"
+        }
+
+        // 배포용 설정
+        prod {
+            dimension "version"
+            // 실제 패키지명 그대로 사용 (com.easylaw.app)
+            resValue "string", "app_name", "easylaw"
+        }
+    }
+
+
+
 
     defaultConfig {
         applicationId 'com.easylaw.app'
@@ -40,6 +79,20 @@ android {
         // API 키를 BuildConfig에 주입
         buildConfigField "String", "GEMINI_API_KEY", "\"${geminiApiKey}\""
         buildConfigField "String", "LAW_API_KEY", "\"${lawApiKey}\""
+        buildConfigField "String", "GEMINI_API_KEY_HKW", "\"${geminiApiKeyHkw}\""
+        buildConfigField "String", "NAVER_CLIENT_ID", "\"${naverClientId}\""
+        buildConfigField "String", "NAVER_CLIENT_SECRET", "\"${naverClientSecret}\""
+        buildConfigField "String", "KAKAO_NATIVE_KEY", "\"${kakaonativekey}\""
+//        manifestPlaceholders = [KAKAO_NATIVE_KEY: kakaonativekey]
+        buildConfigField "String", "NAVER_MAP_KEY", "\"${naverMapKey}\""
+        buildConfigField "String", "NAVER_MAP_ID", "\"${naverMapId}\""
+//        buildConfigField "String", "NAVER_SEARCH_KEY", "\"${naverSearchKey}\""
+//        buildConfigField "String", "NAVER_SEARCH_ID", "\"${naverSearchId}\""
+        buildConfigField("String", "KAKAO_REST_API_KEY", "\"${kakaoRestApiKey}\"")
+        manifestPlaceholders = [
+                KAKAO_NATIVE_KEY: kakaonativekey,
+                NAVER_MAP_ID: naverMapId]
+        buildConfigField("String", "DEEPL_API_KEY", "\"${deeplApiKey}\"")
     }
 
     buildTypes {
@@ -68,7 +121,7 @@ android {
         compose true
         aidl false
         renderScript false
-        resValues false
+        resValues true
         shaders false
         buildConfig true
     }
@@ -82,6 +135,26 @@ android {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
         }
     }
+
+    signingConfigs {
+        create("release") {
+            storeFile = file("easylaw.jks")
+            storePassword = releaseStorePwd
+            keyAlias = releaseAlias
+            keyPassword =  releaseKeyPwd
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled true
+            shrinkResources true
+
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+
+            // 서명 설정 적용
+            signingConfig signingConfigs.release
+        }
+    }
 }
 configurations.all {
     resolutionStrategy {
@@ -89,7 +162,6 @@ configurations.all {
         force 'org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.9.0'
     }
 }
-
 
 
 dependencies {
@@ -126,10 +198,6 @@ dependencies {
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
 
-
-
-
-
     // ============ Jetpack Libraries ============
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2'
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.2'
@@ -164,10 +232,13 @@ dependencies {
     implementation("com.github.chrisbanes:PhotoView:2.3.0")
 
     // ============ Location ============
-    implementation 'com.google.android.gms:play-services-location:21.0.1'
+//    implementation 'com.google.android.gms:play-services-location:21.0.1'
 
     // ============ Maps (Naver) ============
-    // TODO: Naver Map SDK 추가 (별도 설정 필요)
+    implementation 'io.github.fornewid:naver-map-compose:1.5.7'
+    implementation 'com.naver.maps:map-sdk:3.23.1'
+    implementation 'com.google.accompanist:accompanist-permissions:0.34.0'
+    implementation 'com.google.android.gms:play-services-location:21.1.0'
 
     // ============ Speech Recognition & TTS ============
 //    implementation 'com.google.android.gms:play-services-mlkit-speech-recognition:16.3.0'
@@ -202,6 +273,7 @@ dependencies {
     implementation platform('io.github.jan-tennert.supabase:bom:2.5.0')
     implementation 'io.github.jan-tennert.supabase:postgrest-kt'
     implementation 'io.github.jan-tennert.supabase:gotrue-kt'
+    implementation("io.github.jan-tennert.supabase:storage-kt")
 
     // ============ AI ============
     implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
@@ -213,10 +285,11 @@ dependencies {
     implementation 'com.google.android.libraries.identity.googleid:googleid:1.2.0'
 
     // ============ DataStore ============
-    implementation("androidx.datastore:datastore-preferences:1.1.1")
+//    implementation("androidx.datastore:datastore-preferences:1.1.1")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
 
-
+    // ============ KaKao ============
+    implementation "com.kakao.sdk:v2-share:2.20.1"
 
 
 

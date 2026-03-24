@@ -1,57 +1,88 @@
 package com.easylaw.app
 
-import android.R
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.os.Build
-import androidx.annotation.RequiresApi
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {
-    // 1. 메시지를 받았을 때 실행되는 함수
-    @RequiresApi(Build.VERSION_CODES.O)
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
 
-        // 알림 제목과 내용 가져오기
-        val title = message.notification?.title ?: "알림"
-        val body = message.notification?.body ?: "메시지가 도착했습니다."
+        Log.d("FCM_TEST", "메시지 수신 성공! 보낸 이: ${message.from}")
 
-        sendNotification(title, body)
+        // 1. 알림 데이터 추출 (Title, Body)
+        val title = message.notification?.title ?: message.data["title"]
+        val body = message.notification?.body ?: message.data["body"]
+
+        // 2. 중요: 상세 페이지 이동을 위한 postId 추출
+        val postId = message.data["postId"]
+
+        Log.d("FCM_TEST", "추출된 데이터 - 제목: $title, 내용: $body, postId: $postId")
+
+        if (title != null || body != null) {
+            sendNotification(title ?: "알림", body ?: "", postId)
+        }
     }
 
-    // 2. 화면에 알림을 띄워주는 함수
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun sendNotification(
         title: String,
         body: String,
+        postId: String?,
     ) {
-        val channelId = "default_channel" // 파이어베이스 콘솔과 일치해야 함
+        val channelId = "default_channel"
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        // 안드로이드 8.0 이상은 채널 설정이 필수
-        val channel = NotificationChannel(channelId, "기본 알림", NotificationManager.IMPORTANCE_HIGH)
-        notificationManager.createNotificationChannel(channel)
+        // 1. 알림 채널 생성 (Android O 이상 필수)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel =
+                NotificationChannel(
+                    channelId,
+                    "기본 알림",
+                    NotificationManager.IMPORTANCE_HIGH,
+                )
+            notificationManager.createNotificationChannel(channel)
+        }
 
-        val notification =
+        // 2. 알림 클릭 시 실행될 Intent 설정
+        val intent =
+            Intent(this, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                putExtra("postId", postId) // MainActivity로 postId 전달
+            }
+
+        // 3. PendingIntent 생성 (태블릿 및 최신 기기 대응을 위해 FLAG_IMMUTABLE 필수)
+        val pendingIntent =
+            PendingIntent.getActivity(
+                this,
+                System.currentTimeMillis().toInt(), // 요청 코드 고유화
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+            )
+
+        // 4. 알림 빌드
+        val notificationBuilder =
             NotificationCompat
                 .Builder(this, channelId)
-                .setSmallIcon(R.drawable.ic_dialog_info) // 아이콘 설정
+                .setSmallIcon(android.R.drawable.ic_dialog_info) // 기본 아이콘 사용 (변경 가능)
                 .setContentTitle(title)
                 .setContentText(body)
-                .setAutoCancel(true)
+                .setAutoCancel(true) // 클릭 시 알림 제거
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .build()
+                .setContentIntent(pendingIntent) // 👈 이 부분이 있어야 클릭 시 앱이 열립니다!
 
-        notificationManager.notify(0, notification)
+        // 5. 알림 띄우기 (고유 ID를 사용하여 알림이 겹치지 않게 함)
+        notificationManager.notify(System.currentTimeMillis().toInt(), notificationBuilder.build())
     }
 
-    // 3. 토큰이 갱신될 때 실행 (앱을 새로 깔거나 할 때)
     override fun onNewToken(token: String) {
         super.onNewToken(token)
-        // 여기서 새로운 토큰을 Supabase DB에 업데이트하는 로직을 넣으면 완벽합니다!
+        Log.d("FCM_TEST", "새로운 토큰 생성됨: $token")
     }
 }

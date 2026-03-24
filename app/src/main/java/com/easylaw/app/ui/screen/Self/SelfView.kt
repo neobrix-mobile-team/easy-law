@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.easylaw.app.ui.components.CommonButton
 import com.easylaw.app.ui.components.CommonTextField
-import com.easylaw.app.viewmodel.SelfViewModel
+import com.easylaw.app.viewModel.SelfViewModel
 
 @Composable
 fun SelfView(

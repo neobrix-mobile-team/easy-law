@@ -1,14 +1,19 @@
-package com.easylaw.app.viewmodel
+package com.easylaw.app.viewModel.login
 
 import android.content.Context
+import android.credentials.GetCredentialException
+import android.os.Build
 import android.util.Log
 import android.util.Patterns
+import androidx.annotation.RequiresApi
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.easylaw.app.domain.model.UserInfo
 import com.easylaw.app.domain.model.UserSession
+import com.easylaw.app.viewModel.sign.UserRequest
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.Firebase
@@ -122,9 +127,15 @@ class LoginViewModel
                         throw Exception("유저 정보를 찾을 수 없습니다.")
                     }
                 } catch (e: Exception) {
+                    val errorText =
+                        when {
+                            e.toString().contains("Email not confirmed") -> "이메일 인증을 진행해 주세요."
+                            e.toString().contains("Invalid login credentials") -> "아이디 또는 비밀번호가 일치하지 않습니다."
+                            else -> "알 수 없는 에러"
+                        }
                     Log.e("loginError", "로그인 실패: ${e.message}")
                     _loginViewState.update {
-                        it.copy(isLoginError = "아이디 또는 비밀번호가 일치하지 않습니다.")
+                        it.copy(isLoginError = errorText)
                     }
                 } finally {
                     _loginViewState.update { it.copy(isLoginLoading = false) }
@@ -132,6 +143,7 @@ class LoginViewModel
             }
         }
 
+        @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
         fun logInGoogle(
             context: Context,
             onSuccess: () -> Unit,
@@ -170,9 +182,13 @@ class LoginViewModel
                             null
                         }
 
+                    val supabaseUser = supabase.auth.currentUserOrNull()
+                    val supabaseUid = supabaseUser?.id ?: throw Exception("Supabase ID 발급 실패")
+
                     val userData =
                         UserRequest(
-                            id = firebaseUser.uid,
+                            id = supabaseUid,
+//                            id = firebaseUser.uid,
                             name = firebaseUser.displayName ?: "이름 없음",
                             email = firebaseUser.email ?: "",
                             user_role = userSession.getUserRole(),
@@ -201,6 +217,7 @@ class LoginViewModel
         ) {
             private val credentialManager = CredentialManager.create(context)
 
+            @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
             suspend fun signIn(): GoogleIdTokenCredential? {
                 try {
                     // 구글 로그인 옵션 설정
@@ -220,10 +237,47 @@ class LoginViewModel
                     // 팝업 띄우기
                     val result = credentialManager.getCredential(context, request)
                     return GoogleIdTokenCredential.createFrom(result.credential.data)
+                } catch (e: GetCredentialException) {
+                    // 💡 구글 로그인 과정(팝업, 인증 등)에서 발생하는 모든 에러
+                    if (e is GetCredentialCancellationException) {
+                        Log.d("GoogleLogin", "사용자가 취소함")
+                    } else {
+                        Log.e("GoogleLogin", "인증 에러 타입: ${e.type}")
+                        Log.e("GoogleLogin", "인증 에러 메시지: ${e.message}")
+                    }
+                    return null
                 } catch (e: Exception) {
+                    // 💡 데이터 변환(createFrom) 오류나 기타 예상치 못한 모든 에러
+                    Log.e("GoogleLogin", "기타 시스템 오류: ${e.message}")
                     e.printStackTrace()
                     return null
                 }
             }
         }
     }
+
+@RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+private fun handleCredentialException(e: GetCredentialException) {
+    when (e) {
+        // ✅ 사용자가 취소함 (이건 거의 모든 버전에서 동일)
+        is GetCredentialCancellationException -> {
+            Log.d("GoogleLogin", "사용자가 로그인을 취소했습니다.")
+        }
+
+        // ❌ GetCredentialPasswordException 대신
+        // ✅ 아래처럼 type을 확인하거나 일반적인 에러로 처리
+        else -> {
+            val errorType = e.type
+            val errorMessage = e.message
+
+            // 로그캣에서 이 내용을 보고 원인을 파악할 수 있습니다.
+            Log.e("GoogleLogin", "Credential 오류 발생!")
+            Log.e("GoogleLogin", "Type: $errorType")
+            Log.e("GoogleLogin", "Message: $errorMessage")
+
+            // 개발자용 팁:
+            // errorType에 "TYPE_NO_CREDENTIAL"이 포함되면 계정이 없는 것임
+            // errorType에 "10"이 포함되면 SHA-1/Client ID 문제임
+        }
+    }
+}

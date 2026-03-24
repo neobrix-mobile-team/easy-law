@@ -1,5 +1,6 @@
 package com.easylaw.app.navigation
 
+import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -7,31 +8,39 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Gavel
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
+import com.easylaw.app.R
 import com.easylaw.app.ui.screen.LegalSearchRoute
 import com.easylaw.app.ui.screen.Login.LoginView
 import com.easylaw.app.ui.screen.Login.SignView
-import com.easylaw.app.ui.screen.Self.SelfView
+import com.easylaw.app.ui.screen.community.CommunityContentView
+import com.easylaw.app.ui.screen.community.CommunityUpdateView
 import com.easylaw.app.ui.screen.community.CommunityView
 import com.easylaw.app.ui.screen.community.CommunityWriteView
+import com.easylaw.app.ui.screen.diagnosis.DiagnosisScreen
+import com.easylaw.app.ui.screen.map.MapScreen
 import com.easylaw.app.ui.screen.onboarding.OnboardingView
-import com.easylaw.app.viewmodel.CommunityViewModel
-import com.easylaw.app.viewmodel.CommunityWriteViewModel
-import com.easylaw.app.viewmodel.LoginViewModel
-import com.easylaw.app.viewmodel.OnboardingViewModel
-import com.easylaw.app.viewmodel.SelfViewModel
-import com.easylaw.app.viewmodel.SignViewModel
+import com.easylaw.app.viewModel.OnboardingViewModel
+import com.easylaw.app.viewModel.community.CommunityDetailViewModel
+import com.easylaw.app.viewModel.community.CommunityUpdateViewModel
+import com.easylaw.app.viewModel.community.CommunityViewModel
+import com.easylaw.app.viewModel.community.CommunityWriteViewModel
+import com.easylaw.app.viewModel.login.LoginViewModel
+import com.easylaw.app.viewModel.sign.SignViewModel
 
 data class BottomNavItem(
     val route: String,
-    val title: String,
+    @StringRes val titleResId: Int,
     val icon: ImageVector,
 )
 
@@ -43,24 +52,27 @@ object NavRoute {
     const val LAW_CONSULT = "lawConsult"
     const val COMMUNITY = "community"
     const val COMMUNITY_WRITE = "communityWrite"
+    const val COMMUNITY_UPDATE = "communityUpdate/{updateId}"
     const val SELF = "self"
     const val CAR_CRUSH = "carCrush"
+    const val MAP = "map"
+    const val COMMUNITY_DETAIL = "communityDetail/{id}"
 
     val bottomItems =
         listOf(
             BottomNavItem(
                 route = COMMUNITY,
-                title = "커뮤니티",
+                titleResId = R.string.sidebar_menu_community,
                 icon = Icons.Default.Share,
             ),
             BottomNavItem(
                 route = LAW_CONSULT,
-                title = "판례검색",
+                titleResId = R.string.sidebar_menu_precedent,
                 icon = Icons.Default.Gavel,
             ),
             BottomNavItem(
                 route = SELF,
-                title = "자가진단",
+                titleResId = R.string.sidebar_menu_self_diagnosis,
                 icon = Icons.Default.Check,
             ),
 //        BottomNavItem(
@@ -68,6 +80,11 @@ object NavRoute {
 //            title = "영상 분석",
 //            icon = Icons.Default.Videocam
 //        )
+            BottomNavItem(
+                route = MAP,
+                titleResId = R.string.sidebar_menu_nearby,
+                icon = Icons.Default.Map,
+            ),
         )
 }
 
@@ -120,6 +137,8 @@ fun AppRoute(
                 },
                 goToMainView = {
                     navController.navigate(NavRoute.COMMUNITY) {
+                        // navController.graph.id
+                        // 이전 스택 전부 지우고 다음 화면 스택만 남긴다.
                         popUpTo(navController.graph.id) {
                             inclusive = true
                         }
@@ -159,6 +178,52 @@ fun AppRoute(
                         launchSingleTop = true
                     }
                 },
+                gotoDetail = { clickedId ->
+                    navController.navigate("communityDetail/$clickedId") {
+                        launchSingleTop = true
+                    }
+                },
+            )
+        }
+        composable(
+            route = "communityDetail/{id}",
+            arguments = listOf(navArgument("id") { type = NavType.StringType }),
+        ) {
+            val communityDetailViewModel: CommunityDetailViewModel = hiltViewModel()
+            CommunityContentView(
+                modifier = modifier,
+                viewModel = communityDetailViewModel,
+                goBack = {
+                    navController.popBackStack()
+                },
+                goUpdate = { updateId ->
+                    navController.navigate("communityUpdate/$updateId") {
+                        launchSingleTop = true
+                    }
+                },
+            )
+//            CommunityDetailView(
+//                modifier = modifier,
+//                viewModel = communityDetailViewModel,
+//                goBack = {
+//                    navController.popBackStack()
+//                },
+//                goUpdate = { updateId ->
+//                    navController.navigate("communityUpdate/$updateId") {
+//                        launchSingleTop = true
+//                    }
+//                },
+//            )
+        }
+        composable(
+            route = NavRoute.COMMUNITY_UPDATE,
+            arguments = listOf(navArgument("updateId") { type = NavType.LongType }),
+        ) {
+            val communityUpdateViewModel: CommunityUpdateViewModel = hiltViewModel()
+            CommunityUpdateView(
+                modifier = modifier,
+                viewModel = communityUpdateViewModel,
+                goBack = { navController.popBackStack() },
             )
         }
         // 커뮤니티 - 글쓰기
@@ -186,11 +251,13 @@ fun AppRoute(
         composable(
             route = NavRoute.SELF,
         ) {
-            val selfViewModel: SelfViewModel = hiltViewModel()
-            SelfView(
-                modifier = modifier,
-                viewModel = selfViewModel,
-            )
+            DiagnosisScreen(modifier = modifier)
+        }
+
+        composable(
+            route = NavRoute.MAP,
+        ) {
+            MapScreen()
         }
     }
 }

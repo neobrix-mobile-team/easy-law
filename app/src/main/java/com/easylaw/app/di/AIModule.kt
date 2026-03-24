@@ -1,6 +1,8 @@
 package com.easylaw.app.di
 
+import com.easylaw.app.BuildConfig
 import com.google.ai.client.generativeai.GenerativeModel
+import com.google.ai.client.generativeai.type.RequestOptions
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -14,8 +16,12 @@ object AIModule {
     @Singleton
     fun provideGenerativeModel(): GenerativeModel =
         GenerativeModel(
-            modelName = "gemini-2.5-flash",
-//            apiKey = "AIzaSyDAHMokux1Lg5Jx9PwfkzIigI8my9Jvamw"
-            apiKey = "AIzaSyDDkAUVkk_EdyhW6S3etuVchfJBiAQn-5U",
+            modelName = "gemini-3.1-flash-lite-preview",
+//            modelName = "gemini-2.5-flash-lite",
+            apiKey = BuildConfig.GEMINI_API_KEY,
+            requestOptions =
+                RequestOptions(
+                    timeout = 30_000, // 30초 타임아웃 — 초과 시 TimeoutCancellationException 발생
+                ),
         )
 }

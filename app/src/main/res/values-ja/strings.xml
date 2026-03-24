@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ========================================================= -->
+    <!--  기존 strings.xml 항목 - 일본어 번역                        -->
+    <!-- ========================================================= -->
+
+<!--    <string name="app_name">EasyLaw</string>-->
+    <string name="title_activity_main">EasyLaw - わかりやすい法律ガイド</string>
+
+    <!-- 버튼 -->
+    <string name="btn_next">次へ</string>
+    <string name="btn_start">はじめる</string>
+
+    <!-- 온보딩 -->
+    <string name="onboarding_welcome_title">はじめまして！\n法律がわかりやすくなる\nEasyLawです。</string>
+    <string name="onboarding_welcome_subtitle">難しい法律用語をわかりやすくご説明します。</string>
+    <string name="onboarding_ask_help">どのようなお手伝いが\n必要ですか？</string>
+
+    <string name="btn_korean">韓国人</string>
+    <string name="btn_foreigner">I am a foreign resident in Korea.</string>
+
+    <string name="permission_title">必要な権限のみ\n使用時にお伺いします。</string>
+    <string name="permission_subtitle">書類の解析に必要です。</string>
+    <string name="permission_camera_title">カメラ</string>
+    <string name="permission_camera_desc">書類のスキャンおよび事故映像の撮影</string>
+    <string name="permission_storage_title">ストレージ</string>
+    <string name="permission_storage_desc">端末に保存された写真の読み込み</string>
+
+    <!-- 로그인 -->
+    <string name="login_title">安全な法律サービス</string>
+    <string name="login_id_label">ID：</string>
+    <string name="login_id_hint">メール形式で入力してください。</string>
+    <string name="login_id_error">メール形式で入力してください。</string>
+    <string name="login_pwd_label">パスワード：</string>
+    <string name="login_pwd_hint">パスワードを入力してください。</string>
+    <string name="login_pwd_error">8文字以上で入力してください。</string>
+    <string name="login_btn">ログイン</string>
+    <string name="login_google_btn">Googleでログイン</string>
+    <string name="login_signup_link">会員登録</string>
+    <string name="login_loading">ログイン中です…</string>
+    <string name="login_error_title">ログイン失敗</string>
+
+    <!-- 회원가입 -->
+    <string name="sign_title">サービスをご利用いただくために\n情報を入力してください</string>
+    <string name="sign_name_label">氏名</string>
+    <string name="sign_name_hint">本名を入力してください</string>
+    <string name="sign_email_label">メールアドレス</string>
+    <string name="sign_email_hint">example@mail.com</string>
+    <string name="sign_email_error">正しいメール形式で入力してください</string>
+    <string name="sign_pwd_label">パスワード</string>
+    <string name="sign_pwd_hint">8文字以上で入力してください</string>
+    <string name="sign_pwd_error">8文字以上の入力が必要です</string>
+    <string name="sign_pwd_confirm_label">パスワード確認</string>
+    <string name="sign_pwd_confirm_error">パスワードが一致しません。</string>
+    <string name="sign_btn">同意して登録する</string>
+    <string name="sign_loading">しばらくお待ちください…</string>
+    <string name="sign_success_title">会員登録完了</string>
+    <string name="sign_success_desc">これですべてのサービスを\nご利用いただけます</string>
+    <string name="sign_error_title">会員登録失敗</string>
+
+    <!-- 공통 -->
+    <string name="confirm">確認</string>
+    <string name="logout">ログアウト</string>
+    <string name="required_field">必須項目です。</string>
+    <string name="loading_analyzing">分析中…</string>
+    <string name="error_occurred">エラーが発生しました。もう一度お試しください。</string>
+    <string name="no_contact_info">連絡先情報なし</string>
+
+    <!-- 언어 선택 -->
+    <string name="lang_korean">한국어</string>
+    <string name="lang_english">English</string>
+    <string name="lang_japanese">日本語</string>
+    <string name="lang_select_title">言語を選択</string>
+    <string name="lang_selected_desc">選択済み</string>
+
+    <!-- 사이드바 메뉴 -->
+    <string name="sidebar_greeting">%sさん</string>
+    <string name="sidebar_guest">ゲスト</string>
+    <string name="sidebar_group_community">コミュニティ</string>
+    <string name="sidebar_group_legal">法律サービス</string>
+    <string name="sidebar_menu_community">コミュニティ</string>
+    <string name="sidebar_menu_precedent">判例検索</string>
+    <string name="sidebar_menu_self_diagnosis">セルフ診断</string>
+    <string name="sidebar_menu_nearby">地図</string>
+
+    <!-- 글쓰기 -->
+    <string name="write_category_prompt">どの分野のお悩みですか？</string>
+    <string name="write_title_label">タイトル</string>
+    <string name="write_title_placeholder">タイトルを入力してください。</string>
+    <string name="write_content_label">本文</string>
+    <string name="write_content_placeholder">本文を入力してください。</string>
+
+    <!-- 지도 -->
+    <string name="map_searching">近くの法律機関を検索中…</string>
+    <string name="map_search_this_area">このエリアで検索</string>
+    <string name="map_my_location_desc">現在地</string>
+    <string name="map_search_desc">検索</string>
+    <string name="map_navigate">ここへのルート</string>
+    <string name="map_no_results">検索結果がありません。</string>
+    <string name="map_permission_required">サービスを利用するには位置情報の権限が必要です。</string>
+    <string name="map_request_permission">権限を許可する</string>
+
+    <!-- 자가진단 (SelfView) -->
+    <string name="self_title">セルフ診断</string>
+    <string name="self_subtitle">いくつかの質問に答えるだけで、あなたに合った法律ガイドをすぐにご提供します。</string>
+    <string name="self_situation_title">どのような状況ですか？</string>
+    <string name="self_situation_placeholder">具体的な状況を教えてください</string>
+    <string name="self_checklist_prefix">準備するもの: %s</string>
+    <string name="self_diagnose_btn">診断する</string>
+
+    <!-- 자가진단 (DiagnosisScreen) -->
+    <string name="diagnosis_title">セルフ診断</string>
+    <string name="diagnosis_description">できるだけ詳しく状況をお伝えいただくと、\nより正確な法律診断が受けられます。</string>
+    <string name="diagnosis_input_label">法律問題の状況説明</string>
+    <string name="diagnosis_input_placeholder">例：社長が3か月間給料を払ってくれません…</string>
+    <string name="diagnosis_voice_input_desc">音声入力</string>
+    <string name="diagnosis_start_btn">セルフ診断を開始する</string>
+    <string name="diagnosis_request_btn">分析を依頼する</string>
+    <string name="diagnosis_submit_btn">入力完了</string>
+    <string name="diagnosis_mic_desc">マイク</string>
+    <string name="diagnosis_analyzing">分析中…</string>
+    <string name="diagnosis_paused">分析が一時中断されました。\nしばらくしてから再度お試しください。</string>
+    <string name="diagnosis_bot_greeting">こんにちは！法律に関してどのようなお悩みですか？</string>
+    <string name="diagnosis_user_sample">賃金未払いについてお問い合わせします。</string>
+    <string name="diagnosis_error">エラーが発生しました</string>
+    <string name="diagnosis_back_to_start">最初に戻る</string>
+
+    <!-- 음성인식 상태 -->
+    <string name="stt_empty"> </string>
+    <string name="stt_connecting">接続中…</string>
+    <string name="stt_listening">聞いています…話してください。</string>
+    <string name="stt_processing">テキストに変換中…</string>
+
+    <!-- 음성인식 오류 토스트 -->
+    <string name="stt_error_audio">録音エラーです。マイクの状態を確認してください。</string>
+    <string name="stt_error_client">クライアント側のエラーが発生しました。</string>
+    <string name="stt_error_no_permission">マイクの権限がありません。設定で許可してください。</string>
+    <string name="stt_error_network">ネットワーク接続が不安定です。</string>
+    <string name="stt_error_timeout">ネットワーク接続がタイムアウトしました。</string>
+    <string name="stt_error_no_result">認識結果がありません。もう一度話してください。</string>
+    <string name="stt_error_busy">サービスが混雑しています。しばらくしてからお試しください。</string>
+    <string name="stt_error_server">サーバーエラーが発生しました。</string>
+    <string name="stt_error_no_speech">音声が検出されませんでした。認識を終了します。</string>
+    <string name="stt_error_unknown">不明なエラーが発生しました。</string>
+    <string name="stt_permission_required">音声認識にはマイクの権限が必要です。</string>
+    <string name="stt_not_supported">このデバイスでは音声認識はサポートされていません。</string>
+    <string name="stt_permission_legal">法律診断にはマイクの権限が必要です。</string>
+    <string name="stt_permission_denied">マイクの権限が拒否されています。設定で許可してください。</string>
+
+    <!-- 판례 검색 -->
+    <string name="legal_search_title">状況を診断する</string>
+    <string name="legal_search_subtitle">正確な分析のために以下の項目を入力してください。</string>
+    <string name="legal_search_situation_label">どのような状況ですか？</string>
+    <string name="legal_search_situation_placeholder">例：3か月間給料が支払われていません</string>
+    <string name="legal_search_court_label">裁判所の種類</string>
+    <string name="legal_search_detail_label">詳細内容</string>
+    <string name="legal_search_detail_placeholder">発生した出来事を具体的に記入してください（任意）</string>
+    <string name="legal_search_analyzing">キーワードを分析中…</string>
+    <string name="legal_search_ai_analyzing">AI分析キーワード</string>
+    <string name="legal_search_btn">判例検索</string>
+    <string name="legal_search_result_title">判例検索結果</string>
+    <string name="legal_search_no_result">検索結果がありません。</string>
+    <string name="legal_search_filter_no_result">フィルタリング結果がありません。</string>
+    <string name="legal_search_result_filtered">検索結果 %d 件フィルタリング済み</string>
+    <string name="legal_search_result_total">合計 %d 件が検索されました。</string>
+    <string name="legal_search_close_desc">閉じる</string>
+    <string name="legal_search_re_search_placeholder">結果内を再検索（例：控訴、上告）</string>
+    <string name="legal_search_re_search_desc">再検索</string>
+    <string name="legal_search_verdict_date">判決日: %s</string>
+    <string name="legal_search_expand_desc">展開</string>
+    <string name="legal_search_collapse_desc">折りたたむ</string>
+    <string name="legal_search_tab_original">原文</string>
+    <string name="legal_search_tab_ai_summary">AI要約</string>
+    <string name="legal_search_section_issue">【判示事項】</string>
+    <string name="legal_search_section_summary">【判決要旨】</string>
+    <string name="legal_search_section_content">【判例内容（理由）】</string>
+    <string name="legal_search_summarizing">判決文を分析して\n要約しています…</string>
+
+    <!-- 법원종류 필터 -->
+    <string name="court_all">すべて（未選択）</string>
+    <string name="court_supreme">最高裁判所</string>
+    <string name="court_lower">下級裁判所</string>
+
+
+    <!-- 지도 시설 카테고리 -->
+    <string name="facility_court">裁判所</string>
+    <string name="facility_prosecutor">検察庁</string>
+    <string name="facility_police">警察署</string>
+    <string name="facility_legal_aid">法律救助公団</string>
+    <string name="facility_notary">公証事務所</string>
+    <string name="facility_registry">登記所</string>
+    <string name="facility_judicial_scrivener">司法書士</string>
+    <string name="facility_lawyer">弁護士</string>
+    <string name="facility_law_firm">法律事務所</string>
+    <string name="facility_patent_attorney">弁理士</string>
+
+    <!-- 지도 필터칩 -->
+    <string name="filter_all">すべて</string>
+    <string name="filter_court">裁判所</string>
+    <string name="filter_prosecutor">検察</string>
+    <string name="filter_police">警察</string>
+    <string name="filter_legal_aid">法律救助</string>
+    <string name="filter_notary">公証</string>
+    <string name="filter_registry">登記</string>
+    <string name="filter_judicial_scrivener">司法書士</string>
+    <string name="filter_lawyer">弁護士</string>
+    <string name="filter_law_firm">法律事務所</string>
+    <string name="filter_patent_attorney">弁理士</string>
+
+</resources>

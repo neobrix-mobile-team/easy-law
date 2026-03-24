@@ -49,7 +49,7 @@ import com.easylaw.app.ui.components.CommonFilterCategory
 import com.easylaw.app.ui.components.CommonIndicator
 import com.easylaw.app.ui.components.CommonPreview
 import com.easylaw.app.ui.components.CommonTextField
-import com.easylaw.app.viewmodel.CommunityWriteViewModel
+import com.easylaw.app.viewModel.community.CommunityWriteViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

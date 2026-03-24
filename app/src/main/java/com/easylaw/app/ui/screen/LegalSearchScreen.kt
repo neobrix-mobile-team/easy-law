@@ -1,5 +1,6 @@
 package com.easylaw.app.ui.screen
 
+import android.util.Log
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -50,6 +51,7 @@ import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -59,6 +61,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -67,18 +70,17 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.easylaw.app.R
 import com.easylaw.app.domain.model.Precedent
 import com.easylaw.app.util.debouncedClickable
-import com.easylaw.app.viewmodel.CourtTypeOption
-import com.easylaw.app.viewmodel.DetailViewMode
-import com.easylaw.app.viewmodel.LegalSearchUiState
-import com.easylaw.app.viewmodel.LegalSearchViewModel
+import com.easylaw.app.viewModel.CourtTypeOption
+import com.easylaw.app.viewModel.DetailViewMode
+import com.easylaw.app.viewModel.LegalSearchUiState
+import com.easylaw.app.viewModel.LegalSearchViewModel
 
 @Composable
 fun LegalSearchRoute(viewModel: LegalSearchViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-//    val searchResults = viewModel.searchResults.collectAsLazyPagingItems()
-//    val searchResults by viewModel.searchResults.collectAsStateWithLifecycle()
     val displayResults by viewModel.displayResults.collectAsStateWithLifecycle()
     val filterKeyword by viewModel.filterKeyword.collectAsStateWithLifecycle()
 
@@ -100,6 +102,7 @@ fun LegalSearchRoute(viewModel: LegalSearchViewModel = hiltViewModel()) {
                 onFilterKeywordChange = viewModel::updateListFilterText,
                 onPrecedentClick = viewModel::onPrecedentClick,
                 onDismiss = viewModel::closeResults,
+                onVisibleItemsChanged = viewModel::translateVisibleItems,
             )
         }
 
@@ -133,30 +136,29 @@ fun SituationDiagnosisScreen(
         Column(
             modifier =
                 Modifier
-                    .weight(1f)
                     .verticalScroll(rememberScrollState()),
         ) {
-            Text(text = "상황 진단하기", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+            Text(text = stringResource(R.string.legal_search_title), fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.Black)
             Spacer(modifier = Modifier.height(8.dp))
-            Text(text = "정확한 분석을 위해 아래 항목을 채워주세요.", fontSize = 16.sp, color = Color.Gray)
+            Text(text = stringResource(R.string.legal_search_subtitle), fontSize = 16.sp, color = Color.Gray)
 
             Spacer(modifier = Modifier.height(32.dp))
 
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(text = "어떤 상황인가요?", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                Text(text = stringResource(R.string.legal_search_situation_label), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black)
                 Text(text = "*", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Red)
             }
             Spacer(modifier = Modifier.height(8.dp))
             CustomTextField(
                 value = uiState.situation,
                 onValueChange = onSituationChange,
-                placeholder = "예: 임금을 석달째 못받았어요",
+                placeholder = stringResource(R.string.legal_search_situation_placeholder),
                 isError = uiState.isSituationError,
             )
 
             if (uiState.isSituationError) {
                 Text(
-                    text = "필수 항목입니다.",
+                    text = stringResource(R.string.required_field),
                     color = Color.Red,
                     fontSize = 12.sp,
                     modifier = Modifier.padding(top = 4.dp, start = 4.dp),
@@ -165,7 +167,7 @@ fun SituationDiagnosisScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            Text(text = "법원종류", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+            Text(text = stringResource(R.string.legal_search_court_label), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black)
             Spacer(modifier = Modifier.height(8.dp))
             CourtTypeSpinner(
                 selectedOption = uiState.selectedCourt,
@@ -174,12 +176,12 @@ fun SituationDiagnosisScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            Text(text = "상세 내용", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+            Text(text = stringResource(R.string.legal_search_detail_label), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black)
             Spacer(modifier = Modifier.height(8.dp))
             CustomTextField(
                 value = uiState.details,
                 onValueChange = onDetailsChange,
-                placeholder = "발생한 일을 구체적으로 적어주세요 (선택)",
+                placeholder = stringResource(R.string.legal_search_detail_placeholder),
                 minLines = 3,
             )
 
@@ -202,7 +204,7 @@ fun SituationDiagnosisScreen(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
                     Spacer(modifier = Modifier.width(12.dp))
-                    Text(text = "키워드 분석 중...", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    Text(text = stringResource(R.string.legal_search_analyzing), color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 }
             } else {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -214,7 +216,7 @@ fun SituationDiagnosisScreen(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "판례 검색",
+                        text = stringResource(R.string.legal_search_btn),
                         color = if (isButtonEnabled) Color.White else Color.Gray,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
@@ -238,7 +240,7 @@ fun CourtTypeSpinner(
         onExpandedChange = { expanded = !expanded },
     ) {
         OutlinedTextField(
-            value = selectedOption.displayName,
+            value = stringResource(selectedOption.displayName),
             onValueChange = {},
             readOnly = true,
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
@@ -261,7 +263,7 @@ fun CourtTypeSpinner(
             // Enum 클래스에 정의된 모든 옵션을 리스트로 뿌려줍니다.
             CourtTypeOption.entries.forEach { option ->
                 DropdownMenuItem(
-                    text = { Text(text = option.displayName, color = Color.Black) },
+                    text = { Text(text = stringResource(option.displayName), color = Color.Black) },
                     onClick = {
                         onOptionSelected(option)
                         expanded = false
@@ -315,6 +317,7 @@ fun PrecedentResultDialog(
     onFilterKeywordChange: (String) -> Unit,
     onPrecedentClick: (Precedent) -> Unit,
     onDismiss: () -> Unit,
+    onVisibleItemsChanged: (List<Precedent>) -> Unit,
 ) {
     Dialog(
         onDismissRequest = onDismiss,
@@ -335,35 +338,26 @@ fun PrecedentResultDialog(
                     verticalAlignment = Alignment.Top,
                 ) {
                     Column {
-                        Text(text = "판례 검색 결과", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                        Text(text = stringResource(R.string.legal_search_result_title), fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.Black)
                         Spacer(modifier = Modifier.height(4.dp))
 
                         // 키워드 노출
                         Text(
-                            text = "AI 분석 키워드: ${uiState.extractedKeyword}",
+                            text = "${stringResource(R.string.legal_search_ai_analyzing)}: ${uiState.extractedKeyword}",
                             fontSize = 14.sp,
                             color = Color(0xFF1967D2),
                             fontWeight = FontWeight.Bold,
                         )
                         Spacer(modifier = Modifier.height(4.dp))
 
-//                        val itemCount = pagingItems.itemCount
-
-//                        if (pagingItems.loadState.refresh is LoadState.Loading) {
-
                         if (precedents.isEmpty() && uiState.totalSearchCount == 0) {
-                            Text(text = "검색된 항목이 없습니다.", fontSize = 14.sp, color = Color.Gray)
+                            Text(text = stringResource(R.string.legal_search_no_result), fontSize = 14.sp, color = Color.Gray)
                         } else {
-//                            Text(
-//                                text = "총 ${uiState.totalSearchCount}건이 검색되었습니다.",
-//                                fontSize = 14.sp,
-//                                color = Color.Gray,
-//                            )
                             val resultText =
                                 if (filterKeyword.isNotBlank()) {
-                                    "검색 결과 중 ${precedents.size}건 필터링 됨"
+                                    stringResource(R.string.legal_search_result_filtered, precedents.size)
                                 } else {
-                                    "총 ${uiState.totalSearchCount}건이 검색되었습니다."
+                                    stringResource(R.string.legal_search_result_total, uiState.totalSearchCount)
                                 }
                             Text(text = resultText, fontSize = 14.sp, color = Color.Gray)
                         }
@@ -371,59 +365,75 @@ fun PrecedentResultDialog(
                     IconButton(onClick = onDismiss) {
                         Icon(
                             imageVector = Icons.Default.Close,
-                            contentDescription = "닫기",
+                            contentDescription = stringResource(R.string.legal_search_close_desc),
                             modifier = Modifier.size(32.dp),
                         )
                     }
                 }
 
-                if (uiState.isLoading) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = Color(0xFF6B9DE8))
-                    }
-                } else {
-                    OutlinedTextField(
-                        value = uiState.listFilterText,
-                        onValueChange = onFilterKeywordChange,
-                        placeholder = { Text("결과 내 재검색 (예: 항소, 상고)") },
-                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = "재검색") },
-                        modifier =
-                            Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 24.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        singleLine = true,
-                        colors =
-                            OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFF1967D2),
-                                unfocusedBorderColor = Color(0xFFE0E0E0),
-                                focusedContainerColor = Color.White,
-                                unfocusedContainerColor = Color(0xFFFAFAFA),
-                            ),
-                    )
-                }
+                OutlinedTextField(
+                    value = uiState.listFilterText,
+                    onValueChange = onFilterKeywordChange,
+                    placeholder = { Text(stringResource(R.string.legal_search_re_search_placeholder)) },
+                    leadingIcon = {
+                        Icon(
+                            Icons.Default.Search,
+                            contentDescription = stringResource(R.string.legal_search_re_search_desc),
+                        )
+                    },
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true,
+                    enabled = !uiState.isLoading,
+                    colors =
+                        OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF1967D2),
+                            unfocusedBorderColor = Color(0xFFE0E0E0),
+                            focusedContainerColor = Color.White,
+                            unfocusedContainerColor = Color(0xFFFAFAFA),
+                        ),
+                )
 
                 Spacer(modifier = Modifier.height(16.dp))
                 HorizontalDivider(color = Color(0xFFEEEEEE))
 
                 // 검색 결과 리스트
-                LazyColumn(
-                    modifier =
-                        Modifier
-                            .weight(1f)
-                            .padding(horizontal = 24.dp),
-                    contentPadding = PaddingValues(vertical = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                ) {
+                Box(modifier = Modifier.weight(1f)) {
+                    LazyColumn(
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 24.dp),
+                        contentPadding = PaddingValues(vertical = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        // paging
 //                    items(count = pagingItems.itemCount) { index ->
 //                        val precedent = pagingItems[index]
 //                        if (precedent != null) {
 //                            PrecedentCard(precedent) { onPrecedentClick(precedent) }
 //                        }
 //                    }
-                    items(precedents) { precedent ->
-                        PrecedentCard(precedent) { onPrecedentClick(precedent) }
-                    }
+
+                        Log.d("Translation_LOG", "LazyColumn items 렌더링 - precedents.size: ${precedents.size}")
+                        items(precedents, key = { it.id }) { precedent ->
+
+                            LaunchedEffect(precedent.id) {
+                                onVisibleItemsChanged(listOf(precedent))
+                            }
+
+                            PrecedentCard(
+                                precedent = precedent,
+                                translatedTitle = uiState.translatedTitles[precedent.title],
+                                translatedCategory = uiState.translatedTitles[precedent.category],
+                                translatedCourt = uiState.translatedTitles[precedent.court],
+                                translatedJudgmentType = uiState.translatedTitles[precedent.judgmentType],
+                                onClick = { onPrecedentClick(precedent) },
+                            )
+                        }
 
 //                    if (pagingItems.loadState.append is LoadState.Loading) {
 //                        item {
@@ -439,18 +449,31 @@ fun PrecedentResultDialog(
 //                        }
 //                    }
 
-                    if (precedents.isEmpty() && uiState.listFilterText.isNotBlank()) {
-                        item {
-                            Box(
-                                modifier =
-                                    Modifier
-                                        .fillMaxWidth()
-                                        .padding(32.dp),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Text(text = "필터링된 결과가 없습니다.", color = Color.Gray)
+                        if (precedents.isEmpty() && uiState.listFilterText.isNotBlank()) {
+                            item {
+                                Box(
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .padding(32.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Text(text = stringResource(R.string.legal_search_filter_no_result), color = Color.Gray)
+                                }
                             }
                         }
+                    }
+                }
+
+                if (uiState.isLoading) {
+                    Box(
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .background(Color.White.copy(alpha = 0.7f)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        CircularProgressIndicator(color = Color(0xFF6B9DE8))
                     }
                 }
 
@@ -464,7 +487,7 @@ fun PrecedentResultDialog(
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6B9DE8)),
                         shape = RoundedCornerShape(12.dp),
                     ) {
-                        Text(text = "확인", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        Text(text = stringResource(R.string.confirm), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     }
                 }
             }
@@ -475,8 +498,18 @@ fun PrecedentResultDialog(
 @Composable
 fun PrecedentCard(
     precedent: Precedent,
+    translatedTitle: String? = null,
+    translatedCategory: String? = null,
+    translatedCourt: String? = null,
+    translatedJudgmentType: String? = null,
     onClick: () -> Unit,
 ) {
+    // 번역값이 있으면 번역값 사용, 없으면 원문 표시
+    val displayTitle = translatedTitle ?: precedent.title
+    val displayCategory = translatedCategory ?: precedent.category
+    val displayCourt = translatedCourt ?: precedent.court
+    val displayJudgmentType = translatedJudgmentType ?: precedent.judgmentType
+
     Column(
         modifier =
             Modifier
@@ -488,7 +521,7 @@ fun PrecedentCard(
                 .padding(20.dp),
     ) {
         Text(
-            text = precedent.title,
+            text = displayTitle,
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             color = Color.Black,
@@ -499,55 +532,40 @@ fun PrecedentCard(
         Spacer(modifier = Modifier.height(12.dp))
 
         Row(verticalAlignment = Alignment.CenterVertically) {
-            if (precedent.category.isNotEmpty()) {
+            if (displayCategory.isNotEmpty()) {
                 Box(
                     modifier =
                         Modifier
                             .background(Color(0xFFE8F0FE), RoundedCornerShape(8.dp))
                             .padding(horizontal = 8.dp, vertical = 4.dp),
                 ) {
-                    Text(text = precedent.category, color = Color(0xFF1967D2), fontSize = 12.sp)
+                    Text(text = displayCategory, color = Color(0xFF1967D2), fontSize = 12.sp)
                 }
             }
 
-            if (precedent.court.isNotEmpty()) {
+            if (displayCourt.isNotEmpty()) {
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(text = precedent.court, color = Color.Gray, fontSize = 12.sp)
+                Text(text = displayCourt, color = Color.Gray, fontSize = 12.sp)
             }
         }
 
         Spacer(modifier = Modifier.height(12.dp))
 
-//        Row(verticalAlignment = Alignment.CenterVertically) {
-//            Text(
-//                text = if (precedent.judgmentType.isNotEmpty()) {
-//                    "⚖️"
-//                } else "", fontSize = 14.sp
-//            )
-//            Spacer(modifier = Modifier.width(4.dp))
-//            Text(
-//                text = precedent.judgmentType, color = Color.Gray, fontSize = 14.sp, modifier = Modifier.weight(1f)
-//            )
-//
-//            Spacer(modifier = Modifier.width(4.dp))
-//            Text(text = "선고일자: ${precedent.date}", color = Color.Gray, fontSize = 14.sp)
-//        }
-
         Column(modifier = Modifier.fillMaxWidth()) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                if (precedent.judgmentType.isNotEmpty()) {
+                if (displayJudgmentType.isNotEmpty()) {
                     Text(text = "⚖️", fontSize = 14.sp)
                     Spacer(modifier = Modifier.width(4.dp))
                 }
                 Text(
-                    text = precedent.judgmentType,
+                    text = displayJudgmentType,
                     color = Color.Gray,
                     fontSize = 14.sp,
                     modifier = Modifier.weight(1f),
                 )
             }
             Text(
-                text = "선고일자: ${precedent.date}",
+                text = stringResource(R.string.legal_search_verdict_date, precedent.date ?: ""),
                 color = Color.Gray,
                 fontSize = 14.sp,
                 modifier = Modifier.fillMaxWidth(),
@@ -579,7 +597,7 @@ fun ExpandableLegalSection(
             Spacer(modifier = Modifier.weight(1f))
             Icon(
                 imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                contentDescription = if (isExpanded) "접기" else "펼치기",
+                contentDescription = if (isExpanded) stringResource(R.string.legal_search_collapse_desc) else stringResource(R.string.legal_search_expand_desc),
                 tint = Color.Gray,
             )
         }
@@ -618,7 +636,7 @@ fun PrecedentDetailDialog(
                     horizontalArrangement = Arrangement.End,
                 ) {
                     IconButton(onClick = onDismiss) {
-                        Icon(imageVector = Icons.Default.Close, contentDescription = "닫기")
+                        Icon(imageVector = Icons.Default.Close, contentDescription = stringResource(R.string.legal_search_close_desc))
                     }
                 }
 
@@ -631,7 +649,7 @@ fun PrecedentDetailDialog(
 
                     // 2. 판례 제목
                     Text(
-                        text = detail.title,
+                        text = uiState.detailTitle.ifBlank { detail.title },
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.Black,
@@ -641,9 +659,7 @@ fun PrecedentDetailDialog(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // 생소한 구문 설명: TabRow를 사용하여 '원문'과 '요약' 탭을 구성합니다.
-                    // 선택된 탭에 따라 하단 콘텐츠가 동적으로 바뀝니다.
-                    val tabs = listOf(DetailViewMode.ORIGINAL to "원문", DetailViewMode.SUMMARY to "AI 요약")
+                    val tabs = listOf(DetailViewMode.ORIGINAL to stringResource(R.string.legal_search_tab_original), DetailViewMode.SUMMARY to stringResource(R.string.legal_search_tab_ai_summary))
                     val selectedTabIndex = tabs.indexOfFirst { it.first == uiState.detailViewMode }
 
                     TabRow(
@@ -680,13 +696,13 @@ fun PrecedentDetailDialog(
                             DetailViewMode.ORIGINAL -> {
                                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                                     if (detail.issue.isNotBlank()) {
-                                        ExpandableLegalSection(title = "【판시사항】", content = detail.issue)
+                                        ExpandableLegalSection(title = stringResource(R.string.legal_search_section_issue), content = detail.issue)
                                     }
                                     if (detail.summary.isNotBlank()) {
-                                        ExpandableLegalSection(title = "【판결요지】", content = detail.summary)
+                                        ExpandableLegalSection(title = stringResource(R.string.legal_search_section_summary), content = detail.summary)
                                     }
                                     if (detail.content.isNotBlank()) {
-                                        ExpandableLegalSection(title = "【판례내용(이유)】", content = detail.content)
+                                        ExpandableLegalSection(title = stringResource(R.string.legal_search_section_content), content = detail.content)
                                     }
                                 }
                             }
@@ -703,7 +719,7 @@ fun PrecedentDetailDialog(
                                         CircularProgressIndicator(color = Color(0xFF1967D2))
                                         Spacer(modifier = Modifier.height(16.dp))
                                         Text(
-                                            "판결문을 분석하여\n요약하고 있습니다...",
+                                            stringResource(R.string.legal_search_summarizing),
                                             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                                             color = Color.Gray,
                                         )
@@ -721,10 +737,8 @@ fun PrecedentDetailDialog(
                     }
                 } else {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-//                        Text("판례 상세 정보를 불러올 수 없습니다.")
                         val uriHandler = LocalUriHandler.current
                         val link = uiState.selectedPrecedentLink
-                        // 서버가 "/DRF/..." 처럼 절대 경로를 주지 않을 경우를 대비해 베이스 URL을 조립해줍니다.
                         val fullUrl = if (link.startsWith("/")) "https://www.law.go.kr$link" else link
                         if (fullUrl.isNotBlank()) {
                             uriHandler.openUri(fullUrl)

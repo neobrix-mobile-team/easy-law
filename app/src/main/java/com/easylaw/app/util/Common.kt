@@ -1,5 +1,6 @@
 package com.easylaw.app.util
 
+import android.content.Context
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
@@ -13,5 +14,13 @@ object Common {
         } catch (e: Exception) {
             // 파싱 실패 시 원본 혹은 빈 문자열 반환
             isoString.split("T")[0]
+        }
+
+    fun getAppVersion(context: Context): String =
+        try {
+            val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+            packageInfo.versionName ?: "알 수 없음"
+        } catch (e: Exception) {
+            "0.0.0"
         }
 }

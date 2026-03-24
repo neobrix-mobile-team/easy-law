@@ -29,8 +29,11 @@ fun CommonFilterCategory(
     ) {
         items(categoryKey) { itemKey ->
             val categoryName = category[itemKey] ?: ""
+
+//            Log.d("필터값",  "itemKey: ${ itemKey} / categoryName: ${categoryName} / selectedCategory: ${selectedCategory}")
+
             FilterChip(
-                selected = (itemKey == selectedCategory),
+                selected = (itemKey.trim() == selectedCategory.trim()),
                 onClick = {
                     onCategorySelected(itemKey)
                 },

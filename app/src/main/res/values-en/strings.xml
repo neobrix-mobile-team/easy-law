@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">EasyLaw</string>
+<!--    <string name="app_name">EasyLaw</string>-->
     <string name="title_activity_main">EasyLaw - Easy-to-Understand Legal Guide</string>
 
-<!--버튼-->
+    <!--버튼-->
     <string name="btn_next">next</string>
     <string name="btn_start">start</string>
-<!--온보딩-->
+    <!--온보딩-->
     <string name="onboarding_welcome_title">Nice to meet you!\nMaking law easy,\nthis is EasyLaw.</string>
     <string name="onboarding_welcome_subtitle">We make complex legal terms easy to understand.</string>
     <string name="onboarding_ask_help">How can we\nhelp you?</string>
@@ -21,7 +21,7 @@
     <string name="permission_storage_title">Storage</string>
     <string name="permission_storage_desc">Accessing photos saved on your device</string>
 
-<!--로그인-->
+    <!--로그인-->
     <string name="login_title">Safe Legal Service</string>
     <string name="login_id_label">ID:</string>
     <string name="login_id_hint">Please enter a valid email address.</string>
@@ -35,7 +35,7 @@
     <string name="login_loading">Loging in…</string>
     <string name="login_error_title">Login Failed</string>
 
-<!--회원가입-->
+    <!--회원가입-->
     <string name="sign_title">Please enter your information\nto use the service</string>
     <string name="sign_name_label">Name</string>
     <string name="sign_name_hint">Enter your full name</string>
@@ -52,5 +52,154 @@
     <string name="sign_success_title">Sign Up Complete</string>
     <string name="sign_success_desc">You can now use\nall of our services</string>
     <string name="sign_error_title">Sign Up Failed</string>
+
+    <!--  공통  -->
+    <string name="confirm">Confirm</string>
+    <string name="logout">Logout</string>
+    <string name="required_field">This field is required.</string>
+    <string name="loading_analyzing">Analyzing…</string>
+    <string name="error_occurred">An error occurred. Please try again.</string>
+    <string name="no_contact_info">No contact information</string>
+
+    <!--  언어 선택  -->
+    <string name="lang_korean">한국어</string>
+    <string name="lang_english">English</string>
+    <string name="lang_japanese">日本語</string>
+    <string name="lang_select_title">Select Language</string>
+    <string name="lang_selected_desc">Selected</string>
+
+    <!--  사이드바 메뉴  -->
+    <string name="sidebar_greeting">Hello, %s</string>
+    <string name="sidebar_guest">Guest</string>
+    <string name="sidebar_group_community">Community</string>
+    <string name="sidebar_group_legal">Legal Services</string>
+    <string name="sidebar_menu_community">Community</string>
+    <string name="sidebar_menu_precedent">Case Search</string>
+    <string name="sidebar_menu_self_diagnosis">Self Diagnosis</string>
+    <string name="sidebar_menu_nearby">Map</string>
+
+    <!--  글쓰기  -->
+    <string name="write_category_prompt">What area do you need help with?</string>
+    <string name="write_title_label">Title</string>
+    <string name="write_title_placeholder">Enter a title.</string>
+    <string name="write_content_label">Content</string>
+    <string name="write_content_placeholder">Enter the content.</string>
+
+    <!--  지도  -->
+    <string name="map_searching">Searching nearby legal offices…</string>
+    <string name="map_search_this_area">Search this area</string>
+    <string name="map_my_location_desc">My Location</string>
+    <string name="map_search_desc">Search</string>
+    <string name="map_navigate">Get Directions</string>
+    <string name="map_no_results">No results found.</string>
+    <string name="map_permission_required">Location permission is required to use this service.</string>
+    <string name="map_request_permission">Grant Permission</string>
+
+    <!--  자가진단 (SelfView)  -->
+    <string name="self_title">Self Diagnosis</string>
+    <string name="self_subtitle">Answer a few questions and get a tailored legal guide right away.</string>
+    <string name="self_situation_title">What is your situation?</string>
+    <string name="self_situation_placeholder">Describe your situation</string>
+    <string name="self_checklist_prefix">What to prepare: %s</string>
+    <string name="self_diagnose_btn">Diagnose</string>
+    <string name="diagnosis_back_to_start">Back to Start</string>
+
+    <!--  자가진단 (DiagnosisScreen)  -->
+    <string name="diagnosis_title">Self Diagnosis</string>
+    <string name="diagnosis_description">The more detail you provide,\nthe more accurate your legal diagnosis will be.</string>
+    <string name="diagnosis_input_label">Describe your legal issue</string>
+    <string name="diagnosis_input_placeholder">e.g. My employer hasn\'t paid me for 3 months…</string>
+    <string name="diagnosis_voice_input_desc">Voice Input</string>
+    <string name="diagnosis_start_btn">Start Self Diagnosis</string>
+    <string name="diagnosis_request_btn">Request Analysis</string>
+    <string name="diagnosis_submit_btn">Submit</string>
+    <string name="diagnosis_mic_desc">Microphone</string>
+    <string name="diagnosis_analyzing">Analyzing…</string>
+    <string name="diagnosis_paused">Analysis paused.\nPlease try again in a moment.</string>
+    <string name="diagnosis_bot_greeting">Hello! How can I help you with your legal issue?</string>
+    <string name="diagnosis_user_sample">I have a question about unpaid wages.</string>
+    <string name="diagnosis_error">Error occurred</string>
+
+    <!--  음성인식 상태  -->
+    <string name="stt_empty"> </string>
+    <string name="stt_connecting">Connecting…</string>
+    <string name="stt_listening">Listening… Please speak.</string>
+    <string name="stt_processing">Converting to text…</string>
+
+    <!--  음성인식 오류 토스트  -->
+    <string name="stt_error_audio">Audio recording error. Please check your microphone.</string>
+    <string name="stt_error_client">A client-side error occurred.</string>
+    <string name="stt_error_no_permission">Microphone permission not granted. Please allow it in Settings.</string>
+    <string name="stt_error_network">Network connection is unstable.</string>
+    <string name="stt_error_timeout">Network connection timed out.</string>
+    <string name="stt_error_no_result">No speech detected. Please try again.</string>
+    <string name="stt_error_busy">Service is busy. Please try again shortly.</string>
+    <string name="stt_error_server">A server error occurred.</string>
+    <string name="stt_error_no_speech">No speech detected. Recognition ended.</string>
+    <string name="stt_error_unknown">An unknown error occurred.</string>
+    <string name="stt_permission_required">Microphone permission is required for voice recognition.</string>
+    <string name="stt_not_supported">Voice recognition is not supported on this device.</string>
+    <string name="stt_permission_legal">Microphone permission is required for legal diagnosis.</string>
+    <string name="stt_permission_denied">Microphone permission is denied. Please allow it in Settings.</string>
+
+    <!--  판례 검색  -->
+    <string name="legal_search_title">Diagnose Your Situation</string>
+    <string name="legal_search_subtitle">Please fill in the details below for accurate analysis.</string>
+    <string name="legal_search_situation_label">What is your situation?</string>
+    <string name="legal_search_situation_placeholder">e.g. I haven\'t been paid for 3 months</string>
+    <string name="legal_search_court_label">Court Type</string>
+    <string name="legal_search_detail_label">Details</string>
+    <string name="legal_search_detail_placeholder">Describe what happened in detail (optional)</string>
+    <string name="legal_search_analyzing">Analyzing keywords…</string>
+    <string name="legal_search_ai_analyzing">AI Analysis Keywords</string>
+    <string name="legal_search_btn">Search Cases</string>
+    <string name="legal_search_result_title">Case Search Results</string>
+    <string name="legal_search_no_result">No results found.</string>
+    <string name="legal_search_filter_no_result">No filtered results.</string>
+    <string name="legal_search_result_filtered">%d result(s) filtered</string>
+    <string name="legal_search_result_total">%d result(s) found</string>
+    <string name="legal_search_close_desc">Close</string>
+    <string name="legal_search_re_search_placeholder">Search within results (e.g. appeal)</string>
+    <string name="legal_search_re_search_desc">Re-search</string>
+    <string name="legal_search_verdict_date">Date: %s</string>
+    <string name="legal_search_expand_desc">Expand</string>
+    <string name="legal_search_collapse_desc">Collapse</string>
+    <string name="legal_search_tab_original">Original</string>
+    <string name="legal_search_tab_ai_summary">AI Summary</string>
+    <string name="legal_search_section_issue">【Key Issues】</string>
+    <string name="legal_search_section_summary">【Ruling Summary】</string>
+    <string name="legal_search_section_content">【Case Content (Reasoning)】</string>
+    <string name="legal_search_summarizing">Analyzing the ruling\nand generating summary…</string>
+
+    <!--  법원종류 필터  -->
+    <string name="court_all">All (Not Selected)</string>
+    <string name="court_supreme">Supreme Court</string>
+    <string name="court_lower">Lower Court</string>
+
+
+    <!-- 지도 시설 카테고리 -->
+    <string name="facility_court">Court</string>
+    <string name="facility_prosecutor">Prosecutor\'s Office</string>
+    <string name="facility_police">Police Station</string>
+    <string name="facility_legal_aid">Legal Aid Corporation</string>
+    <string name="facility_notary">Notary Office</string>
+    <string name="facility_registry">Registry Office</string>
+    <string name="facility_judicial_scrivener">Judicial Scrivener</string>
+    <string name="facility_lawyer">Lawyer</string>
+    <string name="facility_law_firm">Law Firm</string>
+    <string name="facility_patent_attorney">Patent Attorney</string>
+
+    <!-- 지도 필터칩 -->
+    <string name="filter_all">All</string>
+    <string name="filter_court">Court</string>
+    <string name="filter_prosecutor">Prosecutor</string>
+    <string name="filter_police">Police</string>
+    <string name="filter_legal_aid">Legal Aid</string>
+    <string name="filter_notary">Notary</string>
+    <string name="filter_registry">Registry</string>
+    <string name="filter_judicial_scrivener">Judicial Scrivener</string>
+    <string name="filter_lawyer">Lawyer</string>
+    <string name="filter_law_firm">Law Firm</string>
+    <string name="filter_patent_attorney">Patent Attorney</string>
 
 </resources>
